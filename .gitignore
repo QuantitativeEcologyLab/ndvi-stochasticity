@@ -47,3 +47,19 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+
+# NASA rasters
+data/nasa-rasters
+
+# ignore login info
+earthdata-login-info.R
+
+# ignore Simon Wood's code (for now)
+functions/betals.r
+
+# ignore thumbnail files
+*.db
+
+# tifs and RDS files are too large
+*.tif
+*.rds
