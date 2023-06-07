@@ -82,7 +82,7 @@ dev.off()
 png('figures/sardinia-test/sardinia-ndvi-betals-gam-check.png', width = 8,
     height = 10, units = 'in', res = 300)
 layout(matrix(1:4, ncol = 2))
-gam.check(m, residuals = 'pearson')
+gam.check(m, type = 'pearson')
 dev.off()
 
 # plots of predictions ----
