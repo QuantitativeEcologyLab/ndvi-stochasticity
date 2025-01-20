@@ -54,9 +54,6 @@ data/nasa-rasters
 # ignore login info
 earthdata-login-info.R
 
-# ignore Simon Wood's code (for now)
-functions/betals.r
-
 # ignore thumbnail files
 *.db
 
