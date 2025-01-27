@@ -60,3 +60,10 @@ earthdata-login-info.R
 # tifs and RDS files are too large
 *.tif
 *.rds
+
+# ignore world ecosystems dataset, but upload some relevant files
+data/world-ecosystems/*
+!data/world-ecosystems/download-link.md
+!data/world-ecosystems/TERMS OF USE.txt
+!data/world-ecosystems/CONTENTS.txt
+
