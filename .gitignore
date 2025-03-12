@@ -63,7 +63,8 @@ earthdata-login-info.R
 
 # ignore world ecosystems dataset, but upload some relevant files
 data/world-ecosystems/*
+data/ecoregions/*
 !data/world-ecosystems/download-link.md
 !data/world-ecosystems/TERMS OF USE.txt
 !data/world-ecosystems/CONTENTS.txt
-
+!data/ecoregions/polygon-neighbors-list.rds
