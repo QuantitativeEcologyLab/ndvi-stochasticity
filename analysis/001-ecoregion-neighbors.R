@@ -76,7 +76,7 @@ length(nbs) == nrow(ecoregions)
 # add names corresponding to each polygon
 all(attr(nbs, 'region.id') == ecoregions$poly_id)
 names(nbs) # no names, currently
-names(nbs) <- attr(nbs, 'region.id') # names do not need to match indeces
+names(nbs) <- attr(nbs, 'region.id') # names do not need to match indices
 
 # add number of neighbors for each polygon
 ecoregions$n_neigh <- map_int(nbs, function(.nb) {
