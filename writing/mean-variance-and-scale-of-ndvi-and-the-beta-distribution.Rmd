@@ -1,0 +1,23 @@
+---
+title: "Mean and variance of NDVI and the Beta distribution"
+author: "Stefano Mezzini"
+date: "2025-03-13"
+header-includes:
+    - \usepackage{setspace}\doublespacing # for double-spaced text
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+\newcommand*\e{\text{E}} <!-- expectation; non-italic E -->
+\newcommand*\var{\text{Var}} <!-- variance; non-italic Var -->
+\newcommand*\ra{\text{R}} <!-- range; non-italic R -->
+
+Since NDVI ranges $\nu \in [-1, 1] \approx (-1, 1)$, we can apply the linear transformation $\nu_*=\frac{\nu+1}{2}$ so that $\nu_* \in (0, 1),$ and $\nu_* \sim \text{Beta}(a_*, b_*)$. We can re-parameterize the distribution as $\nu_* \sim \text{Beta}(\mu_*, \phi_*)$ in terms of the mean $$\mu_* = \frac{a_*}{a_*+b_*}$$ and scale $$\phi_* = \frac{\sigma^2_*}{\mu_*~(1 - \mu_*)} = \frac{a_*b_*}{(a_*+b_*)^2(a_*+b_*+1)} \frac{a_*+b_*}{a_*} \frac{1}{\frac{a_* + b_* - a_*}{a_*+b_*}} = \frac{1}{(a_*+b_*+1)}.$$ For each parameter, we have the ranges
+$$\ra(\mu_*) = \left(\frac{0}{0+\infty}, \frac{\infty}{\infty+0}\right) = (0, 1),$$
+$$\ra(\sigma^2_*) = \left(\frac{0}{(0)^2(0+0+1)}, \frac{c^2}{4c^2(2c+1)}\right) = \left(\frac{0}{(0)^2(0+0+1)}, \frac{1}{8(0^+)+4}\right) = (0, 0.25),$$
+and $$\ra(\phi_*) \left(\frac{1}{(\infty+\infty+1)}, \frac{1}{(0+0+1)}\right) = (0, 1).$$
+
+For NDVI, the mean is $$\mu = \e(\nu) = \e(2 \nu_* - 1) = 2~\e(\nu_*) - 1 = 2\mu_* - 1,$$ the variance is $$\sigma^2 = \var(\nu) = \var(2 \nu_* - 1) = 4~\var(\nu_*) = 4\sigma^2_*,$$ and the ranges for $\mu$ and $\sigma^2$ are $\ra(\mu) = (-1, 1)$ and $\ra(\sigma^2) = (0, 1)$, respectively. Calculating the scale parameter for NDVI is not necessary because our focus is on the mean and variance of NDVI.
