@@ -48,8 +48,9 @@ po/*~
 # RStudio Connect folder
 rsconnect/
 
-# NASA rasters
-data/nasa-rasters
+# MODIS and NASA rasters
+/data/modis-world-ndvi-rasters
+/data/avhrr-viirs-ndvi/raster-files
 
 # ignore login info
 earthdata-login-info.R
@@ -68,3 +69,6 @@ data/ecoregions/*
 !data/world-ecosystems/TERMS OF USE.txt
 !data/world-ecosystems/CONTENTS.txt
 !data/ecoregions/polygon-neighbors-list.rds
+
+# ignore old files
+/analysis/old-files
