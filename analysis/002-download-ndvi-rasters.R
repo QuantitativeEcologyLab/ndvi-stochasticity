@@ -10,22 +10,6 @@ plan(multisession, workers = ncores)
 url_main <- 'https://www.ncei.noaa.gov/data/land-normalized-difference-vegetation-index/access/'
 years <- 1981:2025 #' years to download; *downloading up to 2025-03-16*
 
-#' *\/ delete*
-# rasters that Rekha had downloaded that had "preliminary" in the file name
-# need to re-download
-prelim <- list.files('//./home/shared/NOAA_Files/preliminary-rasters/',
-                     include.dirs = FALSE) %>%
-  `[`(., which(grepl('preliminary', .))) %>%
-  gsub('VIIRS-Land_v001-preliminary_NPP13C1_S-NPP_', '', .) %>%
-  gsub('AVHRR-Land_v005-preliminary_AVH13C1_NOAA-19_', '', .) %>%
-  substr(., 1, nchar('yyyymmdd')) %>%
-  as.Date(format = '%Y%m%d')
-
-length(prelim)
-range(prelim)
-years <- 2014:2025 #' re-downloading files that were preliminary
-#' */\ delete*
-
 # find file names for each raster
 fn_tib <- tibble(
   years = years,
@@ -48,7 +32,7 @@ options(timeout = 60 * 10) # increase timeout to 10 minutes
 options('timeout') # in seconds
 
 DIR <- paste0('//home/mezzinis/H/GitHub/ndvi-stochasticity/',
-              'data/avhrr-viirs-ndvi/raster-files/new/')
+              'data/avhrr-viirs-ndvi/raster-files/')
 if(! dir.exists(DIR)) stop('DIR does not exist!')
 plan() # check plan
 
@@ -57,7 +41,7 @@ output <-
     if(! file.exists(paste0(DIR, .filename))) {
       download.file(
         url = paste0(url_main, .year, '/', .filename),
-        # cannot save directly to '//home/shared' because it needs sudo access
+        #' cannot save directly to `//home/shared` because it needs sudo access
         destfile = paste0(DIR, .filename), method = 'libcurl', quiet = TRUE)
       return(paste('Downloaded', .filename))
     } else {
@@ -67,29 +51,48 @@ output <-
   }, .progress = TRUE)
 table(grepl('Downloaded', output))
 
-# move files to the main folder (out of "/new")
-new <- list.files(DIR)
-length(new)
-file.copy(from = paste0(DIR, new), to = paste0(gsub('new/', '', DIR), new))
+#' There's a few days that have no raster associated with them, but it's
+#' generally rare. We have 8 2-day gaps, 3 3-day gaps, 2 4-day gaps, and
+#' one 16-day gap. The gaps range from 1982 to 2024, and the longest one
+#' is in summer of 2022.
 
 # check files
-new_dates <- list.files('data/avhrr-viirs-ndvi/raster-files/new') %>%
+fn_dates <- fn_tib %>%
+  pull(fn) %>%
   substr(.,
          nchar(.) - nchar('YYYYMMDD_c20240123205954.nc') + 1,
          nchar(.) - nchar('_c20240123205954.nc')) %>%
   as.Date(format = '%Y%m%d')
 
 main_dates <-
-  list.files('data/avhrr-viirs-ndvi/raster-files', pattern = '*.nc') %>%
+  list.files('data/avhrr-viirs-ndvi/raster-files', pattern = '*.nc',
+             recursive = FALSE) %>%
   substr(.,
-         nchar(.) - nchar('YYYYMMDD_c20240123205954.nc') + 1,
-         nchar(.) - nchar('_c20240123205954.nc')) %>%
+         nchar(.) - nchar('YYYYMMDD_cYYYYmmddHHMMSS.nc') + 1,
+         nchar(.) - nchar('_cYYYYmmddHHMMSS.nc')) %>%
   as.Date(format = '%Y%m%d')
 
-range(new_dates)
-range(main_dates)
+# ensure date ranges are the same
+range(fn_dates)
+all(range(fn_dates) == range(main_dates))
 
-#' move files to "//home/shared" folder  on the lab Linux *need to do*
-new <- list.files(DIR)
-length(new)
-file.copy(from = paste0(DIR, new), to = paste0(gsub('new/', '', DIR), new))
+# ensure all rasters downloaded
+sum(! fn_dates %in% main_dates)
+
+# check that all files were downloaded
+gaps <-
+  tibble(date = sort(main_dates),
+         before = lag(date),
+         gap = date - before,
+         year = lubridate::year(date)) %>%
+  relocate(before, .before = 1)
+table(gaps$gap)
+gaps %>%
+  filter(gap > 1) %>%
+  View()
+
+length(fn_dates) == length(main_dates)
+length(fn_dates) - length(main_dates)
+as.numeric(diff(range(main_dates), units = 'days')) / 365
+
+#' *need to move files to "//home/shared" folder on the lab Linux*
