@@ -1,10 +1,9 @@
-- make sure to only include cells fully inside polygons with `mask(..., touches = FALSE)`
-- drop islands with no data
-- make dfs for each year, then check total nrow and compare to max df size (2^31-1)
-- average every ~9 (?) raster layers, maybe split by continents if too big
-- start with oceania to check:
-  - behavior of islands,
-  - fitting time, and
-  - diagnostics
-  - (there's movement data for australia)
-- expand to other regions or the whole world
+- could add distance to edge of polygon (after fusing polygons together at the island level)?
+- subtract pixel-level mean residual before calculating the variance
+- add pixel-level mean residual to the mean?
+- make NDVI palette colorblind-friendly
+
+# products
+- static raster for GIS people
+- shiny app for predicting from the model given the data
+- 
