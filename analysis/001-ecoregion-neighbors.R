@@ -5,6 +5,7 @@ library('sf')      # for spatial data
 library('terra')   # for rasters
 library('spdep')   # for finding neighbors
 library('ggplot2') # for fancy plots
+source('functions/add_nb.R')
 
 # get shapefile of each continent
 ecoregions <- st_read('data/world-ecosystems/data/commondata/data0/tnc_terr_ecoregions.shp') %>%
@@ -31,7 +32,8 @@ ecoregions <- st_read('data/world-ecosystems/data/commondata/data0/tnc_terr_ecor
   st_cast('POLYGON') %>% # assigns attributes to sub-geometries by default
   st_make_valid() %>% # to drop duplicate vertices
   mutate(poly_id = paste('poly', 1:n()),
-         area_km2 = as.numeric(st_area(.)) / 1e6)
+         area_km2 = as.numeric(st_area(.)) / 1e6) %>%
+  filter(WWF_MHTNAM != 'Inland Water') # dropping 17 inland water polygons
 
 # drop points based on plot(n_data ~ area)
 # drop points with areas < (5 km)^2 * 1, 4, or 9 cells
@@ -77,6 +79,7 @@ length(nbs) == nrow(ecoregions)
 all(attr(nbs, 'region.id') == ecoregions$poly_id)
 names(nbs) # no names, currently
 names(nbs) <- attr(nbs, 'region.id') # names do not need to match indices
+names(nbs)
 
 # add number of neighbors for each polygon
 ecoregions$n_neigh <- map_int(nbs, function(.nb) {
@@ -157,43 +160,6 @@ plot(ru_geom[1:4, ], col = pal)
 plot(ru_geom[5:6, ], col = pal[5:6])
 layout(1)
 
-add_nb <- function(p1, p2, add = FALSE) {
-  if(! all(c(p1, p2) %in% names(nbs))) {
-    stop('At least one of ', p1, ' or ', p2, ' is not in `names(nbs)`.')
-  }
-  
-  # add neighbors if polygons are not already neighbors
-  if(which(names(nbs) == p1) %in% nbs[[p2]] |
-     which(names(nbs) == p2) %in% nbs[[p1]]) {
-    stop('Polygons ', p1, ' and ', p2,
-         ' are already neighbors! Check the values for each.')
-  } else {
-    filter(ecoregions, poly_id == p1 | poly_id == p2) %>%
-      st_geometry() %>%
-      st_transform(ha_proj) %>%
-      plot(col = 1:2, main = paste('Polygons', p1, 'and', p2))
-    
-    if(add) {
-      if(all(nbs[[p1]] == 0)) { # if no other neighbors do not add "0"
-        nbs[[p1]] <<- which(names(nbs) == p2)
-      } else { # otherwise keep other neighbors
-        nbs[[p1]] <<- c(nbs[[p1]], which(names(nbs) == p2))
-      }
-      
-      if(all(nbs[[p2]] == 0)) { # if no other neighbors do not add "0"
-        nbs[[p2]] <<- which(names(nbs) == p1)
-      } else { # otherwise keep other neighbors
-        nbs[[p2]] <<- c(nbs[[p2]], which(names(nbs) == p1))
-      }
-      
-      cat('Added', p1, 'as a neighbor to', p2, 'and vice-versa.\n')
-    } else {
-      warning('Did not add ', p1, ' as a neighbor to ', p2,
-              ' and vice-versa!')
-    }
-  }
-}
-
 layout(matrix(1:6, ncol = 2))
 plot(ru_geom, col = pal, main = 'Russian polygons that cross long = 180')
 # 7987 and 8038 area already neighbors
@@ -247,7 +213,6 @@ ggplot(ecoregions) +
 
 # save the final files ----
 st_write(ecoregions, 'data/ecoregions/ecoregions-polygons.shp')
-saveRDS(nbs, 'data/ecoregions/polygon-neighbors-list.rds')
 
 # run a test ----
 if(FALSE) {
@@ -260,7 +225,29 @@ if(FALSE) {
   library('mgcv')    # for GAMs
   
   ecoregions <- st_read('data/ecoregions/ecoregions-polygons.shp')
-  nbs <- readRDS('data/ecoregions/polygon-neighbors-list.rds')
+  
+  r0 <- rast('data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v005_AVH13C1_NOAA-07_19810624_c20170610041337.nc', lyr = 'NDVI') %>%
+    aggregate(2) %>%
+    `values<-`(1) %>%
+    mask(vect(ecoregions))
+  plot(r0)
+  
+  ecoregions$n_cells <- r0 %>%
+    extract(vect(ecoregions), fun = \(x) length(x)) %>%
+    pull(NDVI)
+  
+  d_sample <- bind_rows(readRDS('data/ndvi-global-15-day-average-2020-only.rds'),
+                        readRDS('data/ndvi-global-15-day-average-2021-only.rds')) %>%
+    #' use `exact_extract()` for more data?
+    mutate(doy = lubridate::yday(central_date),
+           poly_id = extract(r_poly_id, data.frame(x, y))[, 2], # 1 is pixel ID
+           wwf_ecoregion = extract(r_eco, data.frame(x, y))[, 2],
+           distance_coast_m = extract(r_dist, data.frame(x, y))[, 2],
+           elevation_m = extract(r_elev, data.frame(x, y))[, 2]) %>%
+    # convert strings to factors
+    mutate(poly_id = factor(poly_id, levels = names(nbs)),
+           wwf_ecoregion = factor(wwf_ecoregion)) %>%
+    na.omit()
   
   RES <- 0.1 # AVHRR NDVI rasters have a resolution of (0.05 degrees)^2
   r <- expand_grid(x = seq(-180, 180, by = RES),
