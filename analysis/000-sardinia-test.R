@@ -449,3 +449,30 @@ cowplot::plot_grid(
 ggsave(paste0('figures/sardinia-test/sardinia-ndvi-model-agreement-duchon-mrf-',
               unique(preds_1_mrf$date), 'predictions.png'),
        height = 12, width = 8, bg = 'white')
+
+# testing complexity of ti(doy, space) ----
+#' `ti()` of doy and space doesn't add much
+# on personal laptop: "initial" is 50 s, run is 5 s
+if(file.exists('models/sardinia-test/gaus-gam-ti-ds-gam.rds')) {
+  m_gaus_ti_ds <- readRDS('models/sardinia-test/gaus-gam-ti-ds-gam.rds')
+} else {
+  m_gaus_ti_ds <- bam(ndvi_scaled ~
+                      s(x, y, bs = 'ds', k = 200) +
+                      s(elev_m, bs = 'ad', k = 10) + # adaptive spline to correct for shorelines better
+                      s(year, bs = 'cr', k = 10) +
+                      s(doy, bs = 'cc', k = 10) +
+                      ti(doy, year, bs = c('cc', 'cr'), k = c(5, 5)),
+                    family = gaussian(),
+                    knots = list(doy = c(0, 1)),
+                    data = sardinia_ndvi,
+                    method = 'fREML',
+                    discrete = TRUE,
+                    control = gam.control(nthreads = 1, trace = TRUE))
+  saveRDS(m_gaus_ti_ds, 'models/sardinia-test/gaus-gam-ti-ds-gam.rds')
+}
+
+draw(m_gaus_ti_ds, rug = FALSE)
+ggsave('figures/sardinia-test/sardinia-ndvi-gaussian-ti-terms.png',
+       width = 13.5, height = 6, units = 'in', dpi = 300, bg = 'white')
+
+summary(m_gaus_ti_ds)
