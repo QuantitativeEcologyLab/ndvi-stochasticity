@@ -95,4 +95,12 @@ length(fn_dates) == length(main_dates)
 length(fn_dates) - length(main_dates)
 as.numeric(diff(range(main_dates), units = 'days')) / 365
 
-#' *need to move files to "//home/shared" folder on the lab Linux*
+# ensure no rasters are corrupt
+library('terra')
+file_names <- list.files(path = 'data/avhrr-viirs-ndvi/raster-files/',
+                         pattern = '.nc', full.names = TRUE, recursive = FALSE)
+table(map_chr(file_names, function(.fn) class(rast(.fn)), .progress = TRUE))
+
+# if any are corrupt, download manually from
+# https://www.ncei.noaa.gov/data/land-normalized-difference-vegetation-index/access/
+#' *need to check if all files are in "//home/shared" folder on the lab Linux*
