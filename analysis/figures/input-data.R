@@ -11,9 +11,9 @@ eco <- read_sf('data/ecoregions/ecoregions-polygons.shp') %>%
   mutate()
 
 if(FALSE) {
-khroma::info() %>%
-  filter(type == 'qualitative') %>%
-  pull(palette)
+  khroma::info() %>%
+    filter(type == 'qualitative') %>%
+    pull(palette)
   
   # potential discrete palettes
   plot_scheme(color('bright')(7))
@@ -24,6 +24,34 @@ khroma::info() %>%
   khroma::info() %>%
     filter(type == 'sequential') %>%
     pull(palette)
+  
+  plot_scheme(color('devon')(10))
+  plot_scheme(color('lajolla')(10))
+  plot_scheme(color('bamako')(10))
+  plot_scheme(color('davos')(10))
+  plot_scheme(color('bilbao')(10))
+  plot_scheme(color('nuuk')(10))
+  plot_scheme(color('oslo')(10))
+  plot_scheme(color('grayC')(10))
+  plot_scheme(color('hawaii')(10))
+  plot_scheme(color('lapaz')(10))
+  plot_scheme(color('tokyo')(10))
+  plot_scheme(color('buda')(10))
+  plot_scheme(color('acton')(10))
+  plot_scheme(color('turku')(10))
+  plot_scheme(color('imola')(10))
+  plot_scheme(color('batlow')(10))
+  plot_scheme(color('batlowW')(10))
+  plot_scheme(color('batlowK')(10))
+  plot_scheme(color('brocO')(10))
+  plot_scheme(color('corkO')(10))
+  plot_scheme(color('vikO')(10))
+  plot_scheme(color('romaO')(10))
+  plot_scheme(color('bamO')(10))
+  plot_scheme(color('YlOrBr')(10))
+  plot_scheme(color('iridescent')(10))
+  plot_scheme(color('incandescent')(10))
+  plot_scheme(color('smoothrainbow')(10))
 }
 
 # individual polygons ----
@@ -89,3 +117,30 @@ p_dist
 
 ggsave('figures/input-data/dist-km.png', p_dist,
        width = 10, height = 5, units = 'in', dpi = 600, bg = 'white')
+
+# hex plot of rasters over day of year and year
+dates <- tibble(
+  file_name = list.files('H:/GitHub/ndvi-stochasticity/data/avhrr-viirs-ndvi/raster-files',
+                         pattern = '*.nc', recursive = FALSE),
+  date = substr(file_name,
+                nchar(file_name) - nchar('YYYYmmdd_xYYYYmmddHHMMSS.nc') + 1,
+                nchar(file_name) - nchar('_xYYYYmmddHHMMSS.nc')) %>%
+    as.Date(format = '%Y%m%d'),
+  doy = lubridate::yday(date),
+  year = lubridate::year(date))
+
+p_n <-
+  dates %>%
+  ggplot(aes(year, doy)) +
+  coord_equal(ratio = 1 / 15) +
+  geom_bin_2d(binwidth = c(0.9999999, 15)) +
+  xlab('Year') +
+  scale_y_continuous('Day of year', expand = c(0, 0),
+                     breaks = c(1, 100, 200, 300, 366)) +
+  scale_fill_lapaz(name = 'Number of rasters', reverse = TRUE,
+                   limits = c(1, NA), range = c(0, 1),
+                   breaks = c(1, 5, 10, 15)) +
+  theme(legend.position = 'top'); p_n
+
+ggsave('figures/input-data/n-rasters-time.png', p_n,
+       width = 8, height = 5, units = 'in', dpi = 300, bg = 'white')
