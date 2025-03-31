@@ -8,7 +8,7 @@ theme_set(theme_bw() +
                   text = element_text(face = 'bold')))
 
 # custom NDVI color palette
-ndvi_pal <- plot_scheme(color('bukavu')(30)) # wrong order
+ndvi_pal <- color('bukavu')(30) # wrong order
 if(.PLOT_PALETTES) plot_scheme(ndvi_pal)
 ndvi_pal <- ndvi_pal[c(1:13, length(ndvi_pal):(length(ndvi_pal)/2 + 1))]
 if(.PLOT_PALETTES) plot_scheme(ndvi_pal)
@@ -35,4 +35,3 @@ if(.PLOT_PALETTES) {
      scale_fill_gradientn(colours = ndvi_pal, limits = c(-1, 1))) %>%
     colorblindr::cvd_grid()
 }
-
