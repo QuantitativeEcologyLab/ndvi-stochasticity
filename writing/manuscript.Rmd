@@ -1,0 +1,123 @@
+---
+title: \large A new global measure of environmental unpredictability 
+author:
+  - name: Stefano Mezzini
+    institute: [braes, biol]
+  - name: Michael J. Noonan
+    email: michael.noonan@ubc.ca
+    institute: [braes, biol, cmps]
+    correspondence: "yes"
+institute:
+  - braes: Okanagan Institute for Biodiversity, Resilience, and Ecosystem Services, The University of British Columbia Okanagan, Kelowna, British Columbia, Canada.
+  - biol: Department of Biology, The University of British Columbia Okanagan, Kelowna, British Columbia, Canada.
+  - cmps: Department of Computer Science, Math, Physics, and Statistics, The University of British Columbia Okanagan, Kelowna, British Columbia, Canada.
+bibliography: 'ndvi-stochasticity.bib'
+csl: 'freshwater-biology.csl'
+fontsize: 12pt
+indent: true
+header-includes:
+    - \usepackage{setspace}\doublespacing # for double-spaced text
+    - \usepackage{indentfirst} # for indenting first line of each paragraph
+    - \usepackage[small]{titlesec} # for smaller font for headings
+    - \usepackage{caption} # for more customization of captions
+    - \captionsetup[figure]{font={scriptsize, doublespacing}, labelfont=bf, aboveskip=4pt, belowskip=-15pt}
+    - \usepackage{hanging} # for hanging indents in references
+    - \usepackage[left]{lineno} # for line numbers
+subparagraph: true # needed for \usepackage[small]{titlesec}
+output:
+  bookdown::pdf_document2:
+    pandoc_args:
+# https://github.com/pandoc/lua-filters/blob/master/author-info-blocks/README.md
+      - '--lua-filter=scholarly-metadata.lua'
+      - '--lua-filter=author-info-blocks.lua'
+    toc: false
+    number_sections: false
+    keep_tex: false # for submitting TeX file
+editor_options:
+  chunk_output_type: console
+---
+
+```{r, echo=FALSE}
+abstract <- ""
+```
+
+<!-- elements of the title page -->
+
+\clearpage
+
+\noindent \textbf{Article type}: Research article
+
+\noindent \textbf{Words in abstract}: `r stringi::stri_count_words(abstract)`
+
+\noindent \textbf{Words in main text}: `r suppressMessages(wordcountaddin::word_count())`
+
+\noindent \textbf{Figures}: \textcolor{red}{\textbf{XXX}}
+
+\noindent \textbf{Tables}: \textcolor{red}{\textbf{XXX}}
+
+\noindent \textbf{References}: \textcolor{red}{\textbf{XXX}}
+
+\noindent \textbf{Appendices}: \textcolor{red}{\textbf{XXX}}
+
+\noindent \textbf{Key words:} remote sensing, NDVI, environmental stochasticity, \textcolor{red}{\textbf{XXX}}
+
+<!-- start main body on a new page -->
+
+\newpage
+
+\doublespacing
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, out.width = '100%', fig.align = 'center')
+```
+
+\linenumbers
+
+# Abstract
+
+\noindent `r abstract`
+
+\newpage
+
+# Introduction
+
+https://www.sciencedirect.com/science/article/abs/pii/S0034425718305625
+https://silvis.forest.wisc.edu/data/dhis/
+
+# Methods
+
+maps of input data
+
+NDVI palette is colorblid-friendly
+
+# Results
+
+output of `draw()`
+
+hex plots of mean and var vs common metrics (e.g., spp diversity, npp, hfi, ...)
+
+# Discussion
+
+
+
+# Useful references
+
+* `{khroma}`: doi:10.5281/zenodo.1472077
+* @keith_predicting_2008
+* @chevin_adaptation_2010
+* @rickbeil_plasticity_2019
+* @mueller_search_2008
+* @pettorelli_using_2005
+* @keys_machine-learning_2021
+* @nilsen_can_2005
+* @stephens_optimal_1982
+* @merkle_large_2016
+* @tian_evaluating_2015
+* @huang_commentary_2021
+* @fan_global_2016
+* @wang_stochastic_2019
+* @pease_ecological_2024
+* @xu_plasticity_2021
+* @mezzini_how_2025
+
+# References
