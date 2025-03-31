@@ -75,7 +75,7 @@ if(file.exists('data/sardinia-test/sardinia-ndvi.rds')) {
     rast(crs = 'EPSG:4326') %>%
     get_elev_raster(z = 6)
   plot(elevs)
-  plot(sardinia, add = TRUE, col = 'transparent')
+  plot(st_geometry(sardinia), add = TRUE, col = 'transparent')
   
   sardinia_ndvi <- mutate(sardinia_ndvi, 
                           elev_m = extract(elevs, select(sardinia_ndvi, x, y)),
@@ -142,7 +142,7 @@ ggsave('figures/sardinia-test/sardinia-ndvi-beta-terms-ndvi-scale.png',
 summary(m_beta)
 
 # fit a spatially explicit test model with a betals family ----
-#' fails with error (*tested on lab' linux machine*):
+#' fails with error (*tested on lab linux machine*):
 #'`Error in h(simpleError(msg, call)) :`
 #'`error in evaluating the argument 'x' in selecting a method for function 't':`
 #'`long vectors (argument 5) are not supported in .Fortran`
