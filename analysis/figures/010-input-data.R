@@ -4,7 +4,7 @@ library('terra')     # for rasters
 library('ggplot2')   # for fancy plots
 library('tidyterra') # for plotting spatRasters with ggplot2
 library('khroma')    # for colorblind-friendly palettes
-source('analysis/figures/default-ggplot-theme.R')
+source('analysis/figures/000-default-ggplot-theme.R')
 
 eco <- read_sf('data/ecoregions/ecoregions-polygons.shp') %>%
   filter(WWF_MHTNAM != 'Inland Water') %>%

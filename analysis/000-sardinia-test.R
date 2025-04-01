@@ -13,7 +13,7 @@ library('gratia')
 source('functions/betals.r') # custom beta location-scale family
 source('functions/scale-ndvi.R')
 source('functions/ndvi-palette.R')
-source('analysis/figures/default-ggplot-theme.R')
+source('analysis/figures/000-default-ggplot-theme.R')
 theme_set(theme_bw())
 
 # the bounding box for sardinia (large enough to include all coast)

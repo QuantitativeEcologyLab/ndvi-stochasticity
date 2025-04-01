@@ -6,7 +6,7 @@ library('sf')      # for simple fleature objects
 library('terra')   # for rasters
 library('elevatr') # for extracting elevation
 library('gratia')  # for plotting GAMs
-source('analysis/figures/default-ggplot-theme.R')
+source('analysis/figures/000-default-ggplot-theme.R')
 source('functions/add_nb.R')
 
 ecoregions <- st_read('data/ecoregions/ecoregions-polygons.shp')

@@ -198,7 +198,7 @@ tictoc::toc()
 # check the first raster ----
 if(FALSE) {
   library('ggplot2')
-  source('analysis/figures/default-ggplot-theme.R')
+  source('analysis/figures/000-default-ggplot-theme.R')
   
   dates_aggr %>%
     filter(group == group[1]) %>%
