@@ -68,3 +68,8 @@ data/ecoregions/*
 
 # ignore old files
 analysis/old-files/*
+
+# ignore excessively large files
+data/hbam-ndvi-data*
+data/ndvi-global-*
+models/*
