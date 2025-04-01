@@ -49,18 +49,14 @@ po/*~
 rsconnect/
 
 # MODIS and NASA rasters
-/data/modis-world-ndvi-rasters
-/data/avhrr-viirs-ndvi/raster-files
+data/modis-world-ndvi-rasters/*
+data/avhrr-viirs-ndvi/raster-files/*
 
 # ignore login info
 earthdata-login-info.R
 
 # ignore thumbnail files
 *.db
-
-# tifs and RDS files are too large
-*.tif
-*.rds
 
 # ignore world ecosystems dataset, but upload some relevant files
 data/world-ecosystems/*
@@ -71,4 +67,9 @@ data/ecoregions/*
 !data/ecoregions/polygon-neighbors-list.rds
 
 # ignore old files
-/analysis/old-files
+analysis/old-files/*
+
+# ignore excessively large files
+data/hbam-ndvi-data*
+data/ndvi-global-*
+models/*
