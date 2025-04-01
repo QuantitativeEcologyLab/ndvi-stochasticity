@@ -8,7 +8,22 @@ source('analysis/figures/default-ggplot-theme.R')
 
 eco <- read_sf('data/ecoregions/ecoregions-polygons.shp') %>%
   filter(WWF_MHTNAM != 'Inland Water') %>%
-  mutate()
+  mutate(WWF_MHTNAM = factor(WWF_MHTNAM, levels = c(
+    'Rock and Ice',
+    'Tundra',
+    'Boreal Forests/Taiga',
+    'Montane Grasslands and Shrublands',
+    'Temperate Grasslands, Savannas and Shrublands',
+    'Temperate Broadleaf and Mixed Forests',
+    'Temperate Conifer Forests',
+    'Mediterranean Forests, Woodlands and Scrub',
+    'Mangroves',
+    'Tropical and Subtropical Moist Broadleaf Forests',
+    'Tropical and Subtropical Dry Broadleaf Forests',
+    'Tropical and Subtropical Coniferous Forests',
+    'Tropical and Subtropical Grasslands, Savannas and Shrublands',
+    'Flooded Grasslands and Savannas',
+    'Deserts and Xeric Shrublands')))
 
 if(FALSE) {
   khroma::info() %>%
@@ -74,9 +89,11 @@ n_distinct(eco$WWF_MHTNAM)
 p_eco <-
   ggplot(eco) +
   geom_sf(aes(fill = WWF_MHTNAM), color = 'black', lwd = .05) +
+  geom_hline(yintercept = 0, color = 'black', lwd = 0.1, lty = 'dashed') +
   scale_fill_discreterainbow(name = 'Ecoregion') +
   scale_x_continuous(expand = c(0, 0)) +
   theme(legend.position = 'top', legend.text = element_text(size = 4.5))
+
 ggsave('figures/input-data/ecoregions.png', p_eco,
        width = 10.1, height = 6, units = 'in', dpi = 600, bg = 'white')
 
@@ -98,10 +115,11 @@ p_elev <-
   scale_x_continuous(expand = c(0, 0)) +
   theme(legend.position = 'top', legend.text = element_text(size = 4.5))
 p_elev
+
 ggsave('figures/input-data/elev-m.png', p_elev,
        width = 10, height = 5, units = 'in', dpi = 600, bg = 'white')
 
-# distance from coast?
+# distance from coast
 r_dist <- rast('data/distance-from-coast-m.tif') %>%
   crop(., st_transform(eco, crs(.)), mask = TRUE)
 
@@ -140,7 +158,27 @@ p_n <-
   scale_fill_lapaz(name = 'Number of rasters', reverse = TRUE,
                    limits = c(1, NA), range = c(0, 1),
                    breaks = c(1, 5, 10, 15)) +
-  theme(legend.position = 'top'); p_n
+  theme(legend.position = 'top')
+p_n
 
 ggsave('figures/input-data/n-rasters-time.png', p_n,
        width = 8, height = 5, units = 'in', dpi = 300, bg = 'white')
+
+# north/south hemispheres
+ns <- rast('data/') %>%
+  as.data.frame(xy = TRUE) %>%
+  transmute(x, y, z = if_else(y < 0, 'S', 'N'))
+
+# south <- tibble(x = c(-180, 180, 180, -180, -180),
+#                 y = c(-90, -90, 0, 0, -90)) %>%
+#   st_as_sf(coords = c('x', 'y')) %>%
+#   st_set_crs('EPSG:4326') %>%
+#   vect()
+
+# expand_grid(x = -10:10,
+#             y = -10:10) %>%
+#   mutate(z = rnorm(n())) %>%
+#   rast() %>%
+#   `crs<-`(crs(south)) %>%
+#   # `values<-`(., ifel(intersect(., south)))
+#   intersect(., south)
