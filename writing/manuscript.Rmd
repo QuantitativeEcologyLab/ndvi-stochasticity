@@ -1,5 +1,5 @@
 ---
-title: \large A new global measure of environmental unpredictability 
+title: \large **ACRONYM**: A new global measure of environmental unpredictability 
 author:
   - name: Stefano Mezzini
     institute: [braes, biol]
@@ -79,6 +79,21 @@ knitr::opts_chunk$set(echo = FALSE, out.width = '100%', fig.align = 'center')
 
 \newpage
 
+# Acronym:
+
+* NVGI: NDVI Variance GAM-smoothed Index
+* GAM-Estimated 
+* Ginli: GAM-Inferred NDVI ??? Index
+* env var
+
+potential words starting with a vowel: Index, Estimate(d), unpredictability
+
+potential words starting with a consonant: GAM, smooth(ed), NDVI, stochasticity, variance, 
+
+Global GAM 
+
+
+
 # Introduction
 
 https://www.sciencedirect.com/science/article/abs/pii/S0034425718305625
@@ -94,15 +109,34 @@ NDVI palette is colorblid-friendly
 
 output of `draw()`
 
-hex plots of mean and var vs common metrics (e.g., spp diversity, npp, hfi, ...)
+hex plots of mean and var vs common metrics:
+* temperature
+* seasonal temperature range
+* precip
+* seasonal temperature range
+* spp diversity
+* net primary productivity
+* hfi
+* max animal weight
 
 # Discussion
 
+* stable states
+* green wave surfing
+* migration routes are key habitat (Ortega et al., in prep), especially in stochastic environments
+* @sawyer_migratory_2019
+* https://www.sciencedirect.com/science/article/pii/S0960982220308484
+* https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.15169
+* industrial development affects animals' ability to respond to both predictable and unpredictable change (https://www.nature.com/articles/s41559-022-01887-9)
+* effects of sudden deep snow in red desert on proghorn (https://www.sciencedirect.com/science/article/abs/pii/S0960982225002957)
+* https://www.nature.com/articles/s41467-023-37750-z
+* https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/ecy.4238
 
+* smoothness of mu impacts smoothness and size of s2: depends on animals' ability to respond to, learn, and predict E(R)
 
 # Useful references
 
-* `{khroma}`: doi:10.5281/zenodo.1472077
+* `{khroma}`: @frerebeau_khroma_2024
 * @keith_predicting_2008
 * @chevin_adaptation_2010
 * @rickbeil_plasticity_2019
