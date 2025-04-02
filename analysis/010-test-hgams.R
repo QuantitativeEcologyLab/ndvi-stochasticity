@@ -141,8 +141,8 @@ d <- mutate(d, poly_id = factor(poly_id, levels = names(nbs)))
 # global smooths only
 # 2020 only: initial is 34 s, fit is 5 s
 # 2020 and 2021: initial is 40 s, fit is 10 s
-if(file.exists('models/global-test/m0-2020-2021.rds')) {
-  m0 <- readRDS('models/global-test/m0-2020-2021.rds')
+if(file.exists('models/global-test/m0-2020-2021-gam.rds')) {
+  m0 <- readRDS('models/global-test/m0-2020-2021-gam.rds')
 } else {
   m0 <- bam(ndvi_15_day_mean ~
               s(elevation_m, bs = 'cr', k = 5) +
@@ -155,7 +155,7 @@ if(file.exists('models/global-test/m0-2020-2021.rds')) {
             discrete = TRUE,
             control = gam.control(nthreads = 1, trace = TRUE))
   draw(m0, rug = FALSE)
-  saveRDS(m0, 'models/global-test/m0-2020-2021.rds')
+  saveRDS(m0, 'models/global-test/m0-2020-2021-gam.rds')
 }
 
 # adding s(doy, ecoregion); no common doy effect across all ecoregions
@@ -219,10 +219,11 @@ d %>%
 
 # testing ecoregion and polygon as fixed effects to hopefully decrease fitting time
 #' 2020 AND 2021: setup is 70 s, fit is 18 minutes
-if(file.exists('models/global-test/m3-2020-2021.rds')) {
-  m3 <- readRDS('models/global-test/m3-2020-2021.rds')
+if(file.exists('models/global-test/m3-2020-2021-gam.rds')) {
+  m3 <- readRDS('models/global-test/m3-2020-2021-gam.rds')
 } else {
   m3 <- bam(ndvi_15_day_mean ~
+              wwf_ecoregion +
               s(elevation_m, bs = 'cr', k = 5) +
               s(log(distance_coast_m), bs ='ad', k = 10) +
               s(doy, by = wwf_ecoregion, bs = 'cc', k = 10) +
@@ -234,11 +235,20 @@ if(file.exists('models/global-test/m3-2020-2021.rds')) {
             discrete = TRUE,
             control = gam.control(nthreads = 1, trace = TRUE))
   draw(m3, rug = FALSE)
-  saveRDS(m3, 'models/global-test/m3-2020-2021.rds')
+  saveRDS(m3, 'models/global-test/m3-2020-2021-gam.rds')
 }
 
 # compare deviance explained
 tibble(model = 0:3,
        dev_expl = map_dbl(list(m0, m1, m2, m3), \(.m) {
          100 - .m$deviance / .m$null.deviance * 100
+       }),
+       smooths = map_chr(list(m0, m1, m2, m3), function(.m) {
+         paste(smooths(.m), collapse = ', ')
        }))
+
+# model dev_expl smooths
+#   m0      16.3 s(elevation_m), s(log(distance_coast_m)), s(doy)
+#   m1      53.4 s(elevation_m), s(log(distance_coast_m)), s(doy,wwf_ecoregion)
+#   m2      64.8 s(elevation_m), s(log(distance_coast_m)), s(doy,wwf_ecoregion), s(poly_id)
+#   m3      64.8 s(elevation_m), s(log(distance_coast_m)), s(doy):wwf_ecoregion + wwf_ecoregion + poly_id
