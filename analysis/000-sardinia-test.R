@@ -38,9 +38,9 @@ hist(sardinia$area_km2)
 if(file.exists('data/sardinia-test/sardinia-ndvi.rds')) {
   sardinia_ndvi <- readRDS('data/sardinia-test/sardinia-ndvi.rds')
 } else {
-  if(.Platform$OS.type != 'unix') stop('NOAA rasters are on the lab Linux.')
+  if(.Platform$OS.type != 'unix') stop('NOAA rasters are on the H: Drive, and you may want to use more cores.')
   future::availableCores(logical = FALSE)
-  plan(multisession, workers = 30)
+  plan(multisession, workers = min(30, availableCores(logical = FALSE) - 2))
   sardinia_ndvi <-
     list.files(path = '/home/shared/NOAA_Files/',
                pattern = '.nc',
@@ -108,9 +108,11 @@ if(file.exists('models/sardinia-test/gaussian-gam.rds')) {
 draw(m_gaus, rug = FALSE)
 ggsave('figures/sardinia-test/sardinia-ndvi-gaussian-terms.png',
        width = 9, height = 6, units = 'in', dpi = 300, bg = 'white')
+
 draw(m_gaus, rug = FALSE, fun = \(x) ndvi_to_11(x + coef(m_gaus)['(Intercept)']))
 ggsave('figures/sardinia-test/sardinia-ndvi-gaussian-terms-ndvi-scale.png',
        width = 9, height = 6, units = 'in', dpi = 300, bg = 'white')
+
 summary(m_gaus)
 
 # fit a spatially explicit test model with a beta family ----
@@ -134,11 +136,13 @@ if(file.exists('models/sardinia-test/beta-gam.rds')) {
 draw(m_beta, rug = FALSE)
 ggsave('figures/sardinia-test/sardinia-ndvi-beta-terms.png',
        width = 9, height = 6, units = 'in', dpi = 300, bg = 'white')
+
 draw(m_beta, rug = FALSE,
      fun = \(x) m_beta$family$linkinv(x + coef(m_beta)['(Intercept)']) %>%
        ndvi_to_11())
 ggsave('figures/sardinia-test/sardinia-ndvi-beta-terms-ndvi-scale.png',
        width = 9, height = 6, units = 'in', dpi = 300, bg = 'white')
+
 summary(m_beta)
 
 # fit a spatially explicit test model with a betals family ----
