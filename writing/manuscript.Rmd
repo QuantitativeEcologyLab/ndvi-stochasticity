@@ -101,9 +101,13 @@ https://silvis.forest.wisc.edu/data/dhis/
 
 # Methods
 
-maps of input data
+## Choice of color schemes
 
-NDVI palette is colorblid-friendly
+We represent NDVI using a modified version of Fabio Crameri's divergent *bukavu* palette [@crameri_ref], which has high-contrast for deuteranope and protanope vision. For NDVI values between 0 and 1 (the right half of the palette), the colors have sufficient contrast for both tritanope and achomatic vision. Appendix A contains an approximate representation of the color palette for each vision type.
+
+## Input data
+
+Maps are in Aappendix A.
 
 # Results
 
@@ -121,7 +125,7 @@ hex plots of mean and var vs common metrics:
 
 # Discussion
 
-* stable states
+* detecting state shifts
 * green wave surfing
 * migration routes are key habitat (Ortega et al., in prep), especially in stochastic environments
 * @sawyer_migratory_2019
@@ -131,6 +135,7 @@ hex plots of mean and var vs common metrics:
 * effects of sudden deep snow in red desert on proghorn (https://www.sciencedirect.com/science/article/abs/pii/S0960982225002957)
 * https://www.nature.com/articles/s41467-023-37750-z
 * https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/ecy.4238
+* see data for snow and pronghorn paper (Aikens et al. 2025)
 
 * smoothness of mu impacts smoothness and size of s2: depends on animals' ability to respond to, learn, and predict E(R)
 

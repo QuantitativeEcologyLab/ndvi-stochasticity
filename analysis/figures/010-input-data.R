@@ -2,6 +2,7 @@ library('dplyr')     # for data wrangling
 library('sf')        # for simple features
 library('terra')     # for rasters
 library('ggplot2')   # for fancy plots
+library('cowplot')   # for fancy plots in grids
 library('tidyterra') # for plotting spatRasters with ggplot2
 library('khroma')    # for colorblind-friendly palettes
 source('analysis/figures/000-default-ggplot-theme.R')
@@ -73,15 +74,19 @@ if(FALSE) {
 n_distinct(eco$poly_id)
 pal_polys <- c(color('okabeito')(8), 'grey')
 plot_scheme_colorblind(pal_polys)
+ggsave('polygons-palette.png', path = 'figures/input-data',
+       width = 6, height = 4, units = 'in', dpi = 300, bg = 'white')
 
+set.seed(-3)
 p_poly <-
   ggplot(eco) +
-  geom_sf(fill = pal_polys[1:nrow(eco) %% length(pal_polys) + 1],
-          lwd = .05) +
+  geom_sf(fill = sample(pal_polys, nrow(eco), replace = TRUE),
+          lwd = .15, color = 'white') +
+  geom_sf(fill = 'transparent', lwd = .05, color = 'black') +
   scale_x_continuous(expand = c(0, 0))
 
 ggsave('figures/input-data/polygons.png', p_poly,
-       width = 10, height = 4.4, units = 'in', dpi = 600, bg = 'white')
+       width = 10, height = 4.4, units = 'in', dpi = 1200, bg = 'white')
 
 # ecoregions ----
 n_distinct(eco$WWF_MHTNAM)
@@ -164,21 +169,35 @@ p_n
 ggsave('figures/input-data/n-rasters-time.png', p_n,
        width = 8, height = 5, units = 'in', dpi = 300, bg = 'white')
 
-# north/south hemispheres
-ns <- rast('data/') %>%
-  as.data.frame(xy = TRUE) %>%
-  transmute(x, y, z = if_else(y < 0, 'S', 'N'))
+#' function similar to `khroma::plot_scheme_colorblind()`
+plot_pal <- function(pal) {
+  .d <- tibble(x = floor((1:length(pal))),
+               y = x %% 2)
+  
+  .p <- colorblindr::palette_plot(pal, color_labels = FALSE,
+                                  xmargin = 0)
+  
+  plot_grid(.p +
+              ggtitle('Trichromatic') +
+              theme(plot.title = element_text(face = 'bold')),
+            colorblindr::cvd_grid(.p, severity = 1), ncol = 1,
+            rel_heights = c(1.25, 2))
+}
 
-# south <- tibble(x = c(-180, 180, 180, -180, -180),
-#                 y = c(-90, -90, 0, 0, -90)) %>%
-#   st_as_sf(coords = c('x', 'y')) %>%
-#   st_set_crs('EPSG:4326') %>%
-#   vect()
+plot_pal(pal_polys)
 
-# expand_grid(x = -10:10,
-#             y = -10:10) %>%
-#   mutate(z = rnorm(n())) %>%
-#   rast() %>%
-#   `crs<-`(crs(south)) %>%
-#   # `values<-`(., ifel(intersect(., south)))
-#   intersect(., south)
+plot_grid(NULL,
+          plot_pal(pal_polys),
+          NULL,
+          plot_pal(color('discreterainbow')(n_distinct(eco$WWF_MHTNAM))),
+          NULL,
+          plot_pal(color('lajolla')(1e3)),
+          NULL,
+          # plot_pal(color('davos')(1e3)),
+          # NULL,
+          plot_pal(rev(color('lapaz')(1e3))),
+          label_x = 0, ncol = 4,  rel_widths = c(0.03, 1),
+          labels = c('A.', '', 'B.', '', 'C.', '', 'D.', '', 'E.'))
+
+ggsave('figures/input-data/color-palettes.png', width = 8, height = 6,
+       scale = 2, units = 'in', dpi = 300, bg = 'white')

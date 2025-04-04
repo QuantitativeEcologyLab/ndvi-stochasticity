@@ -1,6 +1,6 @@
 ---
 title: \large A new global measure of environmental unpredictability 
-subtitle: Appendix 1
+subtitle: Appendix A
 author:
   - name: Stefano Mezzini
     institute: [braes, biol]
@@ -17,6 +17,7 @@ csl: 'freshwater-biology.csl'
 fontsize: 12pt
 indent: true
 header-includes:
+    - \renewcommand{\figurename}{Figure B\!\!} # for "Figure Bx."
     - \usepackage{setspace}\doublespacing # for double-spaced text
     - \usepackage{indentfirst} # for indenting first line of each paragraph
     - \usepackage[small]{titlesec} # for smaller font for headings
@@ -41,20 +42,24 @@ editor_options:
 \clearpage
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, out.width = '100%')
+knitr::opts_chunk$set(echo = FALSE, out.width = '100%', fig.align = 'center')
 ```
 
 ```{r packages, warning=FALSE}
 library('knitr')
 ```
 
-\noindent The figures below illustrate some of the data used for fitting the models. All color palettes below are available via the `khroma` package [@frerebeau_khroma_2024] for `R` [@r_core_team_r_2024]. The code for generating the figures is available [on GitHub](https://github.com/QuantitativeEcologyLab/ndvi-stochasticity/blob/main/analysis/figures/input-data.R). 
+\noindent The figures below illustrate some of the data used for fitting the models. All color palettes below are available via the `khroma` package [@frerebeau_khroma_2024] for `R` [@r_core_team_r_2024]. The code for generating the figures is available [on GitHub](https://github.com/QuantitativeEcologyLab/ndvi-stochasticity/blob/main/analysis/figures/input-data.R). The figure below illustrates each color palette for each type of vision (trichromatic, deuteranope, protanope, tritanope, and achomatic). Palette A is commonly attributed to Masataka Okabe and Kei Ito [@ichihara_color_2008], while the other palettes were created by Fabio Crameri [@crameri_geodynamic_2018; @crameri_scientific_2018].
+
+```{r color-palettes, fig.cap="Color palettes used in the figures below."}
+include_graphics('../figures/input-data/color-palettes.png')
+```
 
 ```{r ecoregions, fig.cap="Map of the ecoregions."}
 include_graphics('../figures/input-data/ecoregions.png')
 ```
 
-```{r polygons, fig.cap="Map of the polygons for each ecoregion. Each polygon is colored with one of 9 colors based on the polygon names. Note that some neighboring polygons have the same color."}
+```{r polygons, fig.cap="Map of the polygons for each ecoregion. Each polygon is colored randomly with one of the 9 colors. Note that some neighboring polygons have the same color."}
 include_graphics('../figures/input-data/polygons.png')
 ```
 
@@ -62,8 +67,8 @@ include_graphics('../figures/input-data/polygons.png')
 include_graphics('../figures/input-data/elev-m.png')
 ```
 
-```{r distance-coast, fig.cap="Map of the estimated distance from the nearest coastal edge."}
-include_graphics('../figures/input-data/dist-m.png')
+```{r distance-coast, fig.cap="Map of the estimated distance from the nearest coastal edge.", eval=FALSE}
+include_graphics('../figures/input-data/dist-km.png')
 ```
 
 ```{r n-rasters, fig.cap="Number of days with a raster within 15-day periods starting on January $1^{\\text{st}}$, for each year."}
