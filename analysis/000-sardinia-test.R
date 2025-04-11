@@ -14,7 +14,6 @@ source('functions/betals.r') # custom beta location-scale family
 source('functions/scale-ndvi.R')
 source('functions/ndvi-palette.R')
 source('analysis/figures/000-default-ggplot-theme.R')
-theme_set(theme_bw())
 
 # the bounding box for sardinia (large enough to include all coast)
 sardinia_bbox <- tibble(x = c(7.6, 10.4), y = c(38.8, 41.3)) %>%
