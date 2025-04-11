@@ -1,5 +1,5 @@
 ---
-title: \large **ACRONYM**: A new global measure of environmental unpredictability 
+title: "DENVar: A global Dynamic Estimate of NDVI Variance"
 author:
   - name: Stefano Mezzini
     institute: [braes, biol]
@@ -38,7 +38,12 @@ editor_options:
 ---
 
 ```{r, echo=FALSE}
-abstract <- ""
+# need to write abstract before cover page to state number of words in it
+abstract <- "Since the 1980s, remote-sensing estimates of habitat productivity such as the Normalized Differnece Vegetation Index (NDVI) have helped develop and support a variety of hypotheses and inform policy and industriy-related decisions. The free availability of such data has allowed widespread access and use of well-established metrics of habitat productivity. However, historically, users tended to focus solely on (predictable) trends in productivity. In recent years, people have been recognizing the importance of envrironmental unpredictability (stochasticity), particularly as climate change and human-induced rapid environmental change transform the ecosystems species have evolved in and adapted to. We adress this gap by presenting a new global Dynamic Estimate of NDVI Variance, *DENVar*. We estimate spatiotemporal trends in mean NDVI and the variance around the mean using Hierarchical Generalized Additive Models, which provide a flexible yet transparent model structure, unlike machine learning approaches such as neural netwoks. We show that DENVar can be used as a reliable proxy of environmental stochasticity, strongly correlates with ***XXX***, and can be used to test many hepotheses related to environmental stochasitcity, such as forage unpredictability, regime shifts, ... . We conclude by offering some considerations around quantifying and interpreting envirnomental stochasticity, and we provide a publicly and freely available shiny app for estimating mean NDVI and the variance around it, DENVar, for given coordinates and optional dates. The app requires no knowledge of statistics or coding. Additionally, we provide a temporally static raster of mean NDVI and DENVar for the years 1981-2025 that can be used for GIS applications and does not require any knowledge of $\\texttt{R}$."
+
+if(FALSE) {
+  stringi::stri_count_words(abstract)
+}
 ```
 
 <!-- elements of the title page -->
@@ -79,35 +84,68 @@ knitr::opts_chunk$set(echo = FALSE, out.width = '100%', fig.align = 'center')
 
 \newpage
 
-# Acronym:
-
-* NVGI: NDVI Variance GAM-smoothed Index
-* GAM-Estimated 
-* Ginli: GAM-Inferred NDVI ??? Index
-* env var
-
-potential words starting with a vowel: Index, Estimate(d), unpredictability
-
-potential words starting with a consonant: GAM, smooth(ed), NDVI, stochasticity, variance, 
-
-Global GAM 
-
-
-
 # Introduction
 
-https://www.sciencedirect.com/science/article/abs/pii/S0034425718305625
-https://silvis.forest.wisc.edu/data/dhis/
+<!-- remote sensing allows us to study landscapes in detail and over large spatiotemporal scales -->
+
+\noindent Developments in remote sensing since the 1970s have greatly expanded our ability to quantify and monitor lanscapes using satellite imagery
+
+- NDVI is an estimate of greenness, NPP, forage availability
+  - NDVI has many uses and is often convenient because it's free, well-established, and 
+
+<!-- successes of NDVI: pettorelli, Aikens -->
+
+many people focus on changes in the mean
+
+<!-- what counts as a change? predictable vs stochastic changes -->
+
+ability to predict and respond to changes in mean conditions (forage availability, phenology, etc.) depends on the scale of changes relative to the perception scale [@levin_problem_1992; @frankham_importance_2004; @riotte-lambert_environmental_2020; @steixner-kumar_strategies_2020] and memory [@abrahms_memory_2019]. Consequently, environmental stochasticity is also an important driver, besides changes in the mean [@mezzini_how_2025]
+
+<!-- difficulties in estimating variance -->
+
+* variance is hard to calculate, as it depends on a correct estimate of the mean
+* paper on estimating the asymptote of environmental variance globally, but variance for a closed system must converge towards a finite value [@bachmaier_variogram_2011; @fleming_fine-scale_2014]
+
+<!-- we present a new measure that is estimated in an understandable way -->
+
+* we present DENVar
+* HGAMs are higly flexible models that allow us to estimate trends in the data without imposing preconceived expectations
+* more transparent than black-box machine learning methods like neural networks, etc.
+* https://www.sciencedirect.com/science/article/abs/pii/S0034425718305625
+* https://silvis.forest.wisc.edu/data/dhis/
 
 # Methods
 
 ## Choice of color schemes
 
-We represent NDVI using a modified version of Fabio Crameri's divergent *bukavu* palette [@crameri_ref], which has high-contrast for deuteranope and protanope vision. For NDVI values between 0 and 1 (the right half of the palette), the colors have sufficient contrast for both tritanope and achomatic vision. Appendix A contains an approximate representation of the color palette for each vision type.
+We represent NDVI using a modified version of Fabio Crameri's divergent *bukavu* palette [@crameri_geodynamic_2018], which has high-contrast for deuteranope and protanope vision. For NDVI values between 0 and 1 (the right half of the palette), the colors also have sufficient contrast for the colors to be distinguishable by both tritanope and achomatic vision. Appendix A contains an approximate representation of the color palette for each vision type. We obtained all color palettes from the `khroma` package [v. 1.14.0, @frerebeau_khroma_2024] for `R` [v. 4.4.1, @r_core_team_r_2024].
 
 ## Input data
 
-Maps are in Aappendix A.
+The models we fit 
+
+### NDVI data
+
+* daily AVHRR-VIIRS
+* 15-day average and `aggregate(, 2)` to make dataset small enough to fit in a single data frame
+
+```{r, eval=FALSE}
+# approximate estimate of the number of unique DOY values
+length(unique(seq(1, 365.25 * (2025 - 1981), by = 15) %% c(365, 365, 365, 366)))
+```
+
+### Predictor data
+
+Maps are in Appendix A.
+
+## Modeling
+
+We estimated spatiotemporal trends in mean NDVI using Hierarchical Generalized Additive Models (HGAMs) via the `mgcv` package for `R` [v. 1.9-3, @wood_generalized_2017]. To reduce modeling fitting times with negligible losses to model accuracy, we used the `bam()` function with fast REstricted Marginal Likelihood (`method = fREML`) and covariate discretization (`discrete = TRUE`). The model structure is available below.
+
+```{r, eval=FALSE}
+# the model for the mean
+```
+
 
 # Results
 
@@ -119,13 +157,20 @@ hex plots of mean and var vs common metrics:
 * precip
 * seasonal temperature range
 * spp diversity
-* net primary productivity
+* gross primary productivity
 * hfi
 * max animal weight
+* https://silvis.forest.wisc.edu/globalwui/
+* https://silvis.forest.wisc.edu/data/dhis/:
+  * NDVI16 (Normalized Difference Vegetation Index)
+  * EVI16 (Enhanced Vegetation Index)
+  * FPAR8 (Fraction absorbed Photosynthetically Active Radiation)
+  * LAI8 (Leaf Area Index)
+  * GPP8 (Gross Primary Productivity)
+* https://silvis.forest.wisc.edu/data/eurasia-trends/
 
 # Discussion
 
-* detecting state shifts
 * green wave surfing
 * migration routes are key habitat (Ortega et al., in prep), especially in stochastic environments
 * @sawyer_migratory_2019
@@ -136,8 +181,15 @@ hex plots of mean and var vs common metrics:
 * https://www.nature.com/articles/s41467-023-37750-z
 * https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/ecy.4238
 * see data for snow and pronghorn paper (Aikens et al. 2025)
+* detecting regime shifts [in lakes: @bjorndahl_abrupt_2022]
 
 * smoothness of mu impacts smoothness and size of s2: depends on animals' ability to respond to, learn, and predict E(R)
+
+## Why not use machine learning? / Advantages of not using ML
+
+arguably, GAMs can be considered as a form of ML, but we are referring to NNs and other forms of black-box ML.
+
+\clearpage
 
 # Useful references
 
@@ -158,5 +210,7 @@ hex plots of mean and var vs common metrics:
 * @pease_ecological_2024
 * @xu_plasticity_2021
 * @mezzini_how_2025
+
+\clearpage
 
 # References
