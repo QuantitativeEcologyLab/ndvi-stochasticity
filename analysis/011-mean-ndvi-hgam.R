@@ -9,39 +9,43 @@ source('functions/add_nb.R')
 
 ecoregions <- st_read('data/ecoregions/ecoregions-polygons.shp')
 
-# resolution is (0.05 degrees)^2 = (3 degree minutes)^2
-# create raster of ecoregion
-r_eco <- rast('data/ecoregions/wwf-ecoregions.tif')
-
-# create raster of polygon ID
-r_poly_id <- rast('data/ecoregions/ecoregion-polygon-id.tif')
-
-# get raster of elevations
-r_elev <- rast('data/elev-raster.tif')
-
-# create raster of distance from coast
-r_dist <- rast('data/distance-from-coast-m.tif')
-
 # set up the data for the model
 if(file.exists('data/hbam-ndvi-data.rds')) {
   d <- readRDS('data/hbam-ndvi-data.rds')
 } else {
-  d <- readRDS('data/ndvi-global-15-day-average.rds') %>%
-    #' use `exact_extract()` for more data?
-    mutate(
-      doy = lubridate::yday(central_date),
-      poly_id = exactextract::exact_extract(r_poly_id, data.frame(x, y))[, 2], # 1 is pixel ID
-      wwf_ecoregion = exactextract::exact_extract(r_eco, data.frame(x, y))[, 2],
-      # distance_coast_m = exactextract::exact_extract(r_dist, data.frame(x, y))[, 2],
-      elevation_m = exactextract::exact_extract(r_elev, data.frame(x, y))[, 2]) %>%
-    # convert strings to factors
-    mutate(wwf_ecoregion = paste(wwf_ecoregion, if_else(y < 0, 'S', 'N')),
-           wwf_ecoregion = factor(wwf_ecoregion))
+  # resolution is (0.05 degrees)^2 = (3 degree minutes)^2
+  # create raster of ecoregion
+  r_eco <- rast('data/ecoregions/wwf-ecoregions.tif')
   
-  apply(d, \(.row) any(is.na(.row))) %>%
-    mean()
+  # create raster of polygon ID
+  r_poly_id <- rast('data/ecoregions/ecoregion-polygon-id.tif')
+  
+  # get raster of elevations
+  r_elev <- rast('data/elev-raster.tif')
+  
+  # create raster of distance from coast
+  r_dist <- rast('data/distance-from-coast-m.tif')
+  
+  # takes a few minutes to import
+  d0 <- readRDS('data/ndvi-global-15-day-average.rds')
+  
+  tictoc::tic()
+  #' `exactextractr::exact_extract()` fails due to bad  class for coords
+  #' takes 2.3 hours on EME linux
+  d <- d0 %>%
+    mutate(
+      year = lubridate::year(central_date),
+      doy = lubridate::yday(central_date),
+      poly_id = extract(r_poly_id, data.frame(x, y))[, 2], # 1 is pixel ID
+      wwf_ecoregion = extract(r_eco, data.frame(x, y))[, 2],
+      # distance_coast_m = extract(r_dist, data.frame(x, y)))[, 2],
+      elevation_m = extract(r_elev, data.frame(x, y))[, 2]) %>%
+    # convert strings to factors while separating the two hemispheres
+    mutate(wwf_ecoregion = paste(wwf_ecoregion, if_else(y < 0, 'S', 'N')) %>%
+             factor())
   
   d <- na.omit(d)
+  nrow(d) / nrow(d0) # ~1% data loss due to NAs
   
   # some excessively low elevations for coastal pixels sea level
   # occurs mostly near islands; leaving values as they are because it helps
@@ -56,6 +60,11 @@ if(file.exists('data/hbam-ndvi-data.rds')) {
   d <- mutate(d, elevation_m = if_else(elevation_m < 0, 0, elevation_m))
   
   saveRDS(d, 'data/hbam-ndvi-data.rds')
+  tictoc::toc()
+  
+  # clean up before fitting models
+  rm(d0)
+  gc()
 }
 
 # create list of neighbors ----
@@ -101,35 +110,60 @@ if(file.exists('data/ecoregions/poly-nbs-global.rds')) {
   saveRDS(nbs, 'data/ecoregions/poly-nbs-global.rds')
 }
 
+# ensure names match the factor levels
 all(attr(nbs, 'region.id') == ecoregions$poly_id)
 
 d <- mutate(d, poly_id = factor(poly_id, levels = names(nbs)))
 
-# fit the model for estimating mean NDVI ----
-if(length(list.files('models/global-test', 'hbam-mean-ndvi-*')) > 1) {
-  DATE <- '2025-04-XX'
-  m <- readRDS(paste0('models/global-test/hbam-mean-ndvi-', DATE, '.rds'))
+DATE <- format(Sys.Date(), '%Y-%m-%d')
+
+#' *TEMPORARY VARIABLE FOR PROPORTION OF DATA*
+SAMPLE <- sample(1:(nrow(d) / 3),      # only first part of the years
+                 floor(nrow(d) / 1e4)) # only a subset of the rows
+
+if(file.exists('models/global-models/hbam-mean-ndvi-DATE.rds')) {
+  m <- readRDS(paste0('models/global-models/hbam-mean-ndvi-DATE.rds'))
 } else {
-  DATE <- format(Sys.time(), '%Y-%m%-%d-%H-%M-%S')
-  
-  m <- bam(
+  m_fe <- bam(
     ndvi_15_day_mean ~
-      wwf_ecoregion +
+      wwf_ecoregion + # to avoid intercept shrinkage
       s(poly_id, bs = 'mrf', xt = list(nb = nbs)) +
-      s(doy, by = wwf_ecoregion, bs = 'cc', k = 10) +
-      s(year, by = wwf_ecoregion, bs = 'cr', k = 10) +
-      ti(doy, year, by = wwf_ecoregion, bs = c('cc', 'cr'), k = c(5, 10)) +
+      s(doy, wwf_ecoregion, bs = 'fs', xt = list(bs = 'cc'), k = 10) +
+      s(year, wwf_ecoregion, bs = 'fs', xt = list(bs = 'cr'), k = 10) +
+      ti(doy, year, wwf_ecoregion, bs = c('cc', 'cr', 're'), k = c(5, 5)) +
       s(elevation_m, bs = 'cr', k = 5),
     family = gaussian(),
-    data = d,
+    #' *TEMPORARY TEST (\/ DELETE)*
+    data = d[1:(nrow(d) / 3), ],
     method = 'fREML',
     knots = list(doy = c(0.5, 366.5)),
-    drop.unused.levels = FALSE,
+    drop.unused.levels = TRUE,
     discrete = TRUE,
-    control = gam.control(nthreads = 1, trace = TRUE))
+    samfrac = 0.001, # find intial guesses with a subset of the data
+    nthreads = 50,
+    control = gam.control(trace = TRUE))
   
-  saveRDS(m, paste0('models/global-test/hbam-mean-ndvi-', DATE, '.rds'))
+  saveRDS(m_fe, paste0('models/global-models/mean-ndvi-hbam-', DATE, '.rds'))
 }
+
+#' plot each smooth separately
+p_hbam_doy <- draw(m_fe, rug = FALSE,
+                   select = which(grepl('s(doy', smooths(m_fe))))
+ggsave(paste0('figures/hbam-mean-ndvi-fe-doy-', DATE, '.png'),
+       plot = p_hbam_doy, width = 24, height = 36, units = 'in', dpi = 300,
+       bg = 'white')
+
+p_hbam_y <- draw(m_fe, rug = FALSE,
+                 select = which(grepl('s(year', smooths(m_fe))))
+ggsave(paste0('figures/hbam-mean-ndvi-fe-year-', DATE, '.png'),
+       plot = p_hbam_y, width = 24, height = 36, units = 'in', dpi = 300,
+       bg = 'white')
+
+p_hbam_elev <- draw(m_fe, rug = FALSE,
+                    select = which(smooths(m_fe) == 's(elev_m)'))
+ggsave(paste0('figures/hbam-mean-ndvi-fe-elev_m-', DATE, '.png'),
+       plot = p_hbam_elev, width = 4, height = 6, units = 'in', dpi = 300,
+       bg = 'white')
 
 p_hbam <- draw(m, rug = FALSE, - which(smooths(m) == 's(poly_id)'))
 
