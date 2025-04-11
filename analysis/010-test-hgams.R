@@ -260,7 +260,7 @@ tibble(model = 0:3,
        }))
 
 # model dev_expl terms
-#   m0      XXXX s(elevation_m), s(doy)
-#   m1      XXXX s(elevation_m), s(doy,wwf_ecoregion)
-#   m2      XXXX s(elevation_m), s(doy,wwf_ecoregion), s(poly_id)
-#   m3      XXXX s(elevation_m), s(doy):wwf_ecoregion + wwf_ecoregion + poly_id
+#   m0      14.3 s(elevation_m), s(doy)
+#   m1      57.5 s(elevation_m), s(doy,wwf_ecoregion)
+#   m2      67.9 s(elevation_m), s(doy,wwf_ecoregion), s(poly_id)
+#   m3      67.9 s(elevation_m), s(doy):wwf_ecoregion + wwf_ecoregion + poly_id
