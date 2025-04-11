@@ -1,3 +1,5 @@
+#' *THE MODELS FIT IN THIS SCRIPT ARE FOR INITIAL TESTING ONLY*
+#' *DO NOT USE THESE MODELS TO PREDICT*
 library('dplyr')   # for data wrangling
 library('purrr')   # for functional programming
 library('sf')      # for shapefiles
@@ -12,7 +14,7 @@ source('functions/add_nb.R')
 ecoregions <- st_read('data/ecoregions/ecoregions-polygons.shp')
 
 # resolution is (0.05 degrees)^2 = (3 degree minutes)^2
-r_0 <- rast('data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v005_AVH13C1_NOAA-07_19810624_c20170610041337.nc',
+r_0 <- rast('H:/GitHub/ndvi-stochasticity/data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v005_AVH13C1_NOAA-07_19810624_c20170610041337.nc',
             lyr = 'QA') %>% # to have a value for each cell irrespective of raster
   aggregate(2) # because aggregated in the dataset
 values(r_0) <- 1
@@ -91,11 +93,11 @@ if(file.exists('data/hbam-ndvi-data-2020-2021-only.rds')) {
 if(FALSE) {
   plot(st_geometry(ecoregions))
   d %>%
-    filter(elevation_m < -20) %>%
+    filter(elevation_m < 0) %>%
     points(y ~ x, ., col = 'red', pch = 19)
 }
 
-d <- mutate(d, elevation_m = if_else(elevation_m < -20, 0, elevation_m))
+d <- mutate(d, elevation_m = if_else(elevation_m < 0, 0, elevation_m))
 
 # create list of neighbors ----
 ecoregions$in_data <- ecoregions$poly_id %in% unique(d$poly_id)
@@ -116,11 +118,13 @@ nbs <- spdep::poly2nb(pl = ecoregions,
                       row.names = ecoregions$poly_id, # so that names match IDs
                       queen = TRUE) # 1 point in common is sufficient
 length(nbs) == nrow(ecoregions)
-names(nbs) <- attr(nbs, 'region.id') # names do not need to match indices
+names(nbs) <- ecoregions$poly_id # names do not need to match indices
 
 # add missing neighbors because of polygons that cross the edge of the map
 c('poly 8225', 'poly 8038', 'poly 7987', 'poly 8226', 'poly 7988', 'poly 8040') %in%
   ecoregions$poly_id
+c('poly 8225', 'poly 8038', 'poly 7987', 'poly 8226', 'poly 7988', 'poly 8040') %in%
+  names(nbs)
 
 layout(matrix(1:6, ncol = 2))
 # 7987 and 8038 are already neighbors
@@ -134,26 +138,30 @@ add_nb(p1 = 'poly 7988', p2 = 'poly 8038', add = TRUE)
 add_nb('poly 8980', 'poly 8987', add = TRUE)
 layout(1)
 
-all(attr(nbs, 'region.id') == ecoregions$poly_id)
+all(names(nbs) == ecoregions$poly_id)
 
-d <- mutate(d, poly_id = factor(poly_id, levels = names(nbs)))
+d <- d %>%
+  mutate(poly_id = factor(poly_id, levels = names(nbs)),
+         wwf_ecoregion = paste(wwf_ecoregion, if_else(y > 0, 'N', 'S')) %>%
+           factor())
 
 # global smooths only
 # 2020 only: initial is 34 s, fit is 5 s
 # 2020 and 2021: initial is 40 s, fit is 10 s
+# 2020 and 2021 on EME linux: initial is 50 s, fit is 10 s
 if(file.exists('models/global-test/m0-2020-2021-gam.rds')) {
   m0 <- readRDS('models/global-test/m0-2020-2021-gam.rds')
 } else {
   m0 <- bam(ndvi_15_day_mean ~
               s(elevation_m, bs = 'cr', k = 5) +
-              s(log(distance_coast_m), bs ='cr', k = 5) +
               s(doy, bs = 'cc', k = 10),
             family = gaussian(), # much faster than betar() with similar results
             data = d,
             method = 'fREML',
             knots = list(doy = c(0.5, 366.5)),
             discrete = TRUE,
-            control = gam.control(nthreads = 1, trace = TRUE))
+            nthreads = 10,
+            control = gam.control(trace = TRUE))
   draw(m0, rug = FALSE)
   saveRDS(m0, 'models/global-test/m0-2020-2021-gam.rds')
 }
@@ -161,32 +169,34 @@ if(file.exists('models/global-test/m0-2020-2021-gam.rds')) {
 # adding s(doy, ecoregion); no common doy effect across all ecoregions
 # 2020 only: initial is 23 s, fit is 38 s (almost all in first iteration)
 # 2020 and 2021: initial is 50 s, fit is 80 s (almost all in first iteration)
+# 2020 and 2021 on EME linux using 10 threads: initial is 46 s, fit is 51 s
 if(file.exists('models/global-test/m1-2020-2021-gam.rds')) {
   m1 <- readRDS(m1, 'models/global-test/m1-2020-2021-gam.rds')
 } else {
   m1 <- bam(ndvi_15_day_mean ~
               s(elevation_m, bs = 'cr', k = 5) +
-              s(log(distance_coast_m), bs ='cr', k = 5) +
               s(doy, wwf_ecoregion, bs = 'fs', xt = list(bs = 'cc'), k = 10),
             family = gaussian(),
             data = d,
             method = 'fREML',
             knots = list(doy = c(0.5, 366.5)),
             discrete = TRUE,
-            control = gam.control(nthreads = 1, trace = TRUE))
+            samfrac = 0.01,
+            nthreads = 10,
+            control = gam.control(trace = TRUE))
   draw(m1, rug = FALSE)
   saveRDS(m1, 'models/global-test/m1-2020-2021-gam.rds')
 }
 
 # adding polygon_id MRF (much, much slower...)
 # 2020 only: initial is 53 s, fit is 1.3 hours
-# 2020 and 2021: initial is 11 s, fit is 1.6 hours
+# 2020 and 2021: initial is XX s, fit is 1.6 hours
+# 2020 and 2021 on EME linux using 10 threads: initial is ~60 s, fit is 20 min
 if(file.exists('models/global-test/m2-2020-2021-gam.rds')) {
   m2 <- readRDS(m2, 'models/global-test/m2-2020-2021-gam.rds')
 } else {
   m2 <- bam(ndvi_15_day_mean ~
               s(elevation_m, bs = 'cr', k = 5) +
-              s(log(distance_coast_m), bs ='cr', k = 5) +
               s(doy, wwf_ecoregion, bs = 'fs', xt = list(bs = 'cc'), k = 10) +
               s(poly_id, bs = 'mrf', xt = list(nb = nbs)),
             family = gaussian(),
@@ -195,16 +205,17 @@ if(file.exists('models/global-test/m2-2020-2021-gam.rds')) {
             knots = list(doy = c(0.5, 366.5)),
             drop.unused.levels = FALSE,
             discrete = TRUE,
-            control = gam.control(nthreads = 1, trace = TRUE))
-  draw(m2, rug = FALSE, select = -4)
+            nthreads = 10,
+            control = gam.control(trace = TRUE))
+  draw(m2, rug = FALSE, select = 1:2)
   saveRDS(m2, 'models/global-test/m2-2020-2021-gam.rds')
 }
 
 # unexplained deviance, starting from second iteration (it's 0 at iteration 1)
 # for 2020 data only
-plot(2:16,
-     c(350145, 349113, 346434, 342350, 338839, 337245, 336736, 336517,
-       336447, 336425, 336418, 336416, 336415, 336415, 336415), type = 'l',
+plot(2:14,
+     c(630903, 630326, 629312, 628184, 627524, 627288, 627211, 627188, 627174,
+       627171, 627170, 627170, 627170), type = 'l',
      ylab = 'Deviance', xlab = 'Iteration')
 
 d %>%
@@ -223,17 +234,18 @@ if(file.exists('models/global-test/m3-2020-2021-gam.rds')) {
   m3 <- readRDS('models/global-test/m3-2020-2021-gam.rds')
 } else {
   m3 <- bam(ndvi_15_day_mean ~
-              wwf_ecoregion +
+              wwf_ecoregion + # to avoid shrinkage of intercepts
               s(elevation_m, bs = 'cr', k = 5) +
-              s(log(distance_coast_m), bs ='ad', k = 10) +
-              s(doy, by = wwf_ecoregion, bs = 'cc', k = 10) +
-              poly_id,
+              s(doy, wwf_ecoregion, bs = 'fs', xt = list(bs = 'cc'), k = 10) +
+              poly_id, # to check if not using MRF saves a lot of time
             family = gaussian(),
             data = d,
             method = 'fREML',
             knots = list(doy = c(0.5, 366.5)),
             discrete = TRUE,
-            control = gam.control(nthreads = 1, trace = TRUE))
+            nthreads = 10,
+            control = gam.control(trace = TRUE))
+  
   draw(m3, rug = FALSE)
   saveRDS(m3, 'models/global-test/m3-2020-2021-gam.rds')
 }
@@ -247,8 +259,8 @@ tibble(model = 0:3,
          paste(smooths(.m), collapse = ', ')
        }))
 
-# model dev_expl smooths
-#   m0      16.3 s(elevation_m), s(log(distance_coast_m)), s(doy)
-#   m1      53.4 s(elevation_m), s(log(distance_coast_m)), s(doy,wwf_ecoregion)
-#   m2      64.8 s(elevation_m), s(log(distance_coast_m)), s(doy,wwf_ecoregion), s(poly_id)
-#   m3      64.8 s(elevation_m), s(log(distance_coast_m)), s(doy):wwf_ecoregion + wwf_ecoregion + poly_id
+# model dev_expl terms
+#   m0      XXXX s(elevation_m), s(doy)
+#   m1      XXXX s(elevation_m), s(doy,wwf_ecoregion)
+#   m2      XXXX s(elevation_m), s(doy,wwf_ecoregion), s(poly_id)
+#   m3      XXXX s(elevation_m), s(doy):wwf_ecoregion + wwf_ecoregion + poly_id
