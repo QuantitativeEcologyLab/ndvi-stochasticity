@@ -13,68 +13,68 @@ source('functions/add_nb.R')
 
 ecoregions <- st_read('data/ecoregions/ecoregions-polygons.shp')
 
-# resolution is (0.05 degrees)^2 = (3 degree minutes)^2
-r_0 <- rast('H:/GitHub/ndvi-stochasticity/data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v005_AVH13C1_NOAA-07_19810624_c20170610041337.nc',
-            lyr = 'QA') %>% # to have a value for each cell irrespective of raster
-  aggregate(2) # because aggregated in the dataset
-values(r_0) <- 1
-plot(r_0)
-res(r_0)
-
-# create raster of ecoregion
-if(file.exists('data/ecoregions/wwf-ecoregions.tif')) {
-  r_eco <- rast('data/ecoregions/wwf-ecoregions.tif')
-} else {
-  r_eco <-
-    ecoregions %>%
-    select(WWF_MHTNAM) %>%
-    vect() %>%
-    rasterize(r_0, field = 'WWF_MHTNAM')
-  plot(r_eco, legend = FALSE)
-  writeRaster(r_eco, 'data/ecoregions/wwf-ecoregions.tif')
-}
-
-# create raster of polygon ID
-if(file.exists('data/ecoregions/ecoregion-polygon-id.tif')) {
-  r_poly_id <- rast('data/ecoregions/ecoregion-polygon-id.tif')
-} else {
-  r_poly_id <-
-    ecoregions %>%
-    select(poly_id) %>%
-    vect() %>%
-    rasterize(r_0, field = 'poly_id')
-  plot(r_poly_id, legend = FALSE)
-  writeRaster(r_poly_id, 'data/ecoregions/ecoregion-polygon-id.tif')
-}
-
-# get raster of elevations
-if(file.exists('data/elev-raster.tif')) {
-  r_elev <- rast('data/elev-raster.tif')
-} else {
-  r_elev <- get_elev_raster(ecoregions, z = 3) #'`z=3` gives `0.076 < res(r_0)`
-  r_elev <- rast(r_elev) #' `{elevatr}` v.0.99.0 still uses `raster::raster()`
-  res(r_elev)
-  res(r_0)
-  plot(r_elev)
-  r_elev <- project(r_elev, r_0) # project to common projection and resolution
-  writeRaster(r_elev, 'data/elev-raster.tif')
-}
-
-# create raster of distance from coast
-if(file.exists('data/distance-from-coast-m.tif')) {
-  r_dist <- rast('data/distance-from-coast-m.tif')
-} else {
-  r_dist <- mask(r_0, vect(ecoregions), inverse = TRUE) %>%
-    distance()
-  r_dist <- mask(r_dist, st_transform(ecoregions, crs(r_dist)))
-  plot(r_dist, main = 'Distance from coast (m)')
-  plot(log10(r_dist), main = expression(bold(log['10'](Distance~(m)))))
-  writeRaster(r_dist, 'data/distance-from-coast-m.tif')
-}
-
 if(file.exists('data/hbam-ndvi-data-2020-2021-only.rds')) {
   d <- readRDS('data/hbam-ndvi-data-2020-2021-only.rds')
 } else {
+  # resolution is (0.05 degrees)^2 = (3 degree minutes)^2
+  r_0 <- rast('H:/GitHub/ndvi-stochasticity/data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v005_AVH13C1_NOAA-07_19810624_c20170610041337.nc',
+              lyr = 'QA') %>% # to have a value for each cell irrespective of raster
+    aggregate(2) # because aggregated in the dataset
+  values(r_0) <- 1
+  plot(r_0)
+  res(r_0)
+  
+  # create raster of ecoregion
+  if(file.exists('data/ecoregions/wwf-ecoregions.tif')) {
+    r_eco <- rast('data/ecoregions/wwf-ecoregions.tif')
+  } else {
+    r_eco <-
+      ecoregions %>%
+      select(WWF_MHTNAM) %>%
+      vect() %>%
+      rasterize(r_0, field = 'WWF_MHTNAM')
+    plot(r_eco, legend = FALSE)
+    writeRaster(r_eco, 'data/ecoregions/wwf-ecoregions.tif')
+  }
+  
+  # create raster of polygon ID
+  if(file.exists('data/ecoregions/ecoregion-polygon-id.tif')) {
+    r_poly_id <- rast('data/ecoregions/ecoregion-polygon-id.tif')
+  } else {
+    r_poly_id <-
+      ecoregions %>%
+      select(poly_id) %>%
+      vect() %>%
+      rasterize(r_0, field = 'poly_id')
+    plot(r_poly_id, legend = FALSE)
+    writeRaster(r_poly_id, 'data/ecoregions/ecoregion-polygon-id.tif')
+  }
+  
+  # get raster of elevations
+  if(file.exists('data/elev-raster.tif')) {
+    r_elev <- rast('data/elev-raster.tif')
+  } else {
+    r_elev <- get_elev_raster(ecoregions, z = 3) #'`z=3` gives `0.076 < res(r_0)`
+    r_elev <- rast(r_elev) #' `{elevatr}` v.0.99.0 still uses `raster::raster()`
+    res(r_elev)
+    res(r_0)
+    plot(r_elev)
+    r_elev <- project(r_elev, r_0) # project to common projection and resolution
+    writeRaster(r_elev, 'data/elev-raster.tif')
+  }
+  
+  # create raster of distance from coast
+  if(file.exists('data/distance-from-coast-m.tif')) {
+    r_dist <- rast('data/distance-from-coast-m.tif')
+  } else {
+    r_dist <- mask(r_0, vect(ecoregions), inverse = TRUE) %>%
+      distance()
+    r_dist <- mask(r_dist, st_transform(ecoregions, crs(r_dist)))
+    plot(r_dist, main = 'Distance from coast (m)')
+    plot(log10(r_dist), main = expression(bold(log['10'](Distance~(m)))))
+    writeRaster(r_dist, 'data/distance-from-coast-m.tif')
+  }
+  
   d <- bind_rows(readRDS('data/ndvi-global-15-day-average-2020-only.rds'),
                  readRDS('data/ndvi-global-15-day-average-2021-only.rds')) %>%
     #' use `exact_extract()` for more data?
@@ -171,7 +171,7 @@ if(file.exists('models/global-test/m0-2020-2021-gam.rds')) {
 # 2020 and 2021: initial is 50 s, fit is 80 s (almost all in first iteration)
 # 2020 and 2021 on EME linux using 10 threads: initial is 46 s, fit is 51 s
 if(file.exists('models/global-test/m1-2020-2021-gam.rds')) {
-  m1 <- readRDS(m1, 'models/global-test/m1-2020-2021-gam.rds')
+  m1 <- readRDS('models/global-test/m1-2020-2021-gam.rds')
 } else {
   m1 <- bam(ndvi_15_day_mean ~
               s(elevation_m, bs = 'cr', k = 5) +
@@ -193,7 +193,7 @@ if(file.exists('models/global-test/m1-2020-2021-gam.rds')) {
 # 2020 and 2021: initial is XX s, fit is 1.6 hours
 # 2020 and 2021 on EME linux using 10 threads: initial is ~60 s, fit is 20 min
 if(file.exists('models/global-test/m2-2020-2021-gam.rds')) {
-  m2 <- readRDS(m2, 'models/global-test/m2-2020-2021-gam.rds')
+  m2 <- readRDS('models/global-test/m2-2020-2021-gam.rds')
 } else {
   m2 <- bam(ndvi_15_day_mean ~
               s(elevation_m, bs = 'cr', k = 5) +
