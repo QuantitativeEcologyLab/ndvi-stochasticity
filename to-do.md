@@ -1,9 +1,10 @@
-- could add distance to edge of polygon (after fusing polygons together at the island level)?
-- subtract pixel-level mean residual before calculating the variance
+# mean modeling
+- 
+
+# variance modeling
+- subtract pixel-level mean residual before calculating the variance?
 - add pixel-level mean residual to the mean?
-- find n of data points necessary for a stable estimate of variance for a given pixel: plot(var(resid) ~ n)
 
 # products
-- static raster for GIS people
+- static raster for GIS people: exclude `s(year)`, `s(doy)`, and `ti(year,doy)`
 - shiny app for predicting from the model given the data
-- 
