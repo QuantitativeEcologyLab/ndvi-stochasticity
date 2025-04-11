@@ -135,7 +135,7 @@ if(file.exists('models/global-models/hbam-mean-ndvi-DATE.rds')) {
     drop.unused.levels = TRUE,
     discrete = TRUE,
     samfrac = 0.001, # find intial guesses with a subset of the data
-    nthreads = 50,
+    nthreads = future::availableCores(logical = FALSE) - 2,
     control = gam.control(trace = TRUE))
   
   saveRDS(m, paste0('models/global-models/mean-ndvi-hbam-', DATE, '.rds'))

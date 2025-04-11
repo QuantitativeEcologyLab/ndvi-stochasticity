@@ -31,7 +31,7 @@ if(length(list.files('models/global-test', 'hbam-var-ndvi-*')) > 1) {
     drop.unused.levels = TRUE, # FALSE slows down the model substantially
     discrete = TRUE,
     samfrac = 0.001, # find intial guesses with a subset of the data
-    nthreads = 50,
+    nthreads = future::availableCores(logical = FALSE) - 2,
     control = gam.control(trace = TRUE))
   
   saveRDS(m, paste0('models/global-test/hbam-var-ndvi-', DATE, '.rds'))
