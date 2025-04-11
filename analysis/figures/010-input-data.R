@@ -106,11 +106,20 @@ ggsave('figures/input-data/ecoregions.png', p_eco,
 r_elev <- rast('data/elev-raster.tif') %>%
   crop(., st_transform(eco, crs(.)), mask = TRUE)
 
-hist(r_elev)
-values(r_elev) <- if_else(values(r_elev) < -400, -400, values(r_elev))
-
+# change coastal values to 0 m above sea level
 ggplot() +
   geom_spatraster(data = r_elev < 0)
+
+# qattara depression and dead sea are < 0 m but also separate polygons
+ggplot() +
+  geom_spatraster(data = r_elev < 0) +
+  scale_fill_manual(values = c('white', 'red'))
+
+hist(r_elev, breaks = 1000)
+abline(v = 0, col = 'red')
+mean(values(r_elev < 0), na.rm = TRUE)
+
+values(r_elev) <- if_else(values(r_elev) < 0, 0, values(r_elev))
 
 p_elev <-
   ggplot() +
@@ -167,7 +176,7 @@ p_n <-
 p_n
 
 ggsave('figures/input-data/n-rasters-time.png', p_n,
-       width = 8, height = 5, units = 'in', dpi = 300, bg = 'white')
+       width = 10, height = 5, units = 'in', dpi = 300, bg = 'white')
 
 #' function similar to `khroma::plot_scheme_colorblind()`
 plot_pal <- function(pal) {
@@ -196,8 +205,8 @@ plot_grid(NULL,
           # plot_pal(color('davos')(1e3)),
           # NULL,
           plot_pal(rev(color('lapaz')(1e3))),
-          label_x = 0, ncol = 4,  rel_widths = c(0.03, 1),
-          labels = c('A.', '', 'B.', '', 'C.', '', 'D.', '', 'E.'))
+          label_x = 0, ncol = 4,  rel_widths = c(0.075, 1),
+          labels = c('A2.', '', 'A3.', '', 'A4.', '', 'A5.'))
 
 ggsave('figures/input-data/color-palettes.png', width = 8, height = 6,
        scale = 2, units = 'in', dpi = 300, bg = 'white')

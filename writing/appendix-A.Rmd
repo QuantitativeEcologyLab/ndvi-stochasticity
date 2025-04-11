@@ -1,0 +1,81 @@
+---
+title: \large A new global measure of environmental unpredictability 
+subtitle: Appendix A
+author:
+  - name: Stefano Mezzini
+    institute: [braes, biol]
+  - name: Michael J. Noonan
+    email: michael.noonan@ubc.ca
+    institute: [braes, biol, cmps]
+    correspondence: "yes"
+institute:
+  - braes: Okanagan Institute for Biodiversity, Resilience, and Ecosystem Services, The University of British Columbia Okanagan, Kelowna, British Columbia, Canada.
+  - biol: Department of Biology, The University of British Columbia Okanagan, Kelowna, British Columbia, Canada.
+  - cmps: Department of Computer Science, Math, Physics, and Statistics, The University of British Columbia Okanagan, Kelowna, British Columbia, Canada.
+bibliography: 'ndvi-stochasticity.bib'
+csl: 'freshwater-biology.csl'
+fontsize: 12pt
+indent: true
+header-includes:
+    - \renewcommand{\figurename}{Figure A\!\!} # for "Figure Ax."
+    - \usepackage{setspace}\doublespacing # for double-spaced text
+    - \usepackage{indentfirst} # for indenting first line of each paragraph
+    - \usepackage[small]{titlesec} # for smaller font for headings
+    - \usepackage{caption} # for more customization of captions
+    - \captionsetup[figure]{font={scriptsize, doublespacing}, labelfont=bf, aboveskip=4pt, belowskip=-15pt}
+    - \usepackage{hanging} # for hanging indents in references
+    - \usepackage[left]{lineno} # for line numbers
+subparagraph: true # needed for \usepackage[small]{titlesec}
+output:
+  bookdown::pdf_document2:
+    pandoc_args:
+# https://github.com/pandoc/lua-filters/blob/master/author-info-blocks/README.md
+      - '--lua-filter=scholarly-metadata.lua'
+      - '--lua-filter=author-info-blocks.lua'
+    toc: false
+    number_sections: false
+    keep_tex: false # for submitting TeX file
+editor_options:
+  chunk_output_type: console
+---
+
+\clearpage
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, out.width = '100%', fig.align = 'center')
+```
+
+```{r packages, warning=FALSE}
+library('knitr')
+```
+
+\noindent Figure A1 below illustrates the color palettes used in this appendix, for each type of vision (trichromatic, deuteranope, protanope, tritanope, and achomatic). Palette A was created by Masataka Okabe and Kei Ito [@okabe_color_2008], while the other palettes were created by Fabio Crameri [@crameri_geodynamic_2018; @crameri_scientific_2018]. All palettes below are available via the `khroma` package [@frerebeau_khroma_2024] for `R` [@r_core_team_r_2024]. Figures A2-A5 show some of the data used for fitting the models for estimating mean NDVI and the variance around the mean. The code for generating the figures is available [on GitHub](https://github.com/QuantitativeEcologyLab/ndvi-stochasticity/blob/main/analysis/figures/input-data.R).
+
+```{r color-palettes, fig.cap="Color palettes used in the figures below."}
+include_graphics('../figures/input-data/color-palettes.png')
+```
+
+```{r polygons, fig.cap="Map of the polygons for each ecoregion. Each polygon is colored randomly with one of 9 colors. Note that some neighboring polygons have the same color."}
+include_graphics('../figures/input-data/polygons.png')
+```
+
+```{r ecoregions, fig.cap="Map of the ecoregions. The Northern and Southern hemispheres were coded to have separate ecoregions in the model by appending \"N\" or \"S\" to the end of the ecoregion name."}
+include_graphics('../figures/input-data/ecoregions.png')
+```
+
+```{r elevation, fig.cap="Map of elevation above sea level. All elevations below 0 m were set to 0 m to fix incorrect altitudes near coast lines. Terrestrial ecosystems with elevations below 0 m (such as the Dead Sea and the Qattara Depression) have also been set to 0 m because they have their own polygons, which allows to account for any differences in the Markov Random Field smooth."}
+include_graphics('../figures/input-data/elev-m.png')
+```
+
+```{r distance-coast, fig.cap="Map of the estimated distance from the nearest coastal edge.", eval=FALSE}
+# not evaluated!
+include_graphics('../figures/input-data/dist-km.png')
+```
+
+```{r n-rasters, fig.cap="Number of days with a raster within 15-day periods starting on January $1^{\\text{st}}$, for each year. Cells with less than 15 rasters indicate one or more missing rasters for that 15-day period, which the exception of cells near day 366, which have 6 days during leap years ($366 \\mod 15 = 6$) and 5 days otherwise ($365 \\mod 15 = 5$)."}
+include_graphics('../figures/input-data/n-rasters-time.png')
+```
+
+\clearpage
+
+# References
