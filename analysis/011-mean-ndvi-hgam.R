@@ -43,7 +43,9 @@ if(file.exists('data/hbam-ndvi-data.rds')) {
   
   d <- na.omit(d)
   
-  # set excessively low elevations to sea level (occurs mostly near islands)
+  # some excessively low elevations for coastal pixels sea level
+  # occurs mostly near islands; leaving values as they are because it helps
+  # inform about the lower NDVI due to the coast
   if(FALSE) {
     plot(st_geometry(ecoregions))
     d %>%
@@ -51,7 +53,7 @@ if(file.exists('data/hbam-ndvi-data.rds')) {
       points(y ~ x, ., col = 'red', pch = 19)
   }
   
-  d <- mutate(d, elevation_m = if_else(elevation_m < -20, 0, elevation_m))
+  d <- mutate(d, elevation_m = if_else(elevation_m < 0, 0, elevation_m))
   
   saveRDS(d, 'data/hbam-ndvi-data.rds')
 }
@@ -71,34 +73,40 @@ if(FALSE) {
 
 ecoregions <- filter(ecoregions, in_data | n_neigh > 0)
 
-nbs <-
-  spdep::poly2nb(pl = ecoregions,
-                 row.names = ecoregions$poly_id, # so that names match IDs
-                 queen = TRUE) # 1 point in common is sufficient
-length(nbs) == nrow(ecoregions)
-names(nbs) <- attr(nbs, 'region.id') # names do not need to match indices
-
-# add missing neighbors because of polygons that cross the edge of the map
-c('poly 8225', 'poly 8038', 'poly 7987', 'poly 8226', 'poly 7988', 'poly 8040') %in%
-  ecoregions$poly_id
-
-layout(matrix(1:6, ncol = 2))
-# 7987 and 8038 are already neighbors
-# 7988 and 8040 are already neighbors
-# 7987 and 8226 do not touch
-add_nb(p1 = 'poly 8225', p2 = 'poly 8226', add = TRUE)
-add_nb(p1 = 'poly 8038', p2 = 'poly 8040', add = TRUE)
-add_nb(p1 = 'poly 7987', p2 = 'poly 7988', add = TRUE)
-add_nb(p1 = 'poly 7987', p2 = 'poly 8040', add = TRUE)
-add_nb(p1 = 'poly 7988', p2 = 'poly 8038', add = TRUE)
-add_nb('poly 8980', 'poly 8987', add = TRUE)
-layout(1)
+if(file.exists('data/ecoregions/poly-nbs-global.rds')) {
+  nbs <- readRDS('data/ecoregions/poly-nbs-global.rds')
+} else {
+  nbs <-
+    spdep::poly2nb(pl = ecoregions,
+                   row.names = ecoregions$poly_id, # so that names match IDs
+                   queen = TRUE) # 1 point in common is sufficient
+  length(nbs) == nrow(ecoregions)
+  names(nbs) <- attr(nbs, 'region.id') # names do not need to match indices
+  
+  # add missing neighbors because of polygons that cross the edge of the map
+  c('poly 8225', 'poly 8038', 'poly 7987', 'poly 8226', 'poly 7988', 'poly 8040') %in%
+    ecoregions$poly_id
+  
+  layout(matrix(1:6, ncol = 2))
+  # 7987 and 8038 are already neighbors
+  # 7988 and 8040 are already neighbors
+  # 7987 and 8226 do not touch
+  add_nb(p1 = 'poly 8225', p2 = 'poly 8226', add = TRUE)
+  add_nb(p1 = 'poly 8038', p2 = 'poly 8040', add = TRUE)
+  add_nb(p1 = 'poly 7987', p2 = 'poly 7988', add = TRUE)
+  add_nb(p1 = 'poly 7987', p2 = 'poly 8040', add = TRUE)
+  add_nb(p1 = 'poly 7988', p2 = 'poly 8038', add = TRUE)
+  add_nb('poly 8980', 'poly 8987', add = TRUE)
+  layout(1)
+  saveRDS(nbs, 'data/ecoregions/poly-nbs-global.rds')
+}
 
 all(attr(nbs, 'region.id') == ecoregions$poly_id)
 
 d <- mutate(d, poly_id = factor(poly_id, levels = names(nbs)))
 
-if(length(list.files('models', 'global-test/hbam-mean-ndvi-*')) > 1) {
+# fit the model for estimating mean NDVI ----
+if(length(list.files('models/global-test', 'hbam-mean-ndvi-*')) > 1) {
   DATE <- '2025-04-XX'
   m <- readRDS(paste0('models/global-test/hbam-mean-ndvi-', DATE, '.rds'))
 } else {
@@ -120,10 +128,34 @@ if(length(list.files('models', 'global-test/hbam-mean-ndvi-*')) > 1) {
     discrete = TRUE,
     control = gam.control(nthreads = 1, trace = TRUE))
   
-  saveRDS(m0, paste0('models/global-test/mean-ndvi-hbam-', DATE, '.rds'))
+  saveRDS(m, paste0('models/global-test/hbam-mean-ndvi-', DATE, '.rds'))
 }
 
 p_hbam <- draw(m, rug = FALSE, - which(smooths(m) == 's(poly_id)'))
 
 ggsave(paste0('figures/hbam-mean-ndvi-', DATE, '.png'), plot = p_hbam,
        width = 8, height = 12, units = 'in', dpi = 600, bg = 'white')
+
+# find pixel-level variance ----
+# add fitted values and residuals to the dataset
+d$mu_hat <- fitted(m)
+d$e <- residuals(m)
+
+# check pixel-level mean residuals
+d %>%
+  slice_sample(prop = 0.1) %>%
+  group_by(long, lat) %>%
+  summarize(mean_e = mean(e, na.rm = TRUE), .groups = 'drop') %>%
+  pull(mean_e) %>%
+  hist()
+
+#' **IF REMOVING PIXEL-LEVEL MEAN RESIDUAL**
+if(FALSE) {
+  d$e <- d$e - d$mean_e
+  d$mu_hat <- d$mu_hat + d$mean_e
+}
+
+# calculate pixel-level squared residual (mean e^2 is the variance)
+d$e_2 <- d$e^2
+
+saveRDS(d, 'data/hbam-var-ndvi-data.rds')
