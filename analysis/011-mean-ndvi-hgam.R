@@ -90,7 +90,7 @@ if(file.exists('data/ecoregions/poly-nbs-global.rds')) {
                    row.names = ecoregions$poly_id, # so that names match IDs
                    queen = TRUE) # 1 point in common is sufficient
   length(nbs) == nrow(ecoregions)
-  names(nbs) <- attr(nbs, 'region.id') # names do not need to match indices
+  names(nbs) <- ecoregions$poly_id # names do not need to match indices
   
   # add missing neighbors because of polygons that cross the edge of the map
   c('poly 8225', 'poly 8038', 'poly 7987', 'poly 8226', 'poly 7988', 'poly 8040') %in%
@@ -111,7 +111,7 @@ if(file.exists('data/ecoregions/poly-nbs-global.rds')) {
 }
 
 # ensure names match the factor levels
-all(attr(nbs, 'region.id') == ecoregions$poly_id)
+all(names(nbs) == levels(d$poly_id))
 
 d <- mutate(d, poly_id = factor(poly_id, levels = names(nbs)))
 
