@@ -260,7 +260,46 @@ tibble(model = 0:3,
        }))
 
 # model dev_expl terms
-#   m0      14.3 s(elevation_m), s(doy)
-#   m1      57.5 s(elevation_m), s(doy,wwf_ecoregion)
-#   m2      67.9 s(elevation_m), s(doy,wwf_ecoregion), s(poly_id)
-#   m3      67.9 s(elevation_m), s(doy):wwf_ecoregion + wwf_ecoregion + poly_id
+#   m0    14.3 % s(elevation_m), s(doy)
+#   m1    57.5 % s(elevation_m), s(doy,wwf_ecoregion)
+#   m2    67.9 % s(elevation_m), s(doy,wwf_ecoregion), s(poly_id)
+#   m3    67.9 % s(elevation_m), s(doy):wwf_ecoregion + wwf_ecoregion + poly_id
+
+# test for variance -----
+# add fitted values and residuals to the dataset
+d$mu_hat <- fitted(m2)
+d$e <- residuals(m2)
+
+# check pixel-level mean residuals
+d <- d %>%
+  group_by(x, y) %>%
+  mutate(mean_e = mean(e, na.rm = TRUE)) %>%
+  ungroup()
+
+d %>%
+  group_by(x, y) %>%
+  slice(1) %>%
+  pull(mean_e) %>%
+  hist(breaks = 50, main = 'Mean pixel-level residual')
+
+#' *IF REMOVING PIXEL-LEVEL MEAN RESIDUAL*
+d <- mutate(d,
+            e = e - mean_e,
+            e_2 = e^2, # squared residuals (mean e^2 is var)
+            mu_hat = mu_hat + mean_e)
+
+# fit the model for the variance
+m_var <- bam(ndvi_15_day_mean ~
+            s(elevation_m, bs = 'cr', k = 5) +
+            s(doy, wwf_ecoregion, bs = 'fs', xt = list(bs = 'cc'), k = 10) +
+            s(poly_id, bs = 'mrf', xt = list(nb = nbs)),
+          family = gaussian(),
+          data = d,
+          method = 'fREML',
+          knots = list(doy = c(0.5, 366.5)),
+          drop.unused.levels = FALSE,
+          discrete = TRUE,
+          nthreads = 10,
+          control = gam.control(trace = TRUE))
+draw(m_var, rug = FALSE, select = 1:2)
+saveRDS(m_var, 'models/global-test/m-var-2020-2021-gam.rds')
