@@ -117,10 +117,6 @@ d <- mutate(d, poly_id = factor(poly_id, levels = names(nbs)))
 
 DATE <- format(Sys.Date(), '%Y-%m-%d')
 
-#' *TEMPORARY VARIABLE FOR PROPORTION OF DATA*
-SAMPLE <- sample(1:(nrow(d) / 3),      # only first part of the years
-                 floor(nrow(d) / 1e4)) # only a subset of the rows
-
 if(file.exists('models/global-models/hbam-mean-ndvi-DATE.rds')) {
   m <- readRDS(paste0('models/global-models/hbam-mean-ndvi-DATE.rds'))
 } else {
@@ -133,8 +129,7 @@ if(file.exists('models/global-models/hbam-mean-ndvi-DATE.rds')) {
       ti(doy, year, wwf_ecoregion, bs = c('cc', 'cr', 're'), k = c(5, 5)) +
       s(elevation_m, bs = 'cr', k = 5),
     family = gaussian(),
-    #' *TEMPORARY TEST (\/ DELETE)*
-    data = d[1:(nrow(d) / 3), ],
+    data = d,
     method = 'fREML',
     knots = list(doy = c(0.5, 366.5)),
     drop.unused.levels = TRUE,
