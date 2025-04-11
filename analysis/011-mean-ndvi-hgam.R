@@ -124,7 +124,7 @@ SAMPLE <- sample(1:(nrow(d) / 3),      # only first part of the years
 if(file.exists('models/global-models/hbam-mean-ndvi-DATE.rds')) {
   m <- readRDS(paste0('models/global-models/hbam-mean-ndvi-DATE.rds'))
 } else {
-  m_fe <- bam(
+  m <- bam(
     ndvi_15_day_mean ~
       wwf_ecoregion + # to avoid intercept shrinkage
       s(poly_id, bs = 'mrf', xt = list(nb = nbs)) +
@@ -143,24 +143,24 @@ if(file.exists('models/global-models/hbam-mean-ndvi-DATE.rds')) {
     nthreads = 50,
     control = gam.control(trace = TRUE))
   
-  saveRDS(m_fe, paste0('models/global-models/mean-ndvi-hbam-', DATE, '.rds'))
+  saveRDS(m, paste0('models/global-models/mean-ndvi-hbam-', DATE, '.rds'))
 }
 
-#' plot each smooth separately
-p_hbam_doy <- draw(m_fe, rug = FALSE,
-                   select = which(grepl('s(doy', smooths(m_fe))))
+# plot each smooth separately
+p_hbam_doy <- draw(m, rug = FALSE,
+                   select = which(grepl('s(doy', smooths(m))))
 ggsave(paste0('figures/hbam-mean-ndvi-fe-doy-', DATE, '.png'),
        plot = p_hbam_doy, width = 24, height = 36, units = 'in', dpi = 300,
        bg = 'white')
 
-p_hbam_y <- draw(m_fe, rug = FALSE,
-                 select = which(grepl('s(year', smooths(m_fe))))
+p_hbam_y <- draw(m, rug = FALSE,
+                 select = which(grepl('s(year', smooths(m))))
 ggsave(paste0('figures/hbam-mean-ndvi-fe-year-', DATE, '.png'),
        plot = p_hbam_y, width = 24, height = 36, units = 'in', dpi = 300,
        bg = 'white')
 
-p_hbam_elev <- draw(m_fe, rug = FALSE,
-                    select = which(smooths(m_fe) == 's(elev_m)'))
+p_hbam_elev <- draw(m, rug = FALSE,
+                    select = which(smooths(m) == 's(elev_m)'))
 ggsave(paste0('figures/hbam-mean-ndvi-fe-elev_m-', DATE, '.png'),
        plot = p_hbam_elev, width = 4, height = 6, units = 'in', dpi = 300,
        bg = 'white')
