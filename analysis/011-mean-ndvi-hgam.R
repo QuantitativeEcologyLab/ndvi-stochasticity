@@ -30,7 +30,7 @@ if(file.exists('data/hbam-ndvi-data.rds')) {
   d0 <- readRDS('data/ndvi-global-15-day-average.rds')
   
   tictoc::tic()
-  #' `exactextractr::exact_extract()` fails due to bad  class for coords
+  #' `exactextractr::exact_extract()` fails due to bad class for coords
   #' takes 2.3 hours on EME linux
   d <- d0 %>%
     mutate(
@@ -134,7 +134,7 @@ if(file.exists('models/global-models/hbam-mean-ndvi-DATE.rds')) {
     knots = list(doy = c(0.5, 366.5)),
     drop.unused.levels = TRUE,
     discrete = TRUE,
-    samfrac = 0.001, # find intial guesses with a subset of the data
+    samfrac = 0.001, # find initial guesses with a subset of the data
     nthreads = future::availableCores(logical = FALSE) - 2,
     control = gam.control(trace = TRUE))
   
