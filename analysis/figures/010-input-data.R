@@ -6,6 +6,7 @@ library('cowplot')   # for fancy plots in grids
 library('tidyterra') # for plotting spatRasters with ggplot2
 library('khroma')    # for colorblind-friendly palettes
 source('analysis/figures/000-default-ggplot-theme.R')
+pal_polys <- c(color('okabeito')(8), 'grey')
 
 eco <- read_sf('data/ecoregions/ecoregions-polygons.shp') %>%
   filter(WWF_MHTNAM != 'Inland Water') %>%
@@ -72,7 +73,6 @@ if(FALSE) {
 
 # individual polygons ----
 n_distinct(eco$poly_id)
-pal_polys <- c(color('okabeito')(8), 'grey')
 plot_scheme_colorblind(pal_polys)
 ggsave('polygons-palette.png', path = 'figures/input-data',
        width = 6, height = 4, units = 'in', dpi = 300, bg = 'white')
@@ -196,15 +196,15 @@ plot_pal <- function(pal) {
 plot_pal(pal_polys)
 
 plot_grid(NULL,
-          plot_pal(pal_polys),
+          plot_pal(rev(color('lapaz')(1e3))),
           NULL,
           plot_pal(color('discreterainbow')(n_distinct(eco$WWF_MHTNAM))),
           NULL,
-          plot_pal(color('lajolla')(1e3)),
+          plot_pal(pal_polys),
           NULL,
-          # plot_pal(color('davos')(1e3)),
+          plot_pal(color('lajolla')(1e3)),
           # NULL,
-          plot_pal(rev(color('lapaz')(1e3))),
+          # plot_pal(color('davos')(1e3)),
           label_x = 0, ncol = 4,  rel_widths = c(0.075, 1),
           labels = c('A2.', '', 'A3.', '', 'A4.', '', 'A5.'))
 
