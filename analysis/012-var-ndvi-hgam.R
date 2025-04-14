@@ -18,12 +18,13 @@ if(length(list.files('models/global-test', 'hbam-var-ndvi-*')) > 1) {
 } else {
   m <- bam(
     e_2 ~
-      wwf_ecoregion + # to avoid intercept shrinkage
+      biome + # to avoid intercept shrinkage
       s(poly_id, bs = 'mrf', xt = list(nb = nbs)) +
-      s(doy, wwf_ecoregion, bs = 'fs', xt = list(bs = 'cc'), k = 10) +
-      s(year, wwf_ecoregion, bs = 'fs', xt = list(bs = 'cr'), k = 10) +
-      ti(doy, year, wwf_ecoregion, bs = c('cc', 'cr', 're'), k = c(5, 5)) +
-      s(elevation_m, bs = 'cr', k = 5),
+      s(doy, biome, bs = 'fs', xt = list(bs = 'cc'), k = 10) +
+      s(year, biome, bs = 'fs', xt = list(bs = 'cr'), k = 10) +
+      ti(doy, year, biome, bs = c('cc', 'cr', 're'), k = c(5, 5)) +
+      s(elevation_m, bs = 'cr', k = 5) +
+      s(mu_hat, bs = 'cr', k = 5),
     family = gaussian(),
     data = d,
     method = 'fREML',
