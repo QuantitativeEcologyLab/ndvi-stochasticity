@@ -120,7 +120,7 @@ ability to predict and respond to changes in mean conditions (forage availabilit
 
 ## Choice of color schemes
 
-We represent NDVI using a modified version of Fabio Crameri's divergent *bukavu* palette [@crameri_geodynamic_2018], which has high-contrast for deuteranope and protanope vision. For NDVI values between 0 and 1 (the right half of the palette), the colors also have sufficient contrast for the colors to be distinguishable by both tritanope and achomatic vision. Appendix A contains an approximate representation of the color palette for each vision type. We obtained all color palettes from the `khroma` package [v. 1.14.0, @frerebeau_khroma_2024] for `R` [v. 4.4.1, @r_core_team_r_2024].
+We represent NDVI using a modified version of Fabio Crameri's divergent *bukavu* palette [@crameri_geodynamic_2018; @crameri_misuse_2020], which has high-contrast for deuteranope and protanope vision. For NDVI values between 0 and 1 (the right half of the palette), the colors also have sufficient contrast for the colors to be distinguishable by both tritanope and achomatic vision. Appendix A contains an approximate representation of the color palette for each vision type. We obtained all color palettes from the `khroma` package [v. 1.14.0, @frerebeau_khroma_2024] for `R` [v. 4.4.1, @r_core_team_r_2024].
 
 ## Input data
 
@@ -259,6 +259,7 @@ arguably, GAMs can be considered as a form of machine learning, but we are refer
 * @pease_ecological_2024
 * @xu_plasticity_2021
 * @mezzini_how_2025
+* **TO READ:** Site fidelity as a maladaptive behavior in the Anthropocene: https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/fee.2456
 
 \clearpage
 
