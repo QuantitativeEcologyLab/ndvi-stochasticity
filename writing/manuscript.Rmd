@@ -88,10 +88,10 @@ knitr::opts_chunk$set(echo = FALSE, out.width = '100%', fig.align = 'center')
 
 <!-- remote sensing allows us to study landscapes in detail and over large spatiotemporal scales -->
 
-\noindent Developments in remote sensing since the 1970s have greatly expanded our ability to quantify and monitor lanscapes using satellite imagery
+\noindent Developments in remote sensing since the 1970s have greatly expanded our ability to quantify and monitor landscapes using satellite imagery
 
 - NDVI is an estimate of greenness, NPP, forage availability
-  - NDVI has many uses and is often convenient because it's free, well-established, and 
+- NDVI has many uses and is often convenient because it's free, well-established, and 
 
 <!-- successes of NDVI: pettorelli, Aikens -->
 
@@ -113,6 +113,8 @@ ability to predict and respond to changes in mean conditions (forage availabilit
 * more transparent than black-box machine learning methods like neural networks, etc.
 * https://www.sciencedirect.com/science/article/abs/pii/S0034425718305625
 * https://silvis.forest.wisc.edu/data/dhis/
+* we provide global rasters of the mean and variance in NDVI, averaged across 1981-2025
+* we provide a shiny app for people to calculate mean and variance without any knowledge of `R`
 
 # Methods
 
@@ -122,36 +124,88 @@ We represent NDVI using a modified version of Fabio Crameri's divergent *bukavu*
 
 ## Input data
 
-The models we fit 
+We obtained NDVI data using the image composites from the AVHRR and VIIRS sensors [@vermote_noaa_2018; @vermote_noaa_2022]. The code for downloading the data directly from the NOAA server is available at [https://github.com/QuantitativeEcologyLab/ndvi-stochasticity/blob/main/analysis/002-download-ndvi-rasters.R](https://github.com/QuantitativeEcologyLab/ndvi-stochasticity/blob/main/analysis/002-download-ndvi-rasters.R). The number of non-NA land raster cells was substantially larger than the maximum data frame size in `R` ($2.28 \times 10 ^{10} > 2^{31} - 1 \approx 0.21 \times 10^{10}$), so we reduced the dataset size by calculating 15-day averages of NDVI (see Fig. A2) and aggregating the averaged rasters by a factor of $2 \times 2$ with `terra::aggregate(fact = 2)`. Although this resulted in a reduction in sample size, the temporal averaging also reduced signal-related noise.
 
-### NDVI data
-
-* daily AVHRR-VIIRS
-* 15-day average and `aggregate(, 2)` to make dataset small enough to fit in a single data frame
+The predictor data for the models included: WWF biome [@olson_global_2002, see Fig. A3], ecoregion [the individual polygons from @olson_global_2002, see Fig. A4], integer day of year (1 to 366), integer year (1981 to 2025), and elevation above sea level (Fig. A5). We excluded all polygons that did not have any NDVI data (0.06% of land, 29% of the polygons, maximum area: $452~\text{km}^2 \approx (21~\text{km})^2$). We distinguished between biomes in the northern and southern hemisphere to allow for different seasonal trends between hemispheres. The 15-day averages allowed us to have non-repeating values of day of year across years, since 15 is not a factor of 365 or 366. We downloaded the global digital elevation model using the `get_elev_raster()` function from the `elevatr` package for `R` [v. 0.99.0, @hollister_elevatr_2023] with a resolution of 0.076 degrees.
 
 ```{r, eval=FALSE}
 # approximate estimate of the number of unique DOY values
-length(unique(seq(1, 365.25 * (2025 - 1981), by = 15) %% c(365, 365, 365, 366)))
+length(unique(lubridate::yday(as.Date('1981-09-01') + seq(0, 15800, by = 15))))
 ```
-
-### Predictor data
-
-Maps are in Appendix A.
 
 ## Modeling
 
-We estimated spatiotemporal trends in mean NDVI using Hierarchical Generalized Additive Models (HGAMs) via the `mgcv` package for `R` [v. 1.9-3, @wood_generalized_2017]. To reduce modeling fitting times with negligible losses to model accuracy, we used the `bam()` function with fast REstricted Marginal Likelihood (`method = fREML`) and covariate discretization (`discrete = TRUE`). The model structure is available below.
+We estimated spatiotemporal trends in mean NDVI using Hierarchical Generalized Additive Models (HGAMs) via the `mgcv` package for `R` [v. 1.9-3, @wood_generalized_2017]. To reduce modeling fitting times with negligible losses to model accuracy, we used the `bam()` function with fast REstricted Marginal Likelihood (`method = fREML`) and covariate discretization (`discrete = TRUE`). See @wood_generalized_2015 and @wood_generalized_2017-1 for more information. Ideally, NDVI should be modeled using beta location-scale models (after the linear transformation $Y^*=\frac{Y + 1}{2}$) to account for the fact that: (1) NDVI is bounded between -1 and 1, and (2) the variance in NDVI is dependent on the mean (and vice-versa), since ecosystems with very low NDVI (e.g., rock, ice, or concrete) or very high NDVI (e.g., dense forest) tend to have lower variance in NDVI. However, preliminary tests showed that fitting times for beta models were prohibitive, especially for beta location-scale models. Additionally, Gaussian models fit substantially faster and provided very similar spatialtemporal estimates of mean NDVI (see the `analysis/000-sardinia-test.R` script in the GitHub repository). The model for the mean NDVI had the structure below:
 
-```{r, eval=FALSE}
-# the model for the mean
+\singlespacing
+
+\scriptsize
+
+```{r m_mean, eval=FALSE, echo=TRUE}
+m_mean <- bam(
+  ndvi_15_day_mean ~
+    biome + # to avoid intercept shrinkage
+    s(poly_id, bs = 'mrf', xt = list(nb = nbs)) +
+    s(doy, biome, bs = 'fs', xt = list(bs = 'cc'), k = 10) +
+    s(year, biome, bs = 'fs', xt = list(bs = 'cr'), k = 10) +
+    ti(doy, year, biome, bs = c('cc', 'cr', 're'), k = c(5, 5)) +
+    s(elevation_m, bs = 'cr', k = 5),
+  family = gaussian(),
+  data = d,
+  method = 'fREML',
+  knots = list(doy = c(0.5, 366.5)),
+  drop.unused.levels = TRUE,
+  discrete = TRUE,
+  samfrac = 0.001, # find initial guesses with a subset of the data
+  nthreads = future::availableCores(logical = FALSE) - 2,
+  control = gam.control(trace = TRUE))
 ```
 
+\normalsize
+
+\doublespacing
+
+Biome-specific fixed-effect intercepts allowed to account for the differences in mean NDVI throught biomes without coefficient shrinkage (i.e., reversion towards the global mean). A Markov Random Field of the ecoregions [`bs = mrf`, see page ***240?*** of @wood_generalized_2017] estimated smoothed, ecoregion-specific deviations from the biome-level spatial means. Two factor-smooth interaction terms (`bs = 'fs'`) accounted for biome-specific seasonal and yearly trends. Seasonal terms were made cyclical by using cyclical cubic splines (`xt = list(bs = 'cc')`), which are continuous up to and including second derivative at the edge knots (0.5 and 366.5, which correspond to 00:00 of January 1^st^ and 24:00 of December 31^st^, respectively). A tensor product interaction smooth for each biome estimated the change in seasonal trends over the years. Finally, a smooth of elevation above sea level accounted for the effect of altitude. See @pedersen_hierarchical_2019 for more information on hierarchical modeling and the use and interpretation of factor smooth interaction terms.
+
+***will we subtract the average residual from each pixel?***
+
+A second HGAM estimated the variance in NDVI around the mean estimated by the model above. The model had an identical structure to the model for the mean, with the exception that (1) the response variable was the squared residual from the first model, such that the model estimated the mean squared residual (i.e., the variance) for a given point in time and space, and (2) a smooth term of the estimated mean NDVI. The model is available below:
+
+\singlespacing
+
+\scriptsize
+
+```{r m_var, eval=FALSE, echo=TRUE}
+m_var <- bam(
+  e_2 ~
+    biome +
+    s(poly_id, bs = 'mrf', xt = list(nb = nbs)) +
+    s(doy, biome, bs = 'fs', xt = list(bs = 'cc'), k = 10) +
+    s(year, biome, bs = 'fs', xt = list(bs = 'cr'), k = 10) +
+    ti(doy, year, biome, bs = c('cc', 'cr', 're'), k = c(5, 5)) +
+    s(elevation_m, bs = 'cr', k = 5) +
+    s(mu_hat, bs = 'cr', k = 5),
+  family = gaussian(),
+  data = d,
+  method = 'fREML',
+  knots = list(doy = c(0.5, 366.5)),
+  drop.unused.levels = TRUE,
+  discrete = TRUE,
+  samfrac = 0.001,
+  nthreads = future::availableCores(logical = FALSE) - 2,
+  control = gam.control(trace = TRUE))
+```
+
+\normalsize
+
+\doublespacing
 
 # Results
 
 output of `draw()`
 
 hex plots of mean and var vs common metrics:
+
 * temperature
 * seasonal temperature range
 * precip
@@ -161,17 +215,12 @@ hex plots of mean and var vs common metrics:
 * hfi
 * max animal weight
 * https://silvis.forest.wisc.edu/globalwui/
-* https://silvis.forest.wisc.edu/data/dhis/:
-  * NDVI16 (Normalized Difference Vegetation Index)
-  * EVI16 (Enhanced Vegetation Index)
-  * FPAR8 (Fraction absorbed Photosynthetically Active Radiation)
-  * LAI8 (Leaf Area Index)
-  * GPP8 (Gross Primary Productivity)
+* https://silvis.forest.wisc.edu/data/dhis/: NDVI16 (Normalized Difference Vegetation Index), EVI16 (Enhanced Vegetation Index), FPAR8 (Fraction absorbed Photosynthetically Active Radiation), LAI8 (Leaf Area Index), GPP8 (Gross Primary Productivity)
 * https://silvis.forest.wisc.edu/data/eurasia-trends/
 
 # Discussion
 
-* green wave surfing
+* green wave surfing: change in the mean, failure to surf: variance
 * migration routes are key habitat (Ortega et al., in prep), especially in stochastic environments
 * @sawyer_migratory_2019
 * https://www.sciencedirect.com/science/article/pii/S0960982220308484
@@ -187,7 +236,7 @@ hex plots of mean and var vs common metrics:
 
 ## Why not use machine learning? / Advantages of not using ML
 
-arguably, GAMs can be considered as a form of ML, but we are referring to NNs and other forms of black-box ML.
+arguably, GAMs can be considered as a form of machine learning, but we are referring to neural networks and other forms of black-box ML.
 
 \clearpage
 
