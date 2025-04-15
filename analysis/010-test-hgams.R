@@ -112,7 +112,7 @@ if(FALSE) {
     geom_point()
 }
 
-ecoregions <- filter(ecoregions, in_data | n_neigh > 0)
+ecoregions <- filter(ecoregions, in_data)
 
 nbs <- spdep::poly2nb(pl = ecoregions,
                       row.names = ecoregions$poly_id, # so that names match IDs
@@ -135,7 +135,7 @@ add_nb(p1 = 'poly 8038', p2 = 'poly 8040', add = TRUE)
 add_nb(p1 = 'poly 7987', p2 = 'poly 7988', add = TRUE)
 add_nb(p1 = 'poly 7987', p2 = 'poly 8040', add = TRUE)
 add_nb(p1 = 'poly 7988', p2 = 'poly 8038', add = TRUE)
-add_nb('poly 8980', 'poly 8987', add = TRUE)
+add_nb(p1 = 'poly 8980', p2 = 'poly 8987', add = TRUE)
 layout(1)
 
 all(names(nbs) == ecoregions$poly_id)
@@ -289,17 +289,72 @@ d <- mutate(d,
             mu_hat = mu_hat + mean_e)
 
 # fit the model for the variance
-m_var <- bam(ndvi_15_day_mean ~
-            s(elevation_m, bs = 'cr', k = 5) +
-            s(doy, wwf_ecoregion, bs = 'fs', xt = list(bs = 'cc'), k = 10) +
-            s(poly_id, bs = 'mrf', xt = list(nb = nbs)),
-          family = gaussian(),
-          data = d,
-          method = 'fREML',
-          knots = list(doy = c(0.5, 366.5)),
-          drop.unused.levels = FALSE,
-          discrete = TRUE,
-          nthreads = 10,
-          control = gam.control(trace = TRUE))
+m_var <- bam(e_2 ~
+               s(elevation_m, bs = 'cr', k = 5) +
+               s(doy, wwf_ecoregion, bs = 'fs', xt = list(bs = 'cc'), k = 10) +
+               s(poly_id, bs = 'mrf', xt = list(nb = nbs)),
+             family = gaussian(),
+             data = d,
+             method = 'fREML',
+             knots = list(doy = c(0.5, 366.5)),
+             drop.unused.levels = FALSE,
+             discrete = TRUE,
+             nthreads = 10,
+             control = gam.control(trace = TRUE))
 draw(m_var, rug = FALSE, select = 1:2)
 saveRDS(m_var, 'models/global-test/m-var-2020-2021-gam.rds')
+
+# compare MRF to sos smoothers ----
+d <- d %>%
+  filter(central_date == central_date[1]) %>%
+  select(x, y, ndvi_15_day_mean, poly_id)
+
+# k = 1e3: fits in ~ 30 seconds
+# k = 2e3: fits in ~ 653 seconds
+m_sos <- bam(ndvi_15_day_mean ~ s(x, y, bs = 'sos', k = 2e3),
+             family = gaussian(),
+             data = d,
+             method = 'fREML',
+             discrete = TRUE,
+             control = gam.control(trace = TRUE))
+
+png('figures/test-hgams/test-hgam-sos.png', width = 7.5, height = 10,
+    units = 'in', bg = 'white', res = 300)
+layout(matrix(c(rep(1, 4), 2:5), ncol = 2, byrow = TRUE))
+plot(m_sos, scheme = 4, too.far = 0.01, n2 = 200)
+plot(m_sos, theta = 0, phi = 90, n2 = 100, too.far = 0.01)
+plot(m_sos, theta = 90, phi = 90, n2 = 100, too.far = 0.01)
+plot(m_sos, theta = 180, phi = 90, n2 = 100, too.far = 0.01)
+plot(m_sos, theta = 270, phi = 90, n2 = 100, too.far = 0.01)
+dev.off()
+
+# fits in XXX seconds
+tictoc::tic()
+m_mrf <- bam(ndvi_15_day_mean ~ s(poly_id, bs = 'mrf', xt = list(nb = nbs)),
+             family = gaussian(),
+             data = d,
+             method = 'fREML',
+             discrete = TRUE,
+             control = gam.control(trace = TRUE))
+tictoc::toc()
+
+# fits in > tens of minutes (not fit)
+tictoc::tic()
+m_fe <- bam(ndvi_15_day_mean ~ poly_id,
+            family = gaussian(),
+            data = d,
+            method = 'fREML',
+            control = gam.control(trace = TRUE))
+tictoc::toc()
+
+# fits in 326 seconds (5.43 minutes), basis size for REs is 3739 / 3951
+tictoc::tic()
+m_re <- bam(ndvi_15_day_mean ~ s(poly_id, bs = 're'),
+            family = gaussian(),
+            data = d,
+            method = 'fREML',
+            discrete = TRUE,
+            control = gam.control(trace = TRUE))
+tictoc::toc()
+(1 - m_re$deviance / m_re$null.deviance) * 100
+m_re$df.null - m_re$df.residual
