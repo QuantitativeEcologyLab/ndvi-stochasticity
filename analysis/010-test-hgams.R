@@ -3,8 +3,8 @@
 library('dplyr')   # for data wrangling
 library('purrr')   # for functional programming
 library('sf')      # for shapefiles
-library('mgcv')    # for Genralized Additive Models
-library('sf')      # for simple fleature objects
+library('mgcv')    # for Generalized Additive Models
+library('sf')      # for simple feature objects
 library('terra')   # for rasters
 library('elevatr') # for extracting elevation
 library('gratia')  # for plotting GAMs
