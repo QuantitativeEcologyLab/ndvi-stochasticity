@@ -46,7 +46,7 @@ plot_hex <- function(variable, bins = 50, xlab, .data = d) {
     scale_fill_acton(name = 'Count (log scale)', range = c(0, 1),
                      limits = ZLIMS, reverse = TRUE,
                      labels = \(.lab) round(exp(.lab))) +
-    labs(x = xlab, y = 'Variance in NDVI') +
+    labs(x = xlab, y = 'DENVar') +
     ylim(YLIMS) +
     theme(legend.position = 'none') +
     #' for a safety check for fill limits, `ZLIMS`
