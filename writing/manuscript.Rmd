@@ -39,7 +39,7 @@ editor_options:
 
 ```{r, echo=FALSE}
 # need to write abstract before cover page to state number of words in it
-abstract <- "Since the 1980s, remote-sensing estimates of habitat productivity such as the Normalized Differnece Vegetation Index (NDVI) have helped develop and support a variety of hypotheses and inform policy and industriy-related decisions. The free availability of such data has allowed widespread access and use of well-established metrics of habitat productivity. However, historically, users tended to focus solely on (predictable) trends in productivity. In recent years, people have been recognizing the importance of envrironmental unpredictability (stochasticity), particularly as climate change and human-induced rapid environmental change transform the ecosystems species have evolved in and adapted to. We adress this gap by presenting a new global Dynamic Estimate of NDVI Variance, *DENVar*. We estimate spatiotemporal trends in mean NDVI and the variance around the mean using Hierarchical Generalized Additive Models, which provide a flexible yet transparent model structure, unlike machine learning approaches such as neural netwoks. We show that DENVar can be used as a reliable proxy of environmental stochasticity, strongly correlates with ***XXX***, and can be used to test many hepotheses related to environmental stochasitcity, such as forage unpredictability, regime shifts, ... . We conclude by offering some considerations around quantifying and interpreting envirnomental stochasticity, and we provide a publicly and freely available shiny app for estimating mean NDVI and the variance around it, DENVar, for given coordinates and optional dates. The app requires no knowledge of statistics or coding. Additionally, we provide a temporally static raster of mean NDVI and DENVar for the years 1981-2025 that can be used for GIS applications and does not require any knowledge of $\\texttt{R}$."
+abstract <- "Since the 1980s, remote-sensing estimates of habitat productivity such as the Normalized Differnece Vegetation Index (NDVI) have helped develop and support a variety of hypotheses and inform policy and industriy-related decisions. The free availability of such data has allowed widespread access and use of well-established metrics of habitat productivity. However, historically, users tended to focus solely on (predictable) trends in productivity. In recent years, people have been recognizing the importance of envrironmental unpredictability (stochasticity), particularly as climate change and human-induced rapid environmental change transform the ecosystems species have evolved in and adapted to. We adress this gap by presenting a new global Dynamic Estimate of NDVI Variance, *DENVar*. We estimate spatiotemporal trends in mean NDVI and the variance around the mean using Hierarchical Generalized Additive Models, which provide a flexible yet transparent model structure, unlike machine learning approaches such as neural netwoks. We show that DENVar can be used as a reliable proxy of environmental stochasticity, strongly correlates with ***XXX***, and can be used to test many hepotheses related to environmental stochasitcity, such as forage stochasticity, regime shifts, ... . We conclude by offering some considerations around quantifying and interpreting envirnomental stochasticity, and we provide a publicly and freely available shiny app for estimating mean NDVI and the variance around it, DENVar, for given coordinates and optional dates. The app requires no knowledge of statistics or coding. Additionally, we provide a temporally static raster of mean NDVI and DENVar for the years 1981-2025 that can be used for GIS applications and does not require any knowledge of $\\texttt{R}$."
 
 if(FALSE) {
   stringi::stri_count_words(abstract)
@@ -88,7 +88,7 @@ knitr::opts_chunk$set(echo = FALSE, out.width = '100%', fig.align = 'center')
 
 <!-- remote sensing allows us to study landscapes in detail and over large spatiotemporal scales -->
 
-\noindent Developments in remote sensing since the 1970s have greatly expanded our ability to quantify and monitor landscapes using satellite imagery
+\noindent Since its early uses in the 1970s, the Normalized Difference Vegetation Index (NDVI) has greatly expanded our ability to quantify and monitor landscapes using satellite imagery
 
 - NDVI is an estimate of greenness, NPP, forage availability
 - NDVI has many uses and is often convenient because it's free, well-established, and 
@@ -135,11 +135,11 @@ length(unique(lubridate::yday(as.Date('1981-09-01') + seq(0, 15800, by = 15))))
 
 ## Modeling
 
-We estimated spatiotemporal trends in mean NDVI using Hierarchical Generalized Additive Models (HGAMs) via the `mgcv` package for `R` [v. 1.9-3, @wood_generalized_2017]. To reduce modeling fitting times with negligible losses to model accuracy, we used the `bam()` function with fast REstricted Marginal Likelihood (`method = fREML`) and covariate discretization (`discrete = TRUE`). See @wood_generalized_2015 and @wood_generalized_2017-1 for more information. Ideally, NDVI should be modeled using beta location-scale models (after the linear transformation $Y^*=\frac{Y + 1}{2}$) to account for the fact that: (1) NDVI is bounded between -1 and 1, and (2) the variance in NDVI is dependent on the mean (and vice-versa), since ecosystems with very low NDVI (e.g., rock, ice, or concrete) or very high NDVI (e.g., dense forest) tend to have lower variance in NDVI. However, preliminary tests showed that fitting times for beta models were prohibitive, especially for beta location-scale models. Additionally, Gaussian models fit substantially faster and provided very similar spatialtemporal estimates of mean NDVI (see the `analysis/000-sardinia-test.R` script in the GitHub repository). The model for the mean NDVI had the structure below:
+We estimated spatiotemporal trends in mean NDVI using Hierarchical Generalized Additive Models (HGAMs) via the `mgcv` package for `R` [v. 1.9-3, @wood_generalized_2017]. To reduce modeling fitting times with negligible losses to model accuracy, we used the `bam()` function with fast REstricted Marginal Likelihood (`method = fREML`) and covariate discretization (`discrete = TRUE`). See @wood_generalized_2015 and @wood_generalized_2017-1 for more information. Ideally, NDVI should be modeled using beta location-scale models (after the linear transformation $Y^*=\frac{Y + 1}{2}$) to account for the fact that: (1) NDVI is bounded between -1 and 1, and (2) the variance in NDVI is dependent on the mean (and vice-versa), since ecosystems with very low NDVI (e.g., rock, ice, or concrete) or very high NDVI (e.g., dense forest) tend to have lower variance in NDVI. However, preliminary tests showed that fitting times for beta models were prohibitive, especially for beta location-scale models. In contrast, Gaussian models fit substantially faster and provided very similar spatialtemporal estimates of mean NDVI (see the `analysis/000-sardinia-test.R` script in the GitHub repository). The global model for the mean NDVI had the structure below:
 
 \singlespacing
 
-\scriptsize
+\small
 
 ```{r m_mean, eval=FALSE, echo=TRUE}
 m_mean <- bam(
@@ -176,6 +176,7 @@ A second HGAM estimated the variance in NDVI around the mean estimated by the mo
 \scriptsize
 
 ```{r m_var, eval=FALSE, echo=TRUE}
+#' *CHANGE TO SOS BASIS*
 m_var <- bam(
   e_2 ~
     biome +
@@ -202,9 +203,15 @@ m_var <- bam(
 
 # Results
 
-output of `draw()`
+## General results
 
-hex plots of mean and var vs common metrics:
+* two Orthographic projections of DENVar: Northern and southern hemispheres on spring solstice
+
+## Correlations with other metrics
+
+```{r hex-plots, fig.cap="Hex plots of the relationship between the global Dynamic Estimate of NDVI Variance (DENVar) and common ecological metricts. The fill of the hexagonal cells represents the log-10-transformed number of points within the cell. Rowwise, the variables are: mean NDVI (as estimated in this manuscript); the machine-learning Human Footprint Index (ml-HFI) of Keys, Barnes \\& Carter (2021); the 2015 cumulative, minimum, and seasonal range in the Dynamic Habitat Index of XXX, (F)."}
+knitr::include_graphics('../figures/hexplots-canada-test.png')
+```
 
 * temperature
 * seasonal temperature range
@@ -212,37 +219,79 @@ hex plots of mean and var vs common metrics:
 * seasonal temperature range
 * spp diversity
 * gross primary productivity
-* hfi
 * max animal weight
 * https://silvis.forest.wisc.edu/globalwui/
 * https://silvis.forest.wisc.edu/data/dhis/: NDVI16 (Normalized Difference Vegetation Index), EVI16 (Enhanced Vegetation Index), FPAR8 (Fraction absorbed Photosynthetically Active Radiation), LAI8 (Leaf Area Index), GPP8 (Gross Primary Productivity)
-* https://silvis.forest.wisc.edu/data/eurasia-trends/
+
+## How to obtain the data
+
+### Static rasters of mean and variance (1981-2025)
+
+* for GIS users (tif)
+
+### Shiny app for obtaining values
+
+* get values for specific coordinates: 1981-2025 average
+* get values for specific coordinates and dates (upload as a CSV, download as a CSV)
+* screenshot of the shiny app
 
 # Discussion
 
-* green wave surfing: change in the mean, failure to surf: variance
+We have presented a new spatiotemporally dynamic metric of environmental stochasticity, which we have called the Dynamic Estimate of NDVI Variance, DENVar. In this section, we discuss the interpretation of DENVar in greater depth, and we argue the advantages and limitations of the statistical methods used. We conclude by suggsting some use cases of DENVar within animal movement ecology, landscape ecology, and phenology, but we invite readers to consider how DENVar may be of use in their field and adjacent disciplines.
+
+## Why use complicated statistics instead of machine learning?
+
+\noindent Admittedly, the title of this section is misleading for two reasons. Firstly, some may argue that Generalized Additive Models are a form of machine-learning (here abbreviated as ML), but we intend to contrast GAMs with more "black-box" types of machine learning, such as neural networks and random forests. The second reason for which the title is misleading is that it implies that machine learning is not complicated, or at least that it is less complicated than the models we used. However, we argue that while traditional statistical models may seem more intimidating to some, their complexity is what allows analysts to produce interpretable results and measures of uncertainty [@wood_generalized_2017]. And while the theoretical basis for GAMs can discouraging for those who do not a strong background in mathematics or statistics, outputs from GAMs can be presented in an accessible manner even to those without a strong quantitative background through the use of well-designed figures, especially in a Bayesian context (when the aim is to estimate a parameter). In contrast, while ML methods will often give understandable results, it may not be possible to discern *why* such results were "chosen" by the model. Instead, GAMs produce flexible yet interpretable estimated effects that can be represented with relatively simple figures, even if the mathematical formula(e) for the model may be complicated.
+
+Ideally, a model should estimate or explore the relationships among variables such that results can be interpreted in a transparent and unambiguous manner, such that readers can scrutinize the underlying assumptions, methods, and decisions. We recognize that the assessing GAMs requires a certain level of expertise, but we hope the readers can appreciate the option to assess the GAMs more easily than a series of consecutive, weighted regressions (as in the case of neural networks). In contrast, GAMs learn from data with no initial starting assumptions other than user-imposed limitations of wiggliness, which are clearly outlined in each basis size of the models' terms. The structure and wuggliness of GAMS can thus be grossly designed based on the system's complexity and structure while allowing the data to inform the model trends, wiggliness, and coefficient size.
+
+## Interpreting DENVar: the importance of scale
+
+* smoothness of mean impacts smoothness and size of variance: depends on scale of interest (e.g., animals' ability to respond to, learn, and predict changes in the mean). Changes not attributed to trends in the mean are stochastic
+* DENVar is a good metric as long as the spatiotemporal scale of interest is similar or larger to that of DENVar. May not work well for small-scale processes such as the movement dynamics of a small rodent, the phenology of a small orchard when spatiotemporal heterogeneity is finer than DENVar's resolution
+
+## Environmental stochasticity and animal movement ecology
+
+The field of animal movement ecology has long shown that animals alter their movement in response to resource abundance or availability [@burt_territoriality_1943; @southwood_habitat_1977; @charnov_optimal_1976; @broekman_environmental_2024]. More recently, movement ecologists have started focusing more on resource stochasticity [e.g., @stephens_optimal_1982; @rizzuto_forage_2021], but it is worth distinguishing between resource stochasticity and seasonality [@nilsen_can_2005]. Seasonality is generally best interpreted as a cyclical change in the mean that many animals can learn to predict, as in the case of green-wave surfing [@middleton_green-wave_2018; @geremia_migrating_2019]. In contrast, environmental stochasticity refers to unpredictable changes, such as forest fires [@ref], sudden snow storms [@aikens_pronghorn_2025], and unusual phenology [@ref]. Animals also respond to stochastic changes [@mezzini_how_2025], but their ability to adapt depends on behavioral plasticity [@steixner-kumar_strategies_2020; @rickbeil_plasticity_2019], and memory [@polansky_elucidating_2015; @abrahms_memory_2019; @riotte-lambert_environmental_2020; @falcon-cortes_hierarchical_2021; @ranc_memory_2022].
+
+@botero_evolutionary_2015 tipping points
+
+@polazzo_measuring_2024
+
+extreme events, black swans [@anderson_black-swan_2017; @logares_black_2012]
+
 * migration routes are key habitat (Ortega et al., in prep), especially in stochastic environments
-* @sawyer_migratory_2019
+* can fail to adapt to changes in conditions @sawyer_migratory_2019
 * https://www.sciencedirect.com/science/article/pii/S0960982220308484
 * https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.15169
 * industrial development affects animals' ability to respond to both predictable and unpredictable change (https://www.nature.com/articles/s41559-022-01887-9)
 * effects of sudden deep snow in red desert on proghorn (https://www.sciencedirect.com/science/article/abs/pii/S0960982225002957)
 * https://www.nature.com/articles/s41467-023-37750-z
 * https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/ecy.4238
-* see data for snow and pronghorn paper (Aikens et al. 2025)
 * detecting regime shifts [in lakes: @bjorndahl_abrupt_2022]
 
-* smoothness of mu impacts smoothness and size of s2: depends on animals' ability to respond to, learn, and predict E(R)
+## Environmental stochasticity and population dynamics
 
-## Why not use machine learning? / Advantages of not using ML
+read @lande_risks_1993
 
-arguably, GAMs can be considered as a form of machine learning, but we are referring to neural networks and other forms of black-box ML.
+\noindent Environmental stochasticity reduces habitats' energetic balance and carrying capacity [@chevin_adaptation_2010] as individuals struggle to rely on unpredictable resources and increase the instability of populations and communities [@lande_risks_1993]. Additionally, stochastic environments reduce the ability of specialist species to adapt and evolve while selecting for more generalist species [@levins_evolution_1974]. Consequently, stochastic environments tend to have lower species diversity [@marcus].
+
+## Environmental stochasticity and fire ecology
+
+\noindent Recent work by @devries has suggested that NDVI stochasticity is an important metric for evaluating forest recovery after large fires, while @collinson has suggested that variance in NDVI is an important predictor of the occurrence of forest fires due to ignition by lightning.
+
+## Environmental stochasticity and phenology
+
+* @jonzen_rapid_2006
+* effects can be compounded by cumulative effects (e.g., loss of species diversity, see @wolf_flowering_2017)
+* climate change affects plant phenology, but changes in situ may not match experimental estimates [@wolkovich_warming_2012]
+* reproduction of painted lady butterfly [@stefanescu_timing_2021]
+* @wessling_seasonal_2018
 
 \clearpage
 
 # Useful references
 
-* `{khroma}`: @frerebeau_khroma_2024
 * @keith_predicting_2008
 * @chevin_adaptation_2010
 * @rickbeil_plasticity_2019
@@ -250,7 +299,6 @@ arguably, GAMs can be considered as a form of machine learning, but we are refer
 * @pettorelli_using_2005
 * @keys_machine-learning_2021
 * @nilsen_can_2005
-* @stephens_optimal_1982
 * @merkle_large_2016
 * @tian_evaluating_2015
 * @huang_commentary_2021
@@ -259,7 +307,10 @@ arguably, GAMs can be considered as a form of machine learning, but we are refer
 * @pease_ecological_2024
 * @xu_plasticity_2021
 * @mezzini_how_2025
-* **TO READ:** Site fidelity as a maladaptive behavior in the Anthropocene: https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/fee.2456
+
+TO READ:
+* Site fidelity as a maladaptive behavior in the Anthropocene: https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/fee.2456
+* Pettorelli N., Vik J.O., Mysterud A., Gaillard J.-M., Tucker C.J. & Stenseth N.Chr. (2005). Using the satellite-derived NDVI to assess ecological responses to environmental change. Trends in Ecology & Evolution 20, 503–510. https://doi.org/10.1016/j.tree.2005.05.011
 
 \clearpage
 
