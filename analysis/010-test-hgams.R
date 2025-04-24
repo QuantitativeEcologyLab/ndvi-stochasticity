@@ -311,12 +311,13 @@ d <- d %>%
 
 # k = 1e3: fits in ~ 30 seconds
 # k = 2e3: fits in ~ 653 seconds
-m_sos <- bam(ndvi_15_day_mean ~ s(x, y, bs = 'sos', k = 2e3),
-             family = gaussian(),
-             data = d,
-             method = 'fREML',
-             discrete = TRUE,
-             control = gam.control(trace = TRUE))
+m_sos <- bam(ndvi_15_day_mean ~ s(y, x, bs = 'sos', k = 2e3), # s(lat,long)
+  family = gaussian(),
+  data = d,
+  method = 'fREML',
+  discrete = TRUE,
+  control = gam.control(trace = TRUE))
+saveRDS(m_sos, 'models/global-test/test-mean-gam-sos-only.rds')
 
 png('figures/test-hgams/test-hgam-sos.png', width = 7.5, height = 10,
     units = 'in', bg = 'white', res = 300)
@@ -358,3 +359,15 @@ m_re <- bam(ndvi_15_day_mean ~ s(poly_id, bs = 're'),
 tictoc::toc()
 (1 - m_re$deviance / m_re$null.deviance) * 100
 m_re$df.null - m_re$df.residual
+
+# test for model of the variance
+d <- mutate(d, e2 = resid(m_sos)^2)
+
+m_sos_var <- bam(
+  e2 ~ s(y, x, bs = 'sos', k = 2e3), # s(lat, long)
+  family = gaussian(),
+  data = d,
+  method = 'fREML',
+  discrete = TRUE,
+  control = gam.control(trace = TRUE))
+saveRDS(m_sos_var, 'models/global-test/test-var-gam-sos-only.rds')
