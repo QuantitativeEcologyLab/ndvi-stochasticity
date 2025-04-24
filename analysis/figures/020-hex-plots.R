@@ -16,7 +16,7 @@ ecoregions <- read_sf('data/ecoregions/ecoregions-polygons.shp') %>%
 r_s2 <- crop(r_s2, ecoregions, mask = TRUE)
 r_mu <- rast('data/output/mean-ndvi-raster-mod-5-no-res-2025-04-21-THINNED-50.tif')
 r_dhi <- rast('data/other-rasters/dhi-data/dhi_ndvi_2015.tif')
-r_hfi <- rast('data/other-rasters/hfi-layers/ml_hfi_v1_2019.nc') # no data on greenland or arctic
+r_hfi <- rast('data/other-rasters/hfp_2021_100m_v1-2_cog.tif')
 r_rich <- rast('data/other-rasters/iucn-red-list-spp-richness/Combined_SR_2024.tif') %>%
   project(crs(r_s2))
 n_distinct(sapply(list(r_s2, r_mu, r_dhi, r_hfi, r_rich), \(x) crs(x, proj = TRUE)))
@@ -30,13 +30,24 @@ if(FALSE) {
   plot(r_rich)
 }
 
+get_values <- function(rst, pts) {
+  extract(rst, select(pts, x, y) %>%
+            vect(geom = c('x', 'y')) %>%
+            set.crs('EPSG:4326') %>%
+            project(crs(rst))) %>%
+    pull(2)
+}
+
 d <- as.data.frame(r_mu, xy = TRUE) %>%
   mutate(.,
-         s2_hat = extract(r_s2, select(., x, y))[, 2],
-         hfi = extract(r_hfi, select(., x, y))[, 2],
-         richness = extract(r_rich, select(., x, y))[, 2]) %>%
+         s2_hat = get_values(r_s2, .),
+         hfi = get_values(r_hfi, .) / 1e3, # scale back to [0, 50]
+         richness = get_values(r_rich, .)) %>%
   bind_cols(.,
-            extract(r_dhi, select(., x, y)) %>%
+            extract(r_dhi, select(., x, y) %>%
+                      vect(geom = c('x', 'y')) %>%
+                      set.crs('EPSG:4326') %>%
+                      project(crs(r_dhi))) %>%
               select(! ID) %>%
               rename(dhi_cumulative = dhi_ndvi_2015_1,
                      dhi_min = dhi_ndvi_2015_2,
@@ -44,16 +55,18 @@ d <- as.data.frame(r_mu, xy = TRUE) %>%
   as_tibble()
 d
 
-d %>%
-  filter(is.na(hfi)) %>%
-  plot(y ~ x, .)
+if(FALSE) {
+  d %>%
+    filter(is.na(hfi)) %>%
+    plot(y ~ x, .)
+}
 
 d %>%
   filter(mu_hat > -0.25) %>% #' *remove: there were 4 points mean < -0.25*
   tidyr::pivot_longer(c(mu_hat, hfi:dhi_seasonal), names_to = 'variable',
                       values_to = 'value') %>%
   mutate(lab = case_when(variable == 'mu_hat' ~ 'Mean NDVI',
-                         variable == 'hfi' ~ 'ml-HFI',
+                         variable == 'hfi' ~ '2021 Human Footprint',
                          variable == 'richness' ~ 'Species richness',
                          variable == 'dhi_cumulative' ~ 'Cumulative DHI',
                          variable == 'dhi_min' ~ 'Minimum DHI',
@@ -73,4 +86,4 @@ d %>%
         strip.text = element_text(size = rel(1)))
 
 ggsave('figures/hexplots-global-test.png',
-       width = 16, height = 10, units = 'in', dpi = 600, bg = 'white')
+       width = 8, height = 5, units = 'in', dpi = 600, bg = 'white')
