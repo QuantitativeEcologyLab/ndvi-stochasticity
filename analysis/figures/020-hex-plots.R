@@ -66,12 +66,11 @@ d %>%
   scale_fill_iridescent(
     name = expression(paste(bold('Count (log'), bold(''['10']),
                             bold(' scale)'))), range = c(0, 1),
-    reverse = FALSE
-    labels = \(.x) 10^.x) +
+    reverse = FALSE, labels = \(.x) 10^.x) +
   labs(y = NULL, x = 'DENVar') +
   theme(legend.position = 'top', strip.background = element_blank(),
         strip.placement = 'outside', legend.key.width = unit(0.5, 'in'),
         strip.text = element_text(size = rel(1)))
 
 ggsave('figures/hexplots-global-test.png',
-       width = 12, height = 10, units = 'in', dpi = 600, bg = 'white')
+       width = 16, height = 10, units = 'in', dpi = 600, bg = 'white')
