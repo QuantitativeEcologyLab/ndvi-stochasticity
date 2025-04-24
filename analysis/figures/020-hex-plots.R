@@ -1,3 +1,4 @@
+library('sf')      # for simple features
 library('terra')   # for rasters
 library('dplyr')   # for data wrangling
 library('ggplot2') # for figures
@@ -6,25 +7,32 @@ library('cowplot') # for ggplot plots in grids
 source('analysis/figures/000-default-ggplot-theme.R')
 source('functions/get_legend.R')
 
-m_mu <- readRDS('models/global-test/test-mean-gam-sos-only.rds')
-m_s2 <- readRDS('models/global-test/test-var-gam-sos-only.rds')
-
+r_s2 <- rast('data/output/var-ndvi-raster-mod-5-no-res-2025-04-21-THINNED-50.tif')
+ecoregions <- read_sf('data/ecoregions/ecoregions-polygons.shp') %>%
+  # drop polygons not in data
+  filter(poly_id %in% names(readRDS('data/ecoregions/poly-nbs-global.rds'))) %>%
+  vect() %>% # convert to spatVect
+  project(crs(r_s2))
+r_s2 <- crop(r_s2, ecoregions, mask = TRUE)
+r_mu <- rast('data/output/mean-ndvi-raster-mod-5-no-res-2025-04-21-THINNED-50.tif')
 r_dhi <- rast('data/other-rasters/dhi-data/dhi_ndvi_2015.tif')
-r_hfi <- rast('data/other-rasters/hfi-layers/ml_hfi_v1_2019.nc')
+r_hfi <- rast('data/other-rasters/hfi-layers/ml_hfi_v1_2019.nc') # no data on greenland or arctic
 r_rich <- rast('data/other-rasters/iucn-red-list-spp-richness/Combined_SR_2024.tif') %>%
-  project('EPSG:4326') # all others are lat/long
-crs(r_dhi, proj = TRUE) == crs(r_hfi, proj = TRUE) &
-  crs(r_hfi, proj = TRUE) == crs(r_rich, proj = TRUE)
+  project(crs(r_s2))
+n_distinct(sapply(list(r_s2, r_mu, r_dhi, r_hfi, r_rich), \(x) crs(x, proj = TRUE)))
 
 # check rasters
-plot(r_dhi)
-plot(r_hfi)
-plot(r_rich)
+if(FALSE) {
+  plot(r_s2)
+  plot(r_mu)
+  plot(r_dhi)
+  plot(r_hfi)
+  plot(r_rich)
+}
 
-#' *will need to change the data later*
-d <- m_mu$model %>%
-  mutate(mu_hat = fitted(m_mu),
-         s2_hat = fitted(m_s2),
+d <- as.data.frame(r_mu, xy = TRUE) %>%
+  mutate(.,
+         s2_hat = extract(r_s2, select(., x, y))[, 2],
          hfi = extract(r_hfi, select(., x, y))[, 2],
          richness = extract(r_rich, select(., x, y))[, 2]) %>%
   bind_cols(.,
@@ -37,87 +45,33 @@ d <- m_mu$model %>%
 d
 
 d %>%
+  filter(is.na(hfi)) %>%
+  plot(y ~ x, .)
+
+d %>%
+  filter(mu_hat > -0.25) %>% #' *remove: there were 4 points mean < -0.25*
   tidyr::pivot_longer(c(mu_hat, hfi:dhi_seasonal), names_to = 'variable',
                       values_to = 'value') %>%
-  mutate(variable = case_when(variable == 'mu_hat' ~ 'Mean NDVI',
-                              variable == 'hfi' ~ 'ml-HFI',
-                              variable == 'richness' ~ 'Species richness',
-                              variable == 'dhi_cumulative' ~ 'Cumulative DHI',
-                              variable == 'dhi_min' ~ 'Minimum DHI',
-                              variable == 'dhi_seasonal' ~ 'Seasonal range in DHI') %>%
+  mutate(lab = case_when(variable == 'mu_hat' ~ 'Mean NDVI',
+                         variable == 'hfi' ~ 'ml-HFI',
+                         variable == 'richness' ~ 'Species richness',
+                         variable == 'dhi_cumulative' ~ 'Cumulative DHI',
+                         variable == 'dhi_min' ~ 'Minimum DHI',
+                         variable == 'dhi_seasonal' ~ 'Seasonal range in DHI') %>%
            factor(., levels = unique(.))) %>%
   ggplot() +
-  facet_wrap(~ variable, scales = 'free_x', strip.position = 'bottom') +
-  geom_hex(aes(value, s2_hat, fill = log10(after_stat(count))),
-           color = 'black', bins = 20, linewidth = 0.1, na.rm = TRUE) +
+  facet_wrap(~ lab, scales = 'free_y', strip.position = 'left') +
+  geom_hex(aes(s2_hat, value, fill = log10(after_stat(count))),
+           color = 'black', bins = 50, linewidth = 0.1, na.rm = TRUE) +
   scale_fill_iridescent(
     name = expression(paste(bold('Count (log'), bold(''['10']),
                             bold(' scale)'))), range = c(0, 1),
-    reverse = FALSE, breaks = seq(0, 6, by = 2),
-    labels = \(.x) paste0('1e', .x)) +
-  labs(x = NULL, y = 'DENVar') +
+    reverse = FALSE
+    labels = \(.x) 10^.x) +
+  labs(y = NULL, x = 'DENVar') +
   theme(legend.position = 'top', strip.background = element_blank(),
-        strip.placement = 'outside',
+        strip.placement = 'outside', legend.key.width = unit(0.5, 'in'),
         strip.text = element_text(size = rel(1)))
 
-ggsave('figures/hexplots-canada-test.png',
+ggsave('figures/hexplots-global-test.png',
        width = 12, height = 10, units = 'in', dpi = 600, bg = 'white')
-
-#' YLIMS <- c(NA, ceiling(max(d$s2_hat) * 100) / 100)
-#' ZLIMS <- log10(c(1, 3e4))
-#' 
-#' plot_hex <- function(variable, bins = 100, xlab = 'x', .data = d) {
-#'   names(.data)[colnames(.data) == variable] <- 'variable'
-#'   
-#'   #' not adding `geom_smooth()` because it's too slow with large data sets
-#'   .data %>%
-#'     filter(, ! is.na(variable)) %>%
-#'     ggplot() +
-#'     geom_hex(aes(variable, s2_hat, fill = log10(after_stat(count))),
-#'              color = 'black', bins = bins, linewidth = 0.1) +
-#'     scale_fill_iridescent(
-#'       name = expression(paste(bold('Count (log'), bold(''['10']),
-#'                               bold(' scale)'))), range = c(0, 1),
-#'       limits = ZLIMS, reverse = FALSE, breaks = seq(0, 6, by = 2),
-#'       labels = \(.x) paste0('1e', .x)) +
-#'     labs(x = xlab, y = 'DENVar') +
-#'     ylim(YLIMS) +
-#'     theme(legend.position = 'none') +
-#'     #' for a safety check for fill limits, `ZLIMS`
-#'     geom_hex(aes(variable, s2_hat,
-#'                  color = log10(after_stat(count)) > ZLIMS[2],
-#'                  lwd = log10(after_stat(count)) > ZLIMS[2]),
-#'              fill = 'transparent', bins = bins, show.legend = FALSE) +
-#'     scale_color_manual(values = c('transparent', 'red'),
-#'                        labels = c(FALSE, TRUE)) +
-#'     scale_linewidth_manual(values = c(0.5, 3), labels = c(FALSE, TRUE))
-#' }
-#' 
-#' plot_hex('mu_hat', xlab = 'Mean NDVI') +
-#'   theme(legend.position = 'top')
-#' 
-#' khroma::info()
-#' 
-#' plot_grid(
-#'   plot_hex('mu_hat', xlab = 'Mean NDVI') +
-#'     theme(legend.position = 'top') +
-#'     ggtitle('Full color vision'),
-#'   colorblindr::cvd_grid(plot_hex('mu_hat', xlab = 'Mean NDVI') +
-#'                           theme(legend.position = 'top')),
-#'   ncol = 2)
-#' 
-#' p <- plot_grid(
-#'   plot_hex('mu_hat', xlab = 'Mean NDVI'),
-#'   plot_hex('hfi', xlab = 'Human Footprint Index (ml-HFI)'),
-#'   plot_hex('richness', xlab = 'Species richness'),
-#'   plot_hex('dhi_cumulative', xlab = 'Cumulative DHI'),
-#'   plot_hex('dhi_min', xlab = 'Minimum DHI'),
-#'   plot_hex('dhi_seasonal', xlab = 'Seasonal range in DHI')) %>%
-#'   plot_grid(get_legend(plot_hex('mu_hat') +
-#'                          theme(legend.position = 'top',
-#'                                legend.key.width = unit(1, 'in'))),
-#'             ., rel_heights = c(1, 10), ncol = 1, labels = 'AUTO')
-#' p
-#' 
-#' ggsave('figures/hexplots-canada-test.png', plot = p,
-#'        width = 12, height = 6, units = 'in', dpi = 600, bg = 'white')
