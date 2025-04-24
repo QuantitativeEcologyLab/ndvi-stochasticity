@@ -6,6 +6,7 @@ source('analysis/figures/000-default-ggplot-theme.R')
 r <- rast("H:/GitHub/ndvi-stochasticity/data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v005_AVH13C1_NOAA-07_19810701_c20170609165932.nc", lyr = 'NDVI')
 eco <- st_read('data/ecoregions/ecoregions-polygons.shp') %>%
   filter(WWF_MHTNAM != 'Inland Water') %>%
+  filter(ECO_NAME != 'Great Lakes') %>%
   st_geometry()
 
 plot(r)
