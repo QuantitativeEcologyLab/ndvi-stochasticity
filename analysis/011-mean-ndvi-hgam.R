@@ -119,14 +119,14 @@ if(file.exists('data/hbam-ndvi-data.rds')) {
 #'   layout(1)
 #'   saveRDS(nbs, 'data/ecoregions/poly-nbs-global.rds')
 #' }
-
-# ensure names match the factor levels and the unique values
-# d <- mutate(d, poly_id = factor(poly_id, levels = names(nbs)))
-all.equal(sort(names(nbs)), sort(levels(d$poly_id)))
-all(levels(d$poly_id) %in% unique(d$poly_id))
+#' 
+#' # ensure names match the factor levels and the unique values
+#' d <- mutate(d, poly_id = factor(poly_id, levels = names(nbs)))
+#' all.equal(sort(names(nbs)), sort(levels(d$poly_id)))
+#' all(levels(d$poly_id) %in% unique(d$poly_id))
 
 if(file.exists('models/global-models/hbam-mean-ndvi-DATE.rds')) {
-  m_mu <- readRDS('models/global-models/hbam-mean-ndvi-NO-MRF-NO-TI-THINNED-DATA-2025-04-14.rds')
+  m_mu <- readRDS('models/global-models/hbam-mean-ndvi-sos-mod-5-no-res-2025-04-21-THINNED-50.rds')
 } else {
   DATE <- paste0('mod-5-no-res-', format(Sys.Date(), '%Y-%m-%d'))
   

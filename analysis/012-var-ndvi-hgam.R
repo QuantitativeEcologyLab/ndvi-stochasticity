@@ -7,8 +7,6 @@ library('gratia')  # for plotting GAMs
 library('ggplot2') # for fancy plots
 source('analysis/figures/000-default-ggplot-theme.R')
 
-# ecoregions <- st_read('data/ecoregions/ecoregions-polygons.shp')
-
 # import the data for the model
 d <- readRDS('data/hbam-var-ndvi-data-mod-5-no-res-2025-04-21-THINNED-50.rds')
 
@@ -22,7 +20,7 @@ quantile(d$mu_hat, 0.001)
 
 if(length(list.files('models/global-test', 'hbam-var-ndvi-*')) > 1) {
   DATE <- '2025-04-XX'
-  m_s2 <- readRDS(paste0('models/global-test/hbam-var-ndvi-', DATE, '.rds'))
+  m_s2 <- readRDS(paste0('models/global-models/hbam-var-ndvi-sos-mod-5-no-res-2025-04-21-THINNED-50.rds'))
 } else {
   m_s2 <- bam(
     e_2 ~
@@ -44,7 +42,7 @@ if(length(list.files('models/global-test', 'hbam-var-ndvi-*')) > 1) {
     nthreads = future::availableCores(logical = FALSE) - 2,
     control = gam.control(trace = TRUE))
   
-  saveRDS(m_s2, paste0('models/global-models/hbam-mean-ndvi-sos-', DATE, '.rds'))
+  saveRDS(m_s2, paste0('models/global-models/hbam-var-ndvi-sos-', DATE, '.rds'))
 }
 
 100 * (1 - m_s2$deviance / m_s2$null.deviance)
