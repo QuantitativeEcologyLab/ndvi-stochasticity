@@ -20,6 +20,7 @@
 
 # RStudio files
 .Rproj.user/
+ndvi-stochasticity.Rproj
 
 # produced vignettes
 vignettes/*.html
