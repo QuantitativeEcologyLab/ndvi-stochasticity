@@ -71,9 +71,11 @@ analysis/old-files/*
 
 # ignore excessively large files
 data/hbam-ndvi-data*
+data/hbam-var-ndvi-data*
 data/ndvi-global-*
 models/*
 
 # ignore datasets from other sources
-/data/other-rasters/*
+data/other-rasters/*
 !data/other-rasters/README.md
+
