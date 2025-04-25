@@ -61,12 +61,19 @@ if(FALSE) {
     plot(y ~ x, .)
 }
 
+ggplot(d, aes(s2_hat)) +
+  geom_histogram(fill = 'grey', color = 'black', binwidth = 0.005,
+                 center = 0.0025) +
+  labs(x = 'DENVar', y = 'Count')
+ggsave('figures/denvar-hist-global-test.png',
+       width = 5, height = 3, units = 'in', dpi = 600, bg = 'white')
+
 d %>%
   filter(mu_hat > -0.25) %>% #' *remove: there were 4 points mean < -0.25*
   tidyr::pivot_longer(c(mu_hat, hfi:dhi_seasonal), names_to = 'variable',
                       values_to = 'value') %>%
   mutate(lab = case_when(variable == 'mu_hat' ~ 'Mean NDVI',
-                         variable == 'hfi' ~ '2017-2021 Human Footprint',
+                         variable == 'hfi' ~ 'Human Footprint',
                          variable == 'richness' ~ 'Species richness',
                          variable == 'dhi_cumulative' ~ 'Cumulative DHI',
                          variable == 'dhi_min' ~ 'Minimum DHI',
