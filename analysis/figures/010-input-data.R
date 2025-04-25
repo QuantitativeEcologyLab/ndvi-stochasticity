@@ -91,16 +91,16 @@ ggsave('figures/input-data/polygons.png', p_poly,
 # ecoregions ----
 n_distinct(eco$WWF_MHTNAM)
 
-p_eco <-
+p_biome <-
   ggplot(eco) +
   geom_sf(aes(fill = WWF_MHTNAM), color = 'black', lwd = .05) +
   geom_hline(yintercept = 0, color = 'black', lwd = 0.1, lty = 'dashed') +
-  scale_fill_discreterainbow(name = 'Ecoregion') +
+  scale_fill_discreterainbow(name = 'Biome') +
   scale_x_continuous(expand = c(0, 0)) +
   theme(legend.position = 'top', legend.text = element_text(size = 4.5))
 
-ggsave('figures/input-data/ecoregions.png', p_eco,
-       width = 10.1, height = 6, units = 'in', dpi = 600, bg = 'white')
+ggsave('figures/input-data/ecoregions.png', p_biome,
+       width = 10.1, height = 6, units = 'in', dpi = 1e3, bg = 'white')
 
 # elevation ----
 r_elev <- rast('data/elev-raster.tif') %>%
