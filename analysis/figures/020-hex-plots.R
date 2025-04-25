@@ -16,7 +16,7 @@ ecoregions <- read_sf('data/ecoregions/ecoregions-polygons.shp') %>%
 r_s2 <- crop(r_s2, ecoregions, mask = TRUE)
 r_mu <- rast('data/output/mean-ndvi-raster-mod-5-no-res-2025-04-21-THINNED-50.tif')
 r_dhi <- rast('data/other-rasters/dhi-data/dhi_ndvi_2015.tif')
-r_hfi <- rast('data/other-rasters/hfp_2021_100m_v1-2_cog.tif')
+r_hfi <- rast('H:/GitHub/ndvi-stochasticity/data/other-rasters/hfp_2021_100m_v1-2_cog.tif')
 r_rich <- rast('data/other-rasters/iucn-red-list-spp-richness/Combined_SR_2024.tif') %>%
   project(crs(r_s2))
 n_distinct(sapply(list(r_s2, r_mu, r_dhi, r_hfi, r_rich), \(x) crs(x, proj = TRUE)))
@@ -66,7 +66,7 @@ d %>%
   tidyr::pivot_longer(c(mu_hat, hfi:dhi_seasonal), names_to = 'variable',
                       values_to = 'value') %>%
   mutate(lab = case_when(variable == 'mu_hat' ~ 'Mean NDVI',
-                         variable == 'hfi' ~ '2021 Human Footprint',
+                         variable == 'hfi' ~ '2017-2021 Human Footprint',
                          variable == 'richness' ~ 'Species richness',
                          variable == 'dhi_cumulative' ~ 'Cumulative DHI',
                          variable == 'dhi_min' ~ 'Minimum DHI',
