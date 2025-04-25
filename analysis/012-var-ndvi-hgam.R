@@ -84,6 +84,7 @@ d %>%
   ggplot() +
   geom_hex(aes(mu_hat, s2_hat, fill = log10(after_stat(count))),
            color = 'black', bins = 100, linewidth = 0.1, na.rm = TRUE) +
+  geom_hline(yintercept = 0, color = 'grey') +
   labs(x = 'Estimated mean NDVI', y = 'DENVar') +
   scale_fill_iridescent(
     name = expression(paste(bold('Count (log'), bold(''['10']),
