@@ -19,7 +19,23 @@ r_dhi <- rast('data/other-rasters/dhi-data/dhi_ndvi_2015.tif')
 r_hfi <- rast('H:/GitHub/ndvi-stochasticity/data/other-rasters/hfp_2021_100m_v1-2_cog.tif')
 r_rich <- rast('data/other-rasters/iucn-red-list-spp-richness/Combined_SR_2024.tif') %>%
   project(crs(r_s2))
-n_distinct(sapply(list(r_s2, r_mu, r_dhi, r_hfi, r_rich), \(x) crs(x, proj = TRUE)))
+if(file.exists('data/other-rasters/FireCCI51based/global_monthly_burned_area_fraction_05deg_caluclated-average.nc')) {
+  r_burn <- rast('data/other-rasters/FireCCI51based/global_monthly_burned_area_fraction_05deg_caluclated-average.nc')
+} else {
+  r_burn <- list.files('data/other-rasters/FireCCI51based',
+                       pattern = '.nc', full.names = TRUE) %>%
+    lapply(rast) %>%
+    rast() %>%
+    mean() %>%
+    project(crs(ecoregions)) %>%
+    mask(ecoregions)
+  writeCDF(r_burn, 'data/other-rasters/FireCCI51based/global_monthly_burned_area_fraction_05deg_caluclated-average.nc')
+}
+
+# some rasters have a difference CRS, but reprojecting takes too long
+tibble(raster = c('r_s2', 'r_mu', 'r_dhi', 'r_hfi', 'r_rich', 'r_burn'),
+       crs = sapply(raster, \(x) crs(get(x), proj = TRUE)),
+       same_crs = crs == crs[1])
 
 # check rasters
 if(FALSE) {
@@ -28,9 +44,11 @@ if(FALSE) {
   plot(r_dhi)
   plot(r_hfi)
   plot(r_rich)
+  plot(r_burn)
 }
 
 get_values <- function(rst, pts) {
+  #' extract values from `rst` after projecting `pts` to `crs(raster)`
   extract(rst, select(pts, x, y) %>%
             vect(geom = c('x', 'y')) %>%
             set.crs('EPSG:4326') %>%
@@ -42,7 +60,8 @@ d <- as.data.frame(r_mu, xy = TRUE) %>%
   mutate(.,
          s2_hat = get_values(r_s2, .),
          hfi = get_values(r_hfi, .) / 1e3, # scale back to [0, 50]
-         richness = get_values(r_rich, .)) %>%
+         richness = get_values(r_rich, .),
+         burned = get_values(r_burn, .)) %>%
   bind_cols(.,
             extract(r_dhi, select(., x, y) %>%
                       vect(geom = c('x', 'y')) %>%
@@ -70,17 +89,18 @@ ggsave('figures/denvar-hist-global-test.png',
 
 d %>%
   filter(mu_hat > -0.25) %>% #' *remove: there were 4 points mean < -0.25*
-  tidyr::pivot_longer(c(mu_hat, hfi:dhi_seasonal), names_to = 'variable',
+  tidyr::pivot_longer(- c(x, y, s2_hat), names_to = 'variable',
                       values_to = 'value') %>%
-  mutate(lab = case_when(variable == 'mu_hat' ~ 'Mean NDVI',
-                         variable == 'hfi' ~ 'Human Footprint',
+  mutate(lab = case_when(variable == 'mu_hat' ~ 'Estimated mean NDVI',
+                         variable == 'hfi' ~ 'Human footprint',
                          variable == 'richness' ~ 'Species richness',
-                         variable == 'dhi_cumulative' ~ 'Cumulative DHI',
-                         variable == 'dhi_min' ~ 'Minimum DHI',
-                         variable == 'dhi_seasonal' ~ 'Seasonal range in DHI') %>%
+                         variable == 'dhi_cumulative' ~ 'Cumulative NDVI',
+                         variable == 'dhi_min' ~ 'Minimum NDVI',
+                         variable == 'dhi_seasonal' ~ 'Seasonal CV of NDVI',
+                         variable == 'burned' ~ 'Mean proportion buned') %>%
            factor(., levels = unique(.))) %>%
   ggplot() +
-  facet_wrap(~ lab, scales = 'free_y', strip.position = 'left') +
+  facet_wrap(~ lab, scales = 'free_y', strip.position = 'left', nrow = 2) +
   geom_hex(aes(s2_hat, value, fill = log10(after_stat(count))),
            color = 'black', bins = 50, linewidth = 0.1, na.rm = TRUE) +
   scale_fill_iridescent(
@@ -88,9 +108,10 @@ d %>%
                             bold(' scale)'))), range = c(0, 1),
     reverse = FALSE, labels = \(.x) 10^.x) +
   labs(y = NULL, x = 'DENVar') +
-  theme(legend.position = 'top', strip.background = element_blank(),
-        strip.placement = 'outside', legend.key.width = unit(0.5, 'in'),
+  theme(legend.position = 'inside', legend.position.inside = c(7/8, 0.25),
+        strip.background = element_blank(),
+        strip.placement = 'outside',# legend.key.width = unit(0.5, 'in'),
         strip.text = element_text(size = rel(1)))
 
 ggsave('figures/hexplots-global-test.png',
-       width = 8, height = 5, units = 'in', dpi = 600, bg = 'white')
+       width = 12, height = 5, units = 'in', dpi = 600, bg = 'white')
