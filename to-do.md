@@ -10,6 +10,8 @@
 - try increasing max dataframe size (ensure `R` is 64-bit): https://stat.ethz.ch/R-manual/R-devel/library/base/html/Memory-limits.html
 
 ## modeling
+- vector size on EME linux is not limited to `2^32 - 1`
+- should be using `R` 4.4.x: 
 - try running `betals` model on a subset of the data to get an idea of the fitting time
   - test `method = 'NCV'` (faster than REML, but not as fast as `bam()`; see dave miller's work: https://calgary.converged.yt/articles/ncv.html and simon's paper: https://arxiv.org/html/2404.16490v1)
 - split by continent to remove issues with monotonicity across greenland with latitude and also increase dataset size
