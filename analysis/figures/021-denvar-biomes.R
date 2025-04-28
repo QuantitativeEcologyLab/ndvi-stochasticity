@@ -1,6 +1,7 @@
 library('sf')      # for shapefiles
 library('terra')   # for rasters
 library('dplyr')   # for data wrangling
+library('purrr')   # for functional programming
 library('ggplot2') # for fancy plots
 library('cowplot') # for fancy plots in grids
 source('analysis/figures/000-default-ggplot-theme.R')
@@ -17,7 +18,7 @@ d <- as.data.frame(mu, xy = TRUE) %>%
   mutate(.,
          s2_hat = as.data.frame(denvar)[[1]],
          i = extract(biomes, select(., x, y))[, 2],
-         biome = sort(unique(ecoregions$WWF_MHTNAM))[i + 1]) %>%
+         biome = sort(unique(biomes_sf$WWF_MHTNAM))[i + 1]) %>%
   filter(biome != 'Inland Water') %>%
   mutate(biome = factor(biome, levels = c(
     'Rock and Ice',
@@ -44,10 +45,11 @@ biomes_sf <- biomes_sf %>%
 biome_pal <- color('discreterainbow')(n_distinct(d$biome))
 
 ggplot(d, aes(x, y, fill = biome)) +
+  coord_sf(crs = 'EPSG:4326') +
   geom_raster() +
   scale_x_continuous(expand = c(0, 0)) +
   scale_fill_discreterainbow(name = 'Biome') +
-  theme(legend.position = 'top')
+  theme(legend.position = 'top', legend.title.position = 'top')
 
 ggplot(d) +
   facet_wrap(~ biome, scales = 'free') +
@@ -63,10 +65,11 @@ p_eco <-
   ggplot(biomes_sf) +
   geom_sf(aes(fill = WWF_MHTNAM), color = 'black', lwd = .05) +
   geom_hline(yintercept = 0, color = 'black', lwd = 0.1, lty = 'dashed') +
-  scale_fill_discreterainbow(name = 'Ecoregion') +
+  scale_fill_discreterainbow(name = 'Biome') +
   scale_x_continuous(expand = c(0, 0)) +
-  theme(legend.position = 'top', legend.text = element_text(size = 4.5),
-        plot.margin = margin(5, 7.5, 5, 5))
+  theme(legend.position = 'top', legend.text = element_text(size = 5.2),
+        plot.margin = margin(5, 7.5, 5, 5), legend.title.position = 'top',
+        legend.title = element_text(hjust = 0.5))
 
 make_hist <- function(.biome, var_only = FALSE) {
   .fill <- biome_pal[which(levels(d$biome) == .biome)]
@@ -155,7 +158,7 @@ p <-
     plot_grid(plotlist = map(levels(d$biome)[5:11], make_hist), nrow = 1),
     ncol = 1, rel_heights = c(4, 1))
 
-ggsave('figures/global-models/ecoregions-histograms.png', p,
+ggsave('figures/global-models/biomes-histograms.png', p,
        width = 10.1 * 7/5, height = 6 * 5/4, units = 'in',
        dpi = 600, bg = 'white')
 
@@ -172,6 +175,6 @@ p <-
                              \(.b) make_hist(.b, TRUE)), nrow = 1),
     ncol = 1, rel_heights = c(4, 1))
 
-ggsave('figures/global-models/ecoregions-histograms-var-only.png', p,
+ggsave('figures/global-models/biomes-histograms-var-only.png', p,
        width = 10.1 * 7/5, height = 6 * 5/4, units = 'in',
        dpi = 600, bg = 'white')
