@@ -1,15 +1,19 @@
 # all tests ran on my personal laptop:
 # 64.0 GB RAM, 13th Gen Intel Core i7-1370P processor (1.90 GHz)
-library('sf')
-library('terra')
-library('elevatr')
-library('dplyr')
-library('lubridate')
-library('purrr')
-library('furrr')
-library('mgcv')
-library('ggplot2')
-library('gratia')
+library('sf')        # for shapefiles
+library('terra')     # for rasters
+library('elevatr')   # for digital elevation models
+library('dplyr')     # for data wrangling
+library('lubridate') # for working with dates
+library('purrr')     # for functional programming
+library('furrr')     # for parallelized functional programming
+library('mgcv')      # for GAMs
+library('ggplot2')   # for fancy plots
+library('cowplot')   # for fancy plots in grids 
+library('gratia')    # for fancy plots of GAMs
+library('inlabru')   # for plotting mesh objects in ggplot
+library('ggplot2')   # for fanct plots
+library('fmesher')   # to generate triangle meshes in polygons
 source('functions/betals.r') # custom beta location-scale family
 source('functions/scale-ndvi.R')
 source('functions/ndvi-palette.R')
@@ -33,11 +37,13 @@ sardinia <- read_sf('data/world-ecosystems/data/commondata/data0/tnc_terr_ecoreg
          area_km2 = as.numeric(st_area(.)) / 1e6)
 hist(sardinia$area_km2)
 
+sardinia_geom <- st_geometry(sardinia)
+
 # import ndvi data (downloaded from the NASA website) ----
 if(file.exists('data/sardinia-test/sardinia-ndvi.rds')) {
   sardinia_ndvi <- readRDS('data/sardinia-test/sardinia-ndvi.rds')
 } else {
-  if(.Platform$OS.type != 'unix') stop('NOAA rasters are on the H: Drive, and you may want to use more cores.')
+  if(.Platform$OS.type != 'unix') stop('AVHRR/VIIRS rasters are on the H: Drive, and you may want to use nultiple cores.')
   future::availableCores(logical = FALSE)
   plan(multisession, workers = min(30, availableCores(logical = FALSE) - 2))
   sardinia_ndvi <-
@@ -45,10 +51,10 @@ if(file.exists('data/sardinia-test/sardinia-ndvi.rds')) {
                pattern = '.nc',
                full.names = TRUE) %>%
     future_map(\(fn) {
-      r <- rast(fn)
+      r <- rast(fn, lyr = 'NDVI')
       r %>%
-        crop(sardinia_bbox) %>% # to avoid including the rest of italy
-        mask(sardinia_bbox) %>%
+        crop(sardinia_geom) %>% # to avoid including the rest of italy
+        mask(sardinia_geom) %>%
         as.data.frame(xy = TRUE, na.rm = TRUE) %>%
         mutate(date = as.Date(unique(time(r))))
     }, .progress = TRUE) %>%
@@ -74,20 +80,61 @@ if(file.exists('data/sardinia-test/sardinia-ndvi.rds')) {
     rast(crs = 'EPSG:4326') %>%
     get_elev_raster(z = 6)
   plot(elevs)
-  plot(st_geometry(sardinia), add = TRUE, col = 'transparent')
+  plot(sardinia_geom, add = TRUE, col = 'transparent')
   
   sardinia_ndvi <- mutate(sardinia_ndvi, 
                           elev_m = extract(elevs, select(sardinia_ndvi, x, y)),
                           year = year(date),
-                          doy = yday(date) / 366) %>%
+                          doy = yday(date)) %>%
     filter(elev_m > -100)
+  
+  # drop points outside sardinia
+  # unique coordinates inside sardinia
+  locs <- sardinia_ndvi %>%
+    select(x, y) %>%
+    group_by(x, y) %>%
+    slice(1) %>%
+    st_as_sf(coords = c('x', 'y')) %>%
+    st_set_crs('EPSG:4326') %>%
+    filter(., st_as_sf(., coords = c('x', 'y')) %>%
+             st_set_crs('EPSG:4326') %>%
+             st_intersects(sardinia_geom, sparse = TRUE) %>%
+             map_lgl(\(x) length(x) > 0))
+  nrow(locs) # all rasters use same coords
+  
+  plot(sardinia_geom)
+  plot(locs, add = TRUE)
+  
+  sardinia_ndvi <- filter(sardinia_ndvi, paste(x, y) %in%
+                            paste(st_coordinates(locs)[, 1],
+                                  st_coordinates(locs)[, 2]))
   sardinia_ndvi
+  
+  plot(sardinia_geom)
+  plot(locs, add = TRUE)
   
   saveRDS(sardinia_ndvi, 'data/sardinia-test/sardinia-ndvi.rds')
 }
+summary(sardinia_ndvi)
+
+# unique coordinates inside sardinia
+locs <- sardinia_ndvi %>%
+  select(x, y) %>%
+  group_by(x, y) %>%
+  slice(1) %>%
+  st_as_sf(coords = c('x', 'y')) %>%
+  st_set_crs('EPSG:4326') %>%
+  filter(., st_as_sf(., coords = c('x', 'y')) %>%
+           st_set_crs('EPSG:4326') %>%
+           st_intersects(sardinia_geom, sparse = TRUE) %>%
+           map_lgl(\(x) length(x) > 0))
+nrow(locs) # all rasters use same coords
+
+plot(sardinia_geom)
+plot(locs, add = TRUE)
 
 # fit a spatially explicit test model with a gaussian family ----
-# on personal laptop: "initial" is 26 s, run is ~2 s
+# on personal laptop: "initial" is 56 s, run is ~2 s
 if(file.exists('models/sardinia-test/gaussian-gam.rds')) {
   m_gaus <- readRDS('models/sardinia-test/gaussian-gam.rds')
 } else {
@@ -108,14 +155,15 @@ draw(m_gaus, rug = FALSE)
 ggsave('figures/sardinia-test/sardinia-ndvi-gaussian-terms.png',
        width = 9, height = 6, units = 'in', dpi = 300, bg = 'white')
 
-draw(m_gaus, rug = FALSE, fun = \(x) ndvi_to_11(x + coef(m_gaus)['(Intercept)']))
+draw(m_gaus, rug = FALSE, fun = \(x) ndvi_to_11(x + coef(m_gaus)['(Intercept)']), dist = 0.03) &
+  scale_fill_viridis_c('NDVI', limits = c(0, 0.4))
 ggsave('figures/sardinia-test/sardinia-ndvi-gaussian-terms-ndvi-scale.png',
        width = 9, height = 6, units = 'in', dpi = 300, bg = 'white')
 
 summary(m_gaus)
 
 # fit a spatially explicit test model with a beta family ----
-# on personal laptop: "initial" is 30 s, run is ~ 660 s
+# on personal laptop: "initial" is 35 s, run is ~ 25 minutes
 if(file.exists('models/sardinia-test/beta-gam.rds')) {
   m_beta <- readRDS('models/sardinia-test/beta-gam.rds')
 } else {
@@ -136,9 +184,9 @@ draw(m_beta, rug = FALSE)
 ggsave('figures/sardinia-test/sardinia-ndvi-beta-terms.png',
        width = 9, height = 6, units = 'in', dpi = 300, bg = 'white')
 
-draw(m_beta, rug = FALSE,
-     fun = \(x) m_beta$family$linkinv(x + coef(m_beta)['(Intercept)']) %>%
-       ndvi_to_11())
+draw(m_beta, rug = FALSE, fun = \(x) m_beta$family$linkinv(x + coef(m_beta)['(Intercept)']) %>%
+       ndvi_to_11(), dist = 0.03) &
+  scale_fill_viridis_c('NDVI', limits = c(0, 0.4))
 ggsave('figures/sardinia-test/sardinia-ndvi-beta-terms-ndvi-scale.png',
        width = 9, height = 6, units = 'in', dpi = 300, bg = 'white')
 
@@ -167,6 +215,79 @@ if(FALSE) {
                     control = gam.control(nthreads = 10, trace = TRUE)))
 }
 
+# using markov random fields informed with delaunay triangulation ----
+# see:
+# - https://groups.google.com/g/r-inla-discussion-group/c/dcrajXPn-eo
+# - https://webhomes.maths.ed.ac.uk/~flindgre/posts/2018-07-22-spatially-varying-mesh-quality/
+ggplot() +
+  geom_sf(data = sardinia_geom) +
+  geom_sf(data = locs)
+
+# build triangular mesh
+plot_mesh <- function(starting_points = NA) {
+  if(is.na(starting_points)) {
+    .locs <- locs
+    .title <- 'Mesh with all starting points'
+  } else {
+    .locs <- slice_sample(locs, n = starting_points)
+    .title <- paste('Mesh with', starting_points, 'random starting points')
+  }
+  .mesh <- fm_rcdt_2d_inla(loc = .locs,
+                           boundary = fm_as_segm(sardinia_geom),
+                           refine = list(max.edge = Inf, min.angle = 21),
+                           crs = 'EPSG:4326')
+  ggplot() +
+    gg(.mesh, ext.linewidth = 0.5, edge.color = 'grey',
+       edge.linewidth = 0.1) +
+    geom_sf(data = .locs, size = 0.75) +
+    labs(x = NULL, y = NULL, title = .title)
+}
+plot_grid(plot_mesh(10), plot_mesh(10), plot_mesh(100), plot_mesh(),
+          nrow = 1)
+ggsave('figures/sardinia-test/delaunay-triangulation-example.png',
+       width = 20, height = 8.68, units = 'in', dpi = 600, bg = 'white')
+
+sardinia_mesh <-
+  fm_rcdt_2d_inla(loc = locs,
+                  boundary = fm_as_segm(sardinia_geom),
+                  refine = list(max.edge = Inf, min.angle = 21),
+                  crs = 'EPSG:4326')
+plot(sardinia_mesh)
+
+diagn <-
+  # returns an sp object
+  INLA::inla.mesh.assessment(sardinia_mesh,
+                             spatial.range = 5,
+                             alpha = 2,
+                             dims = c(n_distinct(sardinia_ndvi$x) * 3,
+                                      n_distinct(sardinia_ndvi$y) * 3)) %>%
+  as.data.frame() %>%
+  as_tibble() %>%
+  filter(! is.na(sd)) # drop points not in a polygon
+
+# diagnostic plots ("sd" column is tied to identifying the polygon)
+plot_grid(
+  # triangle edge length is relatively similar throughout
+  ggplot(diagn) +
+    coord_sf(crs = 'EPSG:4326') +
+    geom_raster(aes(x, y, fill = edge.len)) +
+    scale_fill_viridis_c('Edge length', option = 'F', na.value = 'white') +
+    labs(x = NULL, y = NULL) +
+    theme(legend.position = 'top'),
+  # estimate of var(pointwise) / var(continuous model); should be near 1
+  ggplot(diagn) +
+    coord_sf(crs = 'EPSG:4326') +
+    geom_raster(aes(x, y, fill = sd.dev)) +
+    scale_fill_viridis_c('Estimated variance ratio', option = 'D', na.value = 'white') +
+    labs(x = NULL, y = NULL) +
+    theme(legend.position = 'top'), nrow = 1)
+ggsave('figures/sardinia-test/delaunay-triangulation-example-diagnostics.png',
+       width = 8.5, height = 7.7, units = 'in', dpi = 600, bg = 'white')
+
+# fit GAM using the triangulation object
+#' **HERE**
+
+# comparing models ----
 #' fitting gaussian models rather than beta models because they are
 #' substantially faster with no clear loss to predictive accuracy
 p_fits <-
@@ -307,7 +428,7 @@ if(file.exists('models/sardinia-test/gaussian-mrf-gam.rds')) {
                  discrete = TRUE,
                  control = gam.control(trace = TRUE))
   
-  # adding a complex smooth of explicit space
+  # adding a complex mrf basis informed by delaunay triangulation
   m_mrf_2 <- bam(ndvi_scaled ~
                    s(poly_id, bs = 'mrf', xt = list(nb = nbs)) +
                    s(x, y, bs = 'ds', k = 200) +
@@ -460,17 +581,17 @@ if(file.exists('models/sardinia-test/gaus-gam-ti-ds-gam.rds')) {
   m_gaus_ti_ds <- readRDS('models/sardinia-test/gaus-gam-ti-ds-gam.rds')
 } else {
   m_gaus_ti_ds <- bam(ndvi_scaled ~
-                      s(x, y, bs = 'ds', k = 200) +
-                      s(elev_m, bs = 'ad', k = 10) + # adaptive spline to correct for shorelines better
-                      s(year, bs = 'cr', k = 10) +
-                      s(doy, bs = 'cc', k = 10) +
-                      ti(doy, year, bs = c('cc', 'cr'), k = c(5, 5)),
-                    family = gaussian(),
-                    knots = list(doy = c(0, 1)),
-                    data = sardinia_ndvi,
-                    method = 'fREML',
-                    discrete = TRUE,
-                    control = gam.control(nthreads = 1, trace = TRUE))
+                        s(x, y, bs = 'ds', k = 200) +
+                        s(elev_m, bs = 'ad', k = 10) + # adaptive spline to correct for shorelines better
+                        s(year, bs = 'cr', k = 10) +
+                        s(doy, bs = 'cc', k = 10) +
+                        ti(doy, year, bs = c('cc', 'cr'), k = c(5, 5)),
+                      family = gaussian(),
+                      knots = list(doy = c(0, 1)),
+                      data = sardinia_ndvi,
+                      method = 'fREML',
+                      discrete = TRUE,
+                      control = gam.control(nthreads = 1, trace = TRUE))
   saveRDS(m_gaus_ti_ds, 'models/sardinia-test/gaus-gam-ti-ds-gam.rds')
 }
 

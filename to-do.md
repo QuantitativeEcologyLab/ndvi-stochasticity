@@ -16,7 +16,6 @@
   - test `method = 'NCV'` (faster than REML, but not as fast as `bam()`; see dave miller's work: https://calgary.converged.yt/articles/ncv.html and simon's paper: https://arxiv.org/html/2404.16490v1)
 - split by continent to remove issues with monotonicity across greenland with latitude and also increase dataset size
 - use `{fmesher}` to construct mesh for MRFs when modeling areas with many islands:
-  - https://webhomes.maths.ed.ac.uk/~flindgre/posts/2018-07-22-spatially-varying-mesh-quality/
   - https://wires.onlinelibrary.wiley.com/doi/10.1002/wics.1443
   - use larger triangles near coast to avoid edge effects
   - fit an MRF using vertices of triangles as REs for the spatial smooth
