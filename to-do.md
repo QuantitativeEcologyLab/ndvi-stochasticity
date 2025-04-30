@@ -1,4 +1,7 @@
-## tests
+# PRIORITY
+- clean up sardinia test script
+
+# tests
 - look at green-up rates of areas wit rapid growth rates; e.g.: boreal canada, polar areas
 - biomes run diagonally: check that smoooth effects recognize this rather than depending strongly on latitude and produce horizontal contours
 - test effects of spatiotemporal aggregation on green-up rates
@@ -9,7 +12,7 @@
 - check OpenBLAS with openMP on EME linux
 - try increasing max dataframe size (ensure `R` is 64-bit): https://stat.ethz.ch/R-manual/R-devel/library/base/html/Memory-limits.html
 
-## modeling
+# modeling
 - vector size on EME linux is not limited to `2^32 - 1`
 - should be using `R` 4.4.x: 
 - try running `betals` model on a subset of the data to get an idea of the fitting time
