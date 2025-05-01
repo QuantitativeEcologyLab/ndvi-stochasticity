@@ -84,9 +84,9 @@ if(file.exists('data/sardinia-test/sardinia-ndvi.rds')) {
   plot(sardinia_geom, add = TRUE, col = 'transparent')
   
   d <- mutate(d, 
-                          elev_m = extract(elevs, select(d, x, y)),
-                          year = year(date),
-                          doy = yday(date)) %>%
+              elev_m = extract(elevs, select(d, x, y)),
+              year = year(date),
+              doy = yday(date)) %>%
     filter(elev_m > -100)
   
   # drop points outside sardinia
@@ -107,8 +107,8 @@ if(file.exists('data/sardinia-test/sardinia-ndvi.rds')) {
   plot(locs, add = TRUE)
   
   d <- filter(d, paste(x, y) %in%
-                            paste(st_coordinates(locs)[, 1],
-                                  st_coordinates(locs)[, 2]))
+                paste(st_coordinates(locs)[, 1],
+                      st_coordinates(locs)[, 2]))
   d
   
   plot(sardinia_geom)
@@ -118,6 +118,7 @@ if(file.exists('data/sardinia-test/sardinia-ndvi.rds')) {
 }
 summary(d)
 
+# add cell ID and make list of neighbor cells for all coordinates ----
 # unique coordinates inside sardinia
 locs <- d %>%
   select(x, y) %>%
@@ -131,8 +132,133 @@ locs <- d %>%
            map_lgl(\(x) length(x) > 0))
 nrow(locs) # all rasters use same coords
 
-plot(sardinia_geom)
-plot(locs, add = TRUE)
+p_locs <-
+  ggplot() +
+  geom_sf(data = sardinia_geom) +
+  geom_sf(data = locs)
+p_locs
+
+# make a raster of all locations
+r_0 <- locs %>%
+  st_coordinates() %>%
+  data.frame() %>%
+  mutate(z = 0) %>%
+  rast()
+
+p_locs +
+  geom_raster(aes(x, y), as.data.frame(r_0, xy = TRUE), fill = '#FF000030') +
+  labs(x = NULL, y = NULL)
+
+nbs <-
+  adjacent(r_0, cells = cells(r_0), directions = 8, include = TRUE) %>%
+  as.data.frame() %>%
+  transmute(ref_cell = V1, # first column is the starting cell
+            # add the 8 surrounding neighbors
+            adjacent = map(1:n(), \(i) {
+              .z <- c(V2[i], V3[i], V4[i], V5[i], V6[i], V7[i], V8[i], V9[i])
+              
+              .values <- map_lgl(.z, \(.cell_id) {
+                if(is.nan(.cell_id)) {
+                  return(NA)
+                } else {
+                  return(r_0[.cell_id]$z[1])
+                }})
+              
+              .z <- .z[which(! is.na(.values))]
+              
+              if(length(.z) == 0) {
+                return(0)
+              } else {
+                return(as.character(.z))
+              }
+            }))
+names(nbs$adjacent) <- nbs$ref_cell
+nbs <- nbs$adjacent
+
+d <-
+  mutate(d,
+         cell_id = cellFromXY(r_0, xy = as.matrix(tibble(x, y))) %>%
+           factor(levels = names(nbs)))
+
+# all cell names match the neighbor list names
+# there cannot be any list elements with names that are not in the dataset
+all.equal(sort(as.character(cells(r_0))), sort(names(nbs)))
+
+# all values in neighbor list are in the factor levels
+# this is not crucial, as the model will predict for neighbors with data
+all.equal(sort(levels(d$cell_id)),
+          sort(as.character(unique(unlist(nbs)))))
+
+# test spatial terms with a single day of data ----
+# data for only the first day
+d_1981_06_25 <- filter(d, date == '1981-06-25')
+
+# not all points have data
+ggplot(d_1981_06_25) +
+  geom_raster(aes(x, y, fill = ndvi)) +
+  geom_sf(data = locs, color = 'darkorange')
+
+m_mrf_1981_06_25 <-
+  bam(ndvi_scaled ~ s(cell_id, bs = 'mrf', k = 200,
+                      # need to subset the neighbors  
+                      xt = list(nb = nbs[unique(d_1981_06_25$cell_id)])),
+      family = gaussian(),
+      data = d_1981_06_25,
+      method = 'fREML',
+      discrete = TRUE,
+      drop.unused.levels = TRUE,
+      control = gam.control(trace = TRUE))
+
+m_ds_1981_06_25 <- bam(ndvi_scaled ~ s(x, y, bs = 'ds'),
+                       family = gaussian(),
+                       data = d_1981_06_25,
+                       method = 'fREML',
+                       discrete = TRUE,
+                       drop.unused.levels = TRUE,
+                       control = gam.control(trace = TRUE))
+ggplot() +
+  coord_equal() +
+  geom_point(aes(fitted(m_mrf_1981_06_25), fitted(m_ds_1981_06_25)),
+             alpha = 0.2) +
+  geom_abline(intercept = 0, slope = 1, color = 'red') +
+  labs(x = 'Fitted values from the cell-level MRF GAM',
+       y = 'Fitted values from Douchon-spine GAM')
+ggsave('figures/sardinia-test/douchon-vs-cell-mrf-1981-06-25.png',
+       width = 5, height = 4, units = 'in', dpi = 600, bg = 'white')
+
+# MRF model is more flexible, gives a better fit, and has good shrinkage
+plot_grid(
+  plot_mrf(.model = m_mrf_1981_06_25, .term = c('(Intercept)', 's(cell_id)'),
+           .newdata = d_1981_06_25) +
+    ggtitle('Cell-level MRF'),
+  plot_mrf(.model = m_mrf_1981_06_25, .term = c('(Intercept)', 's(cell_id)'),
+           .newdata = d_1981_06_25, .limits = c(NA, NA), pal = viridis::viridis(10)) +
+    ggtitle(''),
+  d_1981_06_25 %>%
+    mutate(mu_hat = ndvi_to_11(fitted(m_mrf_1981_06_25))) %>%
+    ggplot(aes(ndvi, mu_hat)) +
+    coord_equal() +
+    geom_point(alpha = 0.2) +
+    geom_smooth(method = 'gam') +
+    geom_abline(intercept = 0, slope = 1, color = 'red') +
+    labs(x = 'Fitted', y = 'Observed'),
+  
+  draw(m_ds_1981_06_25, dist = 0.02),
+  draw(m_ds_1981_06_25, dist = 0.02, fun = \(x) ndvi_to_11(x + coef(m_ds_1981_06_25)['(Intercept)'])) &
+    scale_fill_viridis_c('NDVI', limits = ndvi_to_11(range(fitted(m_mrf_1981_06_25)))),
+  d_1981_06_25 %>%
+    mutate(mu_hat = ndvi_to_11(fitted(m_ds_1981_06_25))) %>%
+    ggplot(aes(ndvi, mu_hat)) +
+    coord_equal() +
+    geom_point(alpha = 0.2) +
+    geom_smooth(method = 'gam') +
+    geom_abline(intercept = 0, slope = 1, color = 'red') +
+    labs(x = 'Fitted', y = 'Observed'),
+  nrow = 2)
+ggsave('figures/sardinia-test/douchon-vs-cell-mrf-1981-06-25-predictions.png',
+       width = 15, height = 10, units = 'in', dpi = 300, bg = 'white')
+
+#' *HERE*
 
 # fit a spatially explicit test model with a gaussian family ----
 # on personal laptop: "initial" is 56 s, run is ~2 s
@@ -223,106 +349,6 @@ if(FALSE) {
   summary(m_betals)
 }
 
-# using markov random fields informed with delaunay triangulation ----
-# see:
-# - https://groups.google.com/g/r-inla-discussion-group/c/dcrajXPn-eo
-# - https://webhomes.maths.ed.ac.uk/~flindgre/posts/2018-07-22-spatially-varying-mesh-quality/
-ggplot() +
-  geom_sf(data = sardinia_geom) +
-  geom_sf(data = locs)
-
-# build triangular mesh
-plot_mesh <- function(starting_points = NA) {
-  if(is.na(starting_points)) {
-    .locs <- locs
-    .title <- 'Mesh with all starting points'
-  } else {
-    .locs <- slice_sample(locs, n = starting_points)
-    .title <- paste('Mesh with', starting_points, 'random starting points')
-  }
-  .mesh <- fm_rcdt_2d_inla(loc = .locs,
-                           boundary = fm_as_segm(sardinia_geom),
-                           refine = list(max.edge = 0, min.angle = 21),
-                           crs = 'EPSG:4326')
-  ggplot() +
-    gg(.mesh, ext.linewidth = 0.5, edge.color = 'grey',
-       edge.linewidth = 0.1) +
-    geom_sf(data = .locs, size = 0.75) +
-    labs(x = NULL, y = NULL, title = .title)
-}
-plot_grid(plot_mesh(10), plot_mesh(10), plot_mesh(100), plot_mesh(),
-          nrow = 1)
-if(! file.exists('figures/sardinia-test/delaunay-triangulation-example.png')) {
-  ggsave('figures/sardinia-test/delaunay-triangulation-example.png',
-         width = 20, height = 8.68, units = 'in', dpi = 600, bg = 'white')
-}
-
-sardinia_mesh <-
-  fm_rcdt_2d_inla(loc = locs,
-                  boundary = fm_as_segm(sardinia_geom),
-                  refine = list(max.edge = Inf, min.angle = 21),
-                  crs = 'EPSG:4326')
-plot(sardinia_mesh)
-
-diagn <-
-  # returns an sp object
-  INLA::inla.mesh.assessment(sardinia_mesh,
-                             spatial.range = 5,
-                             alpha = 2,
-                             dims = c(n_distinct(d$x) * 3,
-                                      n_distinct(d$y) * 3)) %>%
-  as.data.frame() %>%
-  as_tibble() %>%
-  filter(! is.na(sd)) # drop points not in a polygon
-
-# diagnostic plots ("sd" column is tied to identifying the polygon)
-diagn %>%
-  filter(sd > 130, sd < 134) %>%
-  ggplot() +
-  coord_sf(crs = 'EPSG:4326') +
-  geom_raster(aes(x, y, fill = sd)) +
-  scale_fill_smoothrainbow() +
-  labs(x = NULL, y = NULL) +
-  theme(legend.position = 'top', legend.key.width = rel(3))
-
-plot_grid(
-  # triangle edge length is relatively similar throughout
-  ggplot(diagn) +
-    coord_sf(crs = 'EPSG:4326') +
-    geom_raster(aes(x, y, fill = edge.len)) +
-    scale_fill_viridis_c('Edge length', option = 'F', na.value = 'white') +
-    labs(x = NULL, y = NULL) +
-    theme(legend.position = 'top'),
-  # estimate of var(pointwise) / var(continuous model); should be near 1
-  ggplot(diagn) +
-    coord_sf(crs = 'EPSG:4326') +
-    geom_raster(aes(x, y, fill = sd.dev)) +
-    scale_fill_viridis_c('Estimated variance ratio', option = 'D', na.value = 'white') +
-    labs(x = NULL, y = NULL) +
-    theme(legend.position = 'top'), nrow = 1)
-
-if(! file.exists('figures/sardinia-test/delaunay-triangulation-example-diagnostics.png')) {
-  ggsave('figures/sardinia-test/delaunay-triangulation-example-diagnostics.png',
-         width = 8.5, height = 7.7, units = 'in', dpi = 600, bg = 'white')
-}
-
-# make list of neighboring points
-sardinia_tri <- fmesher::fm_as_sfc(sardinia_mesh) %>%
-  st_as_sf() %>%
-  mutate(poly_id = factor(paste('poly', 1:n()))) %>%
-  st_zm(drop = TRUE) # drop z axis (not used in neighbors)
-
-ggplot() +
-  geom_sf(aes(fill = poly_id), sardinia_tri) +
-  scale_fill_manual(values = color('acton')(nrow(sardinia_tri))) +
-  theme(legend.position = 'none')
-
-sardinia_nbs <-
-  spdep::poly2nb(pl = sardinia_tri,
-                 row.names = sardinia_tri$poly_id, # so neighbors match ID
-                 queen = TRUE) # 1 point in common is sufficient
-names(sardinia_nbs) <- attr(sardinia_nbs, 'region.id') # names need to match names
-
 # comparing gaussian and beta models ----
 #' fitting gaussian models rather than beta models because they are
 #' substantially faster with no clear loss to predictive accuracy
@@ -400,85 +426,9 @@ st_coordinates(sardinia) %>%
   pull(poly) %>%
   `names<-`(1:6)
 
-# add cell ID and make list of neighbor cells
-r_0 <- locs %>%
-  st_coordinates() %>%
-  data.frame() %>%
-  mutate(z = 0) %>%
-  rast()
-plot(r_0)
-
-sardinia_nbs <-
-  adjacent(r_0, cells = cells(r_0), directions = 8, include = TRUE) %>%
-  as.data.frame() %>%
-  transmute(ref_cell = V1, # first column is the starting cell
-            # add the 8 surrounding neighbors
-            adjacent = map(1:n(), \(i) {
-              .z <- c(V2[i], V3[i], V4[i], V5[i], V6[i], V7[i], V8[i], V9[i])
-              
-              .values <- map_lgl(.z, \(.cell_id) {
-                if(is.nan(.cell_id)) {
-                  return(NA)
-                } else {
-                  return(r_0[.cell_id]$z[1])
-                }})
-              
-              .z <- .z[which(! is.na(.values))]
-              
-              if(length(.z) == 0) {
-                return(0)
-              } else {
-                return(as.character(.z))
-              }
-            }))
-names(sardinia_nbs$adjacent) <- sardinia_nbs$ref_cell
-sardinia_nbs <- sardinia_nbs$adjacent
-
-d <-
-  mutate(d,
-         cell_id = cellFromXY(r_0, xy = as.matrix(tibble(x, y))) %>%
-           factor(levels = names(sardinia_nbs)))
-
-# 
-all.equal(sort(as.character(cells(r_0))), sort(names(sardinia_nbs)))
-
-all(names(sardinia_nbs) %in% unique(d$cell_id))
-all(unique(d$cell_id) %in% names(sardinia_nbs))
-
-# all values in neighbor list are in the factor levels
-all.equal(sort(levels(d$cell_id)),
-          sort(as.character(unique(unlist(sardinia_nbs)))))
-
-# all factor levels match the neighbor levels
-all.equal(levels(d$cell_id), names(sardinia_nbs))
-
 if(file.exists('models/sardinia-test/gaussian-mrf-gam.rds')) {
   m_mrf <- readRDS('models/sardinia-test/gaussian-mrf-gam.rds')
 } else {
-  d_1981_06_25 <- filter(d, date == '1981-06-25')
-  ggplot(d_1981_06_25) +
-    geom_raster(aes(x, y, fill = ndvi))
-  
-  m_mrf_1981_06_25 <-
-    bam(ndvi_scaled ~ s(cell_id, bs = 'mrf', k = 200,
-                        xt = list(nb = sardinia_nbs[unique(d_1981_06_25$cell_id)])),
-        family = gaussian(),
-        data = d_1981_06_25,
-        method = 'fREML',
-        discrete = TRUE,
-        drop.unused.levels = TRUE,
-        control = gam.control(trace = TRUE))
-  
-  plot_grid(
-    plot_mrf(.model = m_mrf_1981_06_25, .term = c('(Intercept)', 's(cell_id)'),
-             .newdata = d0),
-    plot_mrf(.model = m_mrf_1981_06_25, .term = c('(Intercept)', 's(cell_id)'),
-             .newdata = d0, .limits = c(NA, NA)),
-    ggplot() +
-      geom_point(aes(d0$ndvi, ndvi_to_11(fitted(m_mrf_1981_06_25))), alpha = 0.1) +
-      geom_abline(intercept = 0, slope = 1, color = 'red'),
-    nrow = 1)
-  
   # mrf only
   m_mrf_0 <- bam(ndvi_scaled ~ s(cell_id, bs = 'mrf', xt = list(nb = nbs), k = 200),
                  family = gaussian(),
@@ -500,7 +450,7 @@ if(file.exists('models/sardinia-test/gaussian-mrf-gam.rds')) {
                  discrete = TRUE,
                  control = gam.control(trace = TRUE))
   
-  # adding a complex mrf basis informed by delaunay triangulation
+  # adding a complex spatially explitit smoother along with polygon MRFs
   m_mrf_2 <- bam(ndvi_scaled ~
                    s(poly_id, bs = 'mrf', xt = list(nb = nbs)) +
                    s(x, y, bs = 'ds', k = 200) +
@@ -509,6 +459,7 @@ if(file.exists('models/sardinia-test/gaussian-mrf-gam.rds')) {
                    s(doy, bs = 'cc', k = 10),
                  family = gaussian(),
                  knots = list(doy = c(0, 1)),
+                 data = sardinia_ndvi,
                  data = d,
                  method = 'fREML',
                  discrete = TRUE,

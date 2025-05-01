@@ -1,9 +1,10 @@
+source('analysis/figures/000-default-ggplot-theme.R')
 library('mgcv')
 library('ggplot2')
 library('dplyr')
 
 plot_mrf <- function(.model, .term, .newdata, .type = 'response',
-                     .fun = ndvi_to_11, .limits = c(-1, 1)) {
+                     .fun = ndvi_to_11, .limits = c(-1, 1), pal = ndvi_pal) {
   # find unique cells
   .newdata <- .newdata %>%
     group_by(x, y) %>%
@@ -21,5 +22,5 @@ plot_mrf <- function(.model, .term, .newdata, .type = 'response',
     coord_equal() +
     geom_raster() +
     labs(x = NULL, y = NULL) +
-    scale_fill_gradientn('NDVI', colours = ndvi_pal, limits = .limits)
+    scale_fill_gradientn(expression(bold(widehat(NDVI))), colours = pal, limits = .limits)
 }
