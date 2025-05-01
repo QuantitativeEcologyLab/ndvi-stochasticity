@@ -103,6 +103,7 @@ ecoregions <- read_sf('data/ecoregions/ecoregions-polygons.shp') %>%
   filter(poly_id %in% names(readRDS('data/ecoregions/poly-nbs-global.rds'))) %>%
   vect() %>% # convert to spatVect
   project(crs(dem))
+m_mu <- readRDS('models/global-models/hbam-mean-ndvi-sos-5-no-res-2025-04-21-THINNED-50.rds')
 
 preds <- dem %>%
   crop(ecoregions) %>%
@@ -110,9 +111,9 @@ preds <- dem %>%
   as.data.frame(dem, xy = TRUE) %>%
   rename(elevation_m = 3) %>%
   mutate(doy = 0, year = 0) %>%
-  mutate(mu_hat = predict.bam(m_mu, newdata = ., discrete = TRUE,
+  mutate(mu_hat = predict.bam(m_mu, newdata = ., discrete = FALSE,
                           terms = c('(Intercept)', 's(y,x)', 's(elevation_m)'))) %>%
-  mutate(s2_hat = predict(m_s2, newdata = ., discrete = TRUE,
+  mutate(s2_hat = predict(m_s2, newdata = ., discrete = FALSE,
                           terms = c('(Intercept)', 's(y,x)', 's(elevation_m)')))
 head(preds)
 
