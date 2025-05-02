@@ -199,8 +199,8 @@ ggplot(d_1981_06_25) +
   geom_sf(data = locs, color = 'darkorange')
 
 m_mrf_1981_06_25 <-
-  bam(ndvi_scaled ~ s(cell_id, bs = 'mrf', k = 200,
-                      # need to subset the neighbors  
+  bam(ndvi ~ s(cell_id, bs = 'mrf', k = 200,
+                      # need to subset the neighbors to those in the data
                       xt = list(nb = nbs[unique(d_1981_06_25$cell_id)])),
       family = gaussian(),
       data = d_1981_06_25,
@@ -209,7 +209,7 @@ m_mrf_1981_06_25 <-
       drop.unused.levels = TRUE,
       control = gam.control(trace = TRUE))
 
-m_ds_1981_06_25 <- bam(ndvi_scaled ~ s(x, y, bs = 'ds'),
+m_ds_1981_06_25 <- bam(ndvi ~ s(x, y, bs = 'ds'),
                        family = gaussian(),
                        data = d_1981_06_25,
                        method = 'fREML',
@@ -229,29 +229,31 @@ ggsave('figures/sardinia-test/douchon-vs-cell-mrf-1981-06-25.png',
 # MRF model is more flexible, gives a better fit, and has good shrinkage
 plot_grid(
   plot_mrf(.model = m_mrf_1981_06_25, .term = c('(Intercept)', 's(cell_id)'),
-           .newdata = d_1981_06_25) +
+           .newdata = d_1981_06_25, .fun = identity) +
     ggtitle('Cell-level MRF'),
   plot_mrf(.model = m_mrf_1981_06_25, .term = c('(Intercept)', 's(cell_id)'),
-           .newdata = d_1981_06_25, .limits = c(NA, NA), pal = viridis::viridis(10)) +
+           .newdata = d_1981_06_25, .limits = c(NA, NA), .fun = identity,
+           pal = viridis::viridis(10)) +
     ggtitle(''),
   d_1981_06_25 %>%
-    mutate(mu_hat = ndvi_to_11(fitted(m_mrf_1981_06_25))) %>%
+    mutate(mu_hat = fitted(m_mrf_1981_06_25)) %>%
     ggplot(aes(ndvi, mu_hat)) +
     coord_equal() +
     geom_point(alpha = 0.2) +
-    geom_smooth(method = 'gam') +
+    geom_smooth(method = 'gam', formula = y ~ s(x)) +
     geom_abline(intercept = 0, slope = 1, color = 'red') +
     labs(x = 'Fitted', y = 'Observed'),
   
   draw(m_ds_1981_06_25, dist = 0.02),
-  draw(m_ds_1981_06_25, dist = 0.02, fun = \(x) ndvi_to_11(x + coef(m_ds_1981_06_25)['(Intercept)'])) &
-    scale_fill_viridis_c('NDVI', limits = ndvi_to_11(range(fitted(m_mrf_1981_06_25)))),
+  draw(m_ds_1981_06_25, dist = 0.02, fun = \(x) x + coef(m_ds_1981_06_25)['(Intercept)']) &
+    # to specify limits manually
+    scale_fill_viridis_c('NDVI', limits = range(fitted(m_mrf_1981_06_25))),
   d_1981_06_25 %>%
-    mutate(mu_hat = ndvi_to_11(fitted(m_ds_1981_06_25))) %>%
+    mutate(mu_hat = fitted(m_ds_1981_06_25)) %>%
     ggplot(aes(ndvi, mu_hat)) +
     coord_equal() +
     geom_point(alpha = 0.2) +
-    geom_smooth(method = 'gam') +
+    geom_smooth(method = 'gam', formula = y ~ s(x)) +
     geom_abline(intercept = 0, slope = 1, color = 'red') +
     labs(x = 'Fitted', y = 'Observed'),
   nrow = 2)
