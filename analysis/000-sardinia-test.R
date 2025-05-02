@@ -1,5 +1,7 @@
-# all tests ran on my personal laptop:
-# 64.0 GB RAM, 13th Gen Intel Core i7-1370P processor (1.90 GHz)
+# specs of my personal laptop:
+# 64.0 GB RAM, 13th Gen Intel Core i7-1370P processor, 14 cores
+# specs of the EME Linux:
+# 2.2 TB RAM, Intel Xeon Platinum 8462Y+ processor, 64 cores
 library('sf')        # for shapefiles
 library('terra')     # for rasters
 library('elevatr')   # for digital elevation models
@@ -11,9 +13,7 @@ library('mgcv')      # for GAMs
 library('ggplot2')   # for fancy plots
 library('cowplot')   # for fancy plots in grids 
 library('gratia')    # for fancy plots of GAMs
-library('inlabru')   # for plotting mesh objects in ggplot
 library('ggplot2')   # for fanct plots
-library('fmesher')   # to generate triangle meshes in polygons
 source('functions/betals.r') # custom beta location-scale family
 source('functions/scale-ndvi.R')
 source('functions/ndvi-palette.R')
@@ -200,8 +200,8 @@ ggplot(d_1981_06_25) +
 
 m_mrf_1981_06_25 <-
   bam(ndvi ~ s(cell_id, bs = 'mrf', k = 200,
-                      # need to subset the neighbors to those in the data
-                      xt = list(nb = nbs[unique(d_1981_06_25$cell_id)])),
+               # need to subset the neighbors to those in the data
+               xt = list(nb = nbs[unique(d_1981_06_25$cell_id)])),
       family = gaussian(),
       data = d_1981_06_25,
       method = 'fREML',
@@ -228,12 +228,12 @@ ggsave('figures/sardinia-test/douchon-vs-cell-mrf-1981-06-25.png',
 
 # MRF model is more flexible, gives a better fit, and has good shrinkage
 plot_grid(
-  plot_mrf(.model = m_mrf_1981_06_25, .term = c('(Intercept)', 's(cell_id)'),
-           .newdata = d_1981_06_25, .fun = identity) +
+  plot_mrf(.model = m_mrf_1981_06_25, .terms = c('(Intercept)', 's(cell_id)'),
+           .newdata = d_1981_06_25) +
     ggtitle('Cell-level MRF'),
-  plot_mrf(.model = m_mrf_1981_06_25, .term = c('(Intercept)', 's(cell_id)'),
-           .newdata = d_1981_06_25, .limits = c(NA, NA), .fun = identity,
-           pal = viridis::viridis(10)) +
+  plot_mrf(.model = m_mrf_1981_06_25, .terms = c('(Intercept)', 's(cell_id)'),
+           .newdata = d_1981_06_25, .limits = c(NA, NA),
+           .pal = viridis::viridis(10)) +
     ggtitle(''),
   d_1981_06_25 %>%
     mutate(mu_hat = fitted(m_mrf_1981_06_25)) %>%
@@ -260,128 +260,138 @@ plot_grid(
 ggsave('figures/sardinia-test/douchon-vs-cell-mrf-1981-06-25-predictions.png',
        width = 15, height = 10, units = 'in', dpi = 300, bg = 'white')
 
-#' *HERE*
-
 # fit a spatially explicit test model with a gaussian family ----
-# on personal laptop: "initial" is 56 s, run is ~2 s
-if(file.exists('models/sardinia-test/gaussian-gam.rds')) {
-  m_gaus <- readRDS('models/sardinia-test/gaussian-gam.rds')
+# MRF model is faster and gives more flexible predictions while keeping
+# reasonable values
+if(all(file.exists(c('models/sardinia-test/gaussian-gam-ds.rds',
+                     'models/sardinia-test/gaussian-gam-mrf.rds')))) {
+  m_gaus_ds <- readRDS('models/sardinia-test/gaussian-gam-ds.rds')
+  m_gaus_mrf <- readRDS('models/sardinia-test/gaussian-gam-mrf.rds')
 } else {
-  m_gaus <- bam(ndvi_scaled ~ s(x, y, bs = 'ds', k = 200) +
-                  s(elev_m, bs = 'ad', k = 10) + # adaptive spline to correct for shorelines better
-                  s(year, bs = 'cr', k = 10) +
-                  s(doy, bs = 'cc', k = 10),
-                family = gaussian(),
-                knots = list(doy = c(0, 1)),
-                data = d,
-                method = 'fREML',
-                discrete = TRUE,
-                control = gam.control(nthreads = 1, trace = TRUE))
-  saveRDS(m_gaus, 'models/sardinia-test/gaussian-gam.rds')
+  # on personal laptop: fits in 34 s
+  system.time(
+    m_gaus_ds <- bam(
+      ndvi ~
+        s(x, y, bs = 'ds', k = 200) +
+        s(elev_m, bs = 'cr', k = 5) +
+        s(year, bs = 'cr', k = 10) +
+        s(doy, bs = 'cc', k = 10),
+      family = gaussian(),
+      knots = list(doy = c(0, 1)),
+      data = d,
+      method = 'fREML',
+      discrete = TRUE,
+      control = gam.control(nthreads = 1, trace = TRUE))
+  )
   
-  draw(m_gaus, rug = FALSE)
-  ggsave('figures/sardinia-test/sardinia-ndvi-gaussian-terms.png',
+  # on personal laptop: fits in 10 s
+  system.time(
+    m_gaus_mrf <- bam(
+      ndvi ~
+        s(cell_id, bs = 'mrf', k = 200, xt = list(nb = nbs)) +
+        s(elev_m, bs = 'cr', k = 5) +
+        s(year, bs = 'cr', k = 10) +
+        s(doy, bs = 'cc', k = 10),
+      family = gaussian(),
+      knots = list(doy = c(0, 1)),
+      data = d,
+      method = 'fREML',
+      discrete = TRUE,
+      control = gam.control(nthreads = 1, trace = TRUE))
+  )
+  
+  # deviance explained and complexity of the spatial terms are similar
+  summary(m_gaus_ds)
+  summary(m_gaus_mrf)
+  
+  draw(m_gaus_ds, rug = FALSE, dist = 0.015)
+  ggsave('figures/sardinia-test/sardinia-ndvi-gaussian-ds-terms.png',
          width = 9, height = 6, units = 'in', dpi = 300, bg = 'white')
   
-  draw(m_gaus, rug = FALSE, fun = \(x) ndvi_to_11(x + coef(m_gaus)['(Intercept)']), dist = 0.03) &
-    scale_fill_viridis_c('NDVI', limits = c(0, 0.4))
-  ggsave('figures/sardinia-test/sardinia-ndvi-gaussian-terms-ndvi-scale.png',
+  plot_mrf(.model = m_gaus_mrf, .newdata = d, .full_model = TRUE)
+  ggsave('figures/sardinia-test/sardinia-ndvi-gaussian-mrf-terms.png',
          width = 9, height = 6, units = 'in', dpi = 300, bg = 'white')
   
-  summary(m_gaus)
+  saveRDS(m_gaus_ds, 'models/sardinia-test/gaussian-gam-ds.rds')
+  saveRDS(m_gaus_mrf, 'models/sardinia-test/gaussian-gam-mrf.rds')
 }
 
 # fit a spatially explicit test model with a beta family ----
-# on personal laptop: "initial" is 35 s, run is ~ 25 minutes
-if(file.exists('models/sardinia-test/beta-gam.rds')) {
-  m_beta <- readRDS('models/sardinia-test/beta-gam.rds')
+# on personal laptop: mrf model fits in ~ 21 minutes
+#                     ds model fits in ~ 25 miutes
+if(file.exists('models/sardinia-test/beta-gam-mrf.rds')) {
+  m_beta_mrf <- readRDS('models/sardinia-test/beta-gam-mrf.rds')
 } else {
-  m_beta <- bam(ndvi_scaled ~ s(x, y, bs = 'ds', k = 200) +
-                  s(elev_m, bs = 'ad', k = 10) +
-                  s(year, bs = 'cr', k = 10) +
-                  s(doy, bs = 'cc', k = 10),
-                family = betar(),
-                knots = list(doy = c(0, 1)),
-                data = d,
-                method = 'fREML',
-                discrete = TRUE,
-                control = gam.control(trace = TRUE))
-  saveRDS(m_beta, 'models/sardinia-test/beta-gam.rds')
+  system.time(
+    m_beta_mrf <- bam(
+      ndvi_scaled ~
+        s(cell_id, bs = 'mrf', k = 200, xt = list(nb = nbs)) +
+        s(elev_m, bs = 'cr', k = 5) +
+        s(year, bs = 'cr', k = 10) +
+        s(doy, bs = 'cc', k = 10),
+      family = betar(),
+      knots = list(doy = c(0, 1)),
+      data = d,
+      method = 'fREML',
+      discrete = TRUE,
+      control = gam.control(trace = TRUE))
+  )
+  saveRDS(m_beta_mrf, 'models/sardinia-test/beta-gam-mrf.rds')
   
-  draw(m_beta, rug = FALSE)
+  plot_mrf(m_beta_mrf, .newdata = d, .rug = FALSE, .full_model = TRUE)
   ggsave('figures/sardinia-test/sardinia-ndvi-beta-terms.png',
          width = 9, height = 6, units = 'in', dpi = 300, bg = 'white')
   
-  draw(m_beta, rug = FALSE, fun = \(x) m_beta$family$linkinv(x + coef(m_beta)['(Intercept)']) %>%
-         ndvi_to_11(), dist = 0.03) &
-    scale_fill_viridis_c('NDVI', limits = c(0, 0.4))
-  ggsave('figures/sardinia-test/sardinia-ndvi-beta-terms-ndvi-scale.png',
-         width = 9, height = 6, units = 'in', dpi = 300, bg = 'white')
-  
-  summary(m_beta)
+  summary(m_beta_mrf)
 }
 
-# fit a spatially explicit test model with a betals family ----
-#' fails with error (*tested on lab linux machine*):
-#'`Error in h(simpleError(msg, call)) :`
-#'`error in evaluating the argument 'x' in selecting a method for function 't':`
-#'`long vectors (argument 5) are not supported in .Fortran`
-#'`Timing stopped at: 3.938e+04 5.971e+04 9.906e+04`
-if(FALSE) {
-  system.time(
-    m_betals <- gam(list(ndvi_scaled ~ s(x, y, bs = 'ds', k = 20) +
-                           s(elev_m, bs = 'ad', k = 10) +
-                           s(year, bs = 'cr', k = 10) +
-                           s(doy, bs = 'cc', k = 10),
-                         ~ s(x, y, bs = 'ds', k = 20) +
-                           s(elev_m, bs = 'ad', k = 10) +
-                           s(year, bs = 'cr', k = 10) +
-                           s(doy, bs = 'cc', k = 10)),
-                    family = betals(),
-                    knots = list(doy = c(0, 1)),
-                    data = d,
-                    method = 'REML',
-                    control = gam.control(nthreads = 10, trace = TRUE)))
-  saveRDS(m_betals, 'models/sardinia-test/betals-gam.rds')
-  
-  draw(m_betals, rug = FALSE)
-  ggsave('figures/sardinia-test/sardinia-ndvi-betals-terms.png',
-         width = 9, height = 12, units = 'in', dpi = 300, bg = 'white')
-  
-  summary(m_betals)
-}
-
-# comparing gaussian and beta models ----
-#' fitting gaussian models rather than beta models because they are
-#' substantially faster with no clear loss to predictive accuracy
-p_fits <-
-  tibble(beta = ndvi_to_11(fitted(m_beta)),
-         gaus = ndvi_to_11(fitted(m_gaus))) %>%
-  ggplot() +
-  geom_point(aes(x, x), data = tibble(x = 0:1), color = 'transparent') +
-  geom_point(aes(beta, gaus),
-             alpha = 0.01) +
-  geom_abline(intercept = 0, slope = 1, color = 'red') +
-  labs(x = 'NDVI predicted by Beta model (with constant scale parameter)',
-       y = 'NDVI predicted by Gaussian model (with constant variance)')
-if(! file.exists('sardinia-ndvi-model-agreement-gaussian-beta.png')) {
-  ggsave('sardinia-ndvi-model-agreement-gaussian-beta.png', plot = p_fits,
-         path = 'figures/sardinia-test', width = 9, height = 6,
-         units = 'in', dpi = 300, bg = 'white')
-}
+#' # fit a spatially explicit test model with a betals family ----
+#' #' running test
+#' #' fails with error (*tested on lab linux machine*):
+#' #'`Error in h(simpleError(msg, call)) :`
+#' #'`error in evaluating the argument 'x' in selecting a method for function 't':`
+#' #'`long vectors (argument 5) are not supported in .Fortran`
+#' #'`Timing stopped at: 3.938e+04 5.971e+04 9.906e+04`
+#' if(FALSE) {
+#'   system.time(
+#'     m_betals <- gam(list(
+#'       ndvi_scaled ~
+#'         s(cell_id, bs = 'mrf', k = 200, xt = list(nb = nbs)) +
+#'         s(elev_m, bs = 'cr', k = 5) +
+#'         s(year, bs = 'cr', k = 10) +
+#'         s(doy, bs = 'cc', k = 10),
+#'       ~ s(cell_id, bs = 'mrf', k = 200, xt = list(nb = nbs)) +
+#'         s(elev_m, bs = 'cr', k = 5) +
+#'         s(year, bs = 'cr', k = 10) +
+#'         s(doy, bs = 'cc', k = 10)),
+#'       family = betals(),
+#'       knots = list(doy = c(0, 1)),
+#'       data = d,
+#'       method = 'REML',
+#'       control = gam.control(nthreads = 10, trace = TRUE))
+#'   )
+#'   saveRDS(m_betals, 'models/sardinia-test/betals-gam.rds')
+#'   
+#'   draw(m_betals, rug = FALSE)
+#'   ggsave('figures/sardinia-test/sardinia-ndvi-betals-terms.png',
+#'          width = 9, height = 12, units = 'in', dpi = 300, bg = 'white')
+#'   
+#'   summary(m_betals)
+#' }
 
 # plots of predicted means and squared residuals for day 1 ----
 preds_1 <- d %>%
-  mutate(mu_gaus = ndvi_to_11(fitted(m_gaus)),
-         mu_beta = ndvi_to_11(fitted(m_beta))) %>%
+  mutate(mu_gaus = fitted(m_gaus_mrf),
+         mu_beta = ndvi_to_11(fitted(m_beta_mrf))) %>%
   filter(date == min(date))
 
-ggplot() +
-  geom_point(aes(mu_beta, mu_gaus), data = preds_1, alpha = 0.1) +
+ggplot(preds_1, aes(mu_beta, mu_gaus)) +
+  geom_point(alpha = 0.1) +
+  geom_smooth(method = 'gam', formula = y ~ s(x)) +
   geom_abline(intercept = 0, slope = 1, color = 'red') +
-  labs(x = 'NDVI predicted by Beta model (with constant scale parameter)',
-       y = 'NDVI predicted by Gaussian model (with constant variance)')
-ggsave(paste0('sardinia-ndvi-model-agreement-gaussian-beta-',
+  labs(x = 'NDVI predicted by Beta MRF model (with constant scale parameter)',
+       y = 'NDVI predicted by Gaussian MRF model (with constant variance)')
+ggsave(paste0('sardinia-ndvi-mrf-model-agreement-gaussian-beta-',
               unique(preds_1$date), '.png'),
        path = 'figures/sardinia-test', width = 9, height = 6, units = 'in',
        dpi = 300, bg = 'white')
@@ -389,8 +399,8 @@ ggsave(paste0('sardinia-ndvi-model-agreement-gaussian-beta-',
 preds_1_long <- preds_1 %>%
   tidyr::pivot_longer(cols = c(mu_gaus, mu_beta), names_to = 'model',
                       names_prefix = 'mu_', values_to = 'mu') %>%
-  mutate(model = case_when(model == 'beta' ~ 'Beta',
-                           model == 'gaus' ~ 'Gaussian'),
+  mutate(model = case_when(model == 'beta' ~ 'Beta MRF GAM',
+                           model == 'gaus' ~ 'Gaussian MRF GAM'),
          e2 = (ndvi - mu)^2)
 
 cowplot::plot_grid(
@@ -399,229 +409,70 @@ cowplot::plot_grid(
     coord_equal() +
     facet_wrap(~ model) +
     geom_raster(aes(x, y, fill = mu), preds_1_long) +
-    scale_fill_viridis_c(expression('NDVI,'~nu), option = 'A') +
+    scale_fill_viridis_c(expression(hat('\U1D6CE')),
+                         option = 'A') +
     labs(title = paste('Predictions for', d$date[1]), x = NULL, y = NULL),
   # plot squared residuals
   ggplot() +
     coord_equal() +
     facet_wrap(~ model) +
     geom_raster(aes(x, y, fill = e2), preds_1_long) +
-    scale_fill_viridis_c(expression((nu-E(nu))^2), limits = c(0, NA)) +
+    scale_fill_viridis_c(expression(
+      paste('(', hat('\U1D6CE'), ' - \U1D53C(', hat('\U1D6CE'), '\U00B2)')),
+      limits = c(0, NA)) +
     labs(title = paste('Squared residuals', d$date[1]), x = NULL, y = NULL),
   labels = 'AUTO', ncol = 1)
 
-ggsave('figures/sardinia-test/sardinia-ndvi-model-agreement-gaussian-beta-predictions.png',
-       height = 12, width = 8, bg = 'white')
-
-# fit a gaussian model with markov random fields ----
-ggplot(sardinia) + geom_sf(aes(fill = poly_id)) + scale_fill_bright()
-
-# could use matrices of coordinates instead of list of neighbors, but not
-# using this because some polygons wrap around the globe, so the nbs need
-# to be fixed manually, and doing so with matrices would not work well 
-st_coordinates(sardinia) %>%
-  as.data.frame() %>%
-  as_tibble() %>%
-  select(! L1) %>%
-  tidyr::nest(poly = ! L2) %>%
-  mutate(poly = map(poly, as.matrix)) %>%
-  pull(poly) %>%
-  `names<-`(1:6)
-
-if(file.exists('models/sardinia-test/gaussian-mrf-gam.rds')) {
-  m_mrf <- readRDS('models/sardinia-test/gaussian-mrf-gam.rds')
-} else {
-  # mrf only
-  m_mrf_0 <- bam(ndvi_scaled ~ s(cell_id, bs = 'mrf', xt = list(nb = nbs), k = 200),
-                 family = gaussian(),
-                 data = d,
-                 method = 'fREML',
-                 discrete = TRUE,
-                 control = gam.control(trace = TRUE))
-  
-  # mrf, elevation, and time
-  m_mrf_1 <- bam(ndvi_scaled ~
-                   s(poly_id, bs = 'mrf', xt = list(nb = nbs)) +
-                   s(elev_m, bs = 'ad', k = 10) + # adaptive spline to correct for shorelines better
-                   s(year, bs = 'cr', k = 10) +
-                   s(doy, bs = 'cc', k = 10),
-                 family = gaussian(),
-                 knots = list(doy = c(0, 1)),
-                 data = d,
-                 method = 'fREML',
-                 discrete = TRUE,
-                 control = gam.control(trace = TRUE))
-  
-  # adding a complex spatially explitit smoother along with polygon MRFs
-  m_mrf_2 <- bam(ndvi_scaled ~
-                   s(poly_id, bs = 'mrf', xt = list(nb = nbs)) +
-                   s(x, y, bs = 'ds', k = 200) +
-                   s(elev_m, bs = 'ad', k = 10) +
-                   s(year, bs = 'cr', k = 10) +
-                   s(doy, bs = 'cc', k = 10),
-                 family = gaussian(),
-                 knots = list(doy = c(0, 1)),
-                 data = sardinia_ndvi,
-                 data = d,
-                 method = 'fREML',
-                 discrete = TRUE,
-                 control = gam.control(trace = TRUE))
-  
-  round(summary(m_mrf_0)$dev.expl * 100, 2)
-  round(summary(m_mrf_1)$dev.expl * 100, 2) # increases substantially
-  round(summary(m_mrf_2)$dev.expl * 100, 2) # does not increase much
-  
-  saveRDS(m_mrf_1, 'models/sardinia-test/gaussian-mrf-gam.rds')
-  
-  if(FALSE) {
-    # even a simple beta model with only mrfs is much slower
-    # fits in 19.7 minutes (compared to < 5 seconds for the gaussian model)
-    m_mrf_b <- bam(ndvi_scaled ~ s(poly_id, bs = 'mrf', xt = list(nb = nbs)),
-                   family = betar(),
-                   data = d,
-                   method = 'fREML',
-                   discrete = TRUE,
-                   control = gam.control(trace = TRUE))
-  }
-  
-  m_mrf <- m_mrf_1
-  rm(m_mrf_0, m_mrf_1, m_mrf_2, m_mrf_b)
-}
-
-# can't draw mrf smooths fit using polygons
-draw(m_mrf, rug = FALSE, select = -1, scales = 'fixed')
-summary(m_mrf)
-
-mrf_preds <- sardinia %>%
-  mutate(year = 0, doy = 0, elev_m = 0) %>%
-  mutate(mu = predict(m_mrf, ., type = 'response', terms = 's(poly_id)'),
-         ndvi = ndvi_to_11(mu + coef(m_mrf)['(Intercept)']))
-
-# recreate the plot from draw()
-mrf_plots <- list(
-  ggplot(mrf_preds) +
-    geom_sf(aes(fill = mu)) +
-    scale_fill_distiller('Partial\neffect', type = 'div', palette = 5,
-                         limits = c(-1, 1) * max(abs(mrf_preds$mu))),
-  draw(m_mrf, rug = FALSE, select = 2),
-  draw(m_mrf, rug = FALSE, select = 3),
-  draw(m_mrf, rug = FALSE, select = 4))
-cowplot::plot_grid(plotlist = mrf_plots)
-ggsave('figures/sardinia-test/sardinia-ndvi-mrf-terms.png',
-       width = 9, height = 6, units = 'in', dpi = 300, bg = 'white')
-
-mrf_plots_11 <- list(
-  ggplot(mrf_preds) +
-    geom_sf(aes(fill = ndvi)) +
-    scale_fill_distiller('Partial\neffect', type = 'div', palette = 5,
-                         limits = c(-1, 1) * max(abs(mrf_preds$ndvi))),
-  draw(m_mrf, rug = FALSE, select = 2,
-       fun = \(x) ndvi_to_11(x + coef(m_mrf)['(Intercept)'])),
-  draw(m_mrf, rug = FALSE, select = 3,
-       fun = \(x) ndvi_to_11(x + coef(m_mrf)['(Intercept)'])),
-  draw(m_mrf, rug = FALSE, select = 4,
-       fun = \(x) ndvi_to_11(x + coef(m_mrf)['(Intercept)'])))
-cowplot::plot_grid(plotlist = mrf_plots_11)
-ggsave('figures/sardinia-test/sardinia-ndvi-mrf-terms-ndvi-scale.png',
-       width = 9, height = 6, units = 'in', dpi = 300, bg = 'white')
-
-# relatively close deviance explained for the three models
-# (considering that the deviances are different between gaussian and beta)
-round(summary(m_gaus)$dev.expl * 100, 2)
-round(summary(m_beta)$dev.expl * 100, 2)
-round(summary(m_mrf)$dev.expl * 100, 2)
+ggsave('sardinia-ndvi-mrf-model-agreement-gaussian-beta-predictions.png',
+       path = 'figures/sardinia-test', height = 12, width = 8, bg = 'white')
 
 # check agreement with other models
 p_fits_mrf <-
-  tibble(ds = predict(m_gaus, newdata = d, type = 'response') %>%
-           ndvi_to_11(),
-         mrf = predict(m_mrf, newdata = d, type = 'response') %>%
+  tibble(gaus = predict(m_gaus_mrf, newdata = d, type = 'response'),
+         beta = predict(m_beta_mrf, newdata = d, type = 'response') %>%
            ndvi_to_11()) %>%
   ggplot() +
   geom_point(aes(x, x), data = tibble(x = 0:1), color = 'transparent') +
-  geom_point(aes(ds, mrf), alpha = 0.01) +
+  geom_point(aes(gaus, beta), alpha = 0.01) +
   geom_abline(intercept = 0, slope = 1, color = 'red') +
-  labs(x = 'NDVI predicted by Gaussian model (with Duchon spatial smooth)',
-       y = 'NDVI predicted by Gaussian model (with MRF smooth)')
-ggsave('sardinia-ndvi-model-agreement-duchon-mrf.png', plot = p_fits_mrf,
+  labs(x = 'NDVI predicted by Gaussian model (with MRF smooth)',
+       y = 'NDVI predicted by Beta model (with MRF smooth)')
+
+ggsave('sardinia-ndvi-model-agreement-mrf.png', plot = p_fits_mrf,
        path = 'figures/sardinia-test', width = 9, height = 6, units = 'in',
        dpi = 300, bg = 'white')
-
-#' to fix the discordance above, we could add the average residual for a
-#' given pixel to the mean and subtract it from the residuals before
-#' calculating the variance
-#' 
-#' could also correct for NDVI bias in islands using log(area_km2)
-
-# plots of predicted means and squared residuals for day 1 ----
-preds_1_mrf <- d %>%
-  filter(date == min(date)) %>%
-  mutate(.,
-         ds = ndvi_to_11(predict(m_gaus, newdata = .,
-                                 type = 'response', discrete = TRUE)),
-         mrf = ndvi_to_11(predict(m_mrf, newdata = .,
-                                  type = 'response', discrete = TRUE)))
-
-ggplot() +
-  geom_point(aes(ds, mrf), data = preds_1_mrf, alpha = 0.1) +
-  geom_abline(intercept = 0, slope = 1, color = 'red') +
-  labs(x = 'NDVI predicted by Gaussian model (with Duchon spatial smooth)',
-       y = 'NDVI predicted by Gaussian model (with MRF smooth)')
-ggsave(paste0('sardinia-ndvi-model-agreement-duchon-mrf-',
-              unique(preds_1_mrf$date), '.png'),
-       path = 'figures/sardinia-test', width = 9, height = 6, units = 'in',
-       dpi = 300, bg = 'white')
-
-preds_1_mrf_long <- preds_1_mrf %>%
-  tidyr::pivot_longer(cols = c(ds, mrf), names_to = 'model', values_to = 'mu') %>%
-  mutate(model = case_when(model == 'ds' ~ 'Duchon smooth',
-                           model == 'mrf' ~ 'Markov Random Fields'),
-         e2 = (ndvi - mu)^2)
-
-cowplot::plot_grid(
-  # plot estimated mean
-  ggplot() +
-    coord_equal() +
-    facet_wrap(~ model) +
-    geom_raster(aes(x, y, fill = mu), preds_1_mrf_long) +
-    scale_fill_viridis_c(expression('NDVI,'~nu), option = 'A') +
-    labs(title = paste('Predictions for', d$date[1]), x = NULL, y = NULL),
-  # plot squared residuals
-  ggplot() +
-    coord_equal() +
-    facet_wrap(~ model) +
-    geom_raster(aes(x, y, fill = e2), preds_1_mrf_long) +
-    scale_fill_viridis_c(expression((nu-E(nu))^2), limits = c(0, NA)) +
-    labs(title = paste('Squared residuals', d$date[1]), x = NULL, y = NULL),
-  labels = 'AUTO', ncol = 1)
-
-ggsave(paste0('figures/sardinia-test/sardinia-ndvi-model-agreement-duchon-mrf-',
-              unique(preds_1_mrf$date), 'predictions.png'),
-       height = 12, width = 8, bg = 'white')
 
 # testing complexity of ti(doy, space) ----
-#' `ti()` of doy and space doesn't add much
-# on personal laptop: "initial" is 50 s, run is 5 s
-if(file.exists('models/sardinia-test/gaus-gam-ti-ds-gam.rds')) {
-  m_gaus_ti_ds <- readRDS('models/sardinia-test/gaus-gam-ti-ds-gam.rds')
+#' can fit `ti()` terms with MRF smooths exactly as with other bases
+#' *MRF ti fit is flat -- may be because of lack of trends in the data?*
+#' on personal laptop: without `ti(doy, mrf)` fits in ~15 s
+#' on personal laptop: with `ti(doy, mrf)` fits in ~25 s
+if(file.exists('models/sardinia-test/gaus-gam-ti-mrf-gam.rds')) {
+  m_gaus_ti_ds <- readRDS('models/sardinia-test/gaus-gam-ti-mrf-gam.rds')
 } else {
-  m_gaus_ti_ds <- bam(ndvi_scaled ~
-                        s(x, y, bs = 'ds', k = 200) +
-                        s(elev_m, bs = 'ad', k = 10) + # adaptive spline to correct for shorelines better
-                        s(year, bs = 'cr', k = 10) +
-                        s(doy, bs = 'cc', k = 10) +
-                        ti(doy, year, bs = c('cc', 'cr'), k = c(5, 5)),
-                      family = gaussian(),
-                      knots = list(doy = c(0, 1)),
-                      data = d,
-                      method = 'fREML',
-                      discrete = TRUE,
-                      control = gam.control(nthreads = 1, trace = TRUE))
-  saveRDS(m_gaus_ti_ds, 'models/sardinia-test/gaus-gam-ti-ds-gam.rds')
+  system.time(
+    m_gaus_ti_mrf <- bam(
+      ndvi ~
+        s(cell_id, bs = 'mrf', k = 200, xt = list(nb = nbs)) +
+        s(elev_m, bs = 'cr', k = 5) +
+        s(year, bs = 'cr', k = 10) +
+        s(doy, bs = 'cc', k = 10) +
+        ti(doy, year, bs = c('cc', 'cr'), k = c(5, 5)) +
+        ti(doy, cell_id, bs = c('cc', 'mrf'), k = c(5, 10),
+           xt = list(nb = nbs)),
+      family = gaussian(),
+      knots = list(doy = c(0, 1)),
+      data = d,
+      method = 'fREML',
+      discrete = TRUE,
+      control = gam.control(nthreads = 1, trace = TRUE))
+  )
+  saveRDS(m_gaus_ti_mrf, 'models/sardinia-test/gaus-gam-ti-mrf-gam.rds')
+  
+  plot_mrf(.model = m_gaus_ti_mrf, .newdata = d, .full_model = TRUE, ti_surfaces = TRUE)
+  ggsave('figures/sardinia-test/sardinia-ndvi-gaussian-mrf-ti-terms.png',
+         width = 13.5, height = 8, units = 'in', dpi = 300, bg = 'white')
+  plot_mrf(.model = m_gaus_ti_mrf, .newdata = d, .full_model = TRUE, ti_surfaces = FALSE)
 }
-
-draw(m_gaus_ti_ds, rug = FALSE)
-ggsave('figures/sardinia-test/sardinia-ndvi-gaussian-ti-terms.png',
-       width = 13.5, height = 6, units = 'in', dpi = 300, bg = 'white')
 
 summary(m_gaus_ti_ds)
