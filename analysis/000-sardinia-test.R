@@ -222,7 +222,7 @@ ggplot() +
              alpha = 0.2) +
   geom_abline(intercept = 0, slope = 1, color = 'red') +
   labs(x = 'Fitted values from the cell-level MRF GAM',
-       y = 'Fitted values from Douchon-spine GAM')
+       y = 'Fitted values from Douchon-spline GAM')
 ggsave('figures/sardinia-test/douchon-vs-cell-mrf-1981-06-25.png',
        width = 5, height = 4, units = 'in', dpi = 600, bg = 'white')
 
