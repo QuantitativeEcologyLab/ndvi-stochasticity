@@ -18,6 +18,7 @@ source('functions/betals.r') # custom beta location-scale family
 source('functions/scale-ndvi.R')
 source('functions/ndvi-palette.R')
 source('functions/plot_mrf.R') # for plotting markov random field smooths
+source('functions/qr.default_with_LAPACK.R')
 source('analysis/figures/000-default-ggplot-theme.R')
 
 # the bounding box for sardinia (large enough to include all coast)
@@ -269,6 +270,7 @@ if(all(file.exists(c('models/sardinia-test/gaussian-gam-ds.rds',
   m_gaus_mrf <- readRDS('models/sardinia-test/gaussian-gam-mrf.rds')
 } else {
   # on personal laptop: fits in 34 s
+  # on EME: fits in 30 s
   system.time(
     m_gaus_ds <- bam(
       ndvi ~
@@ -281,10 +283,12 @@ if(all(file.exists(c('models/sardinia-test/gaussian-gam-ds.rds',
       data = d,
       method = 'fREML',
       discrete = TRUE,
-      control = gam.control(nthreads = 1, trace = TRUE))
+      nthreads = 10,
+      control = gam.control(trace = TRUE))
   )
   
   # on personal laptop: fits in 10 s
+  # on EME: fits in 30 s
   system.time(
     m_gaus_mrf <- bam(
       ndvi ~
@@ -319,6 +323,8 @@ if(all(file.exists(c('models/sardinia-test/gaussian-gam-ds.rds',
 # fit a spatially explicit test model with a beta family ----
 # on personal laptop: mrf model fits in ~ 21 minutes
 #                     ds model fits in ~ 25 miutes
+# on EME linux: mrf model fits in ~ 9.0 minutes
+#                ds model fits in ~ 8.8 miutes
 if(file.exists('models/sardinia-test/beta-gam-mrf.rds')) {
   m_beta_mrf <- readRDS('models/sardinia-test/beta-gam-mrf.rds')
 } else {
@@ -326,6 +332,7 @@ if(file.exists('models/sardinia-test/beta-gam-mrf.rds')) {
     m_beta_mrf <- bam(
       ndvi_scaled ~
         s(cell_id, bs = 'mrf', k = 200, xt = list(nb = nbs)) +
+        #s(x, y, bs = 'ds', k = 200) +
         s(elev_m, bs = 'cr', k = 5) +
         s(year, bs = 'cr', k = 10) +
         s(doy, bs = 'cc', k = 10),
