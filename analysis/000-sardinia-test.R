@@ -20,6 +20,9 @@ source('functions/ndvi-palette.R')
 source('functions/plot_mrf.R') # for plotting markov random field smooths
 source('functions/qr.default_with_LAPACK.R')
 source('analysis/figures/000-default-ggplot-theme.R')
+assignInNamespace(x = 'qr.default',   # replace `base::qr.default()`
+                  value = qr.default, # with the local version sourced above
+                  ns = 'base')        # specify the base package
 
 # the bounding box for sardinia (large enough to include all coast)
 sardinia_bbox <- tibble(x = c(7.6, 10.4), y = c(38.8, 41.3)) %>%
@@ -352,39 +355,35 @@ if(file.exists('models/sardinia-test/beta-gam-mrf.rds')) {
   summary(m_beta_mrf)
 }
 
-#' # fit a spatially explicit test model with a betals family ----
-#' #' running test
-#' #' fails with error (*tested on lab linux machine*):
-#' #'`Error in h(simpleError(msg, call)) :`
-#' #'`error in evaluating the argument 'x' in selecting a method for function 't':`
-#' #'`long vectors (argument 5) are not supported in .Fortran`
-#' #'`Timing stopped at: 3.938e+04 5.971e+04 9.906e+04`
-#' if(FALSE) {
-#'   system.time(
-#'     m_betals <- gam(list(
-#'       ndvi_scaled ~
-#'         s(cell_id, bs = 'mrf', k = 200, xt = list(nb = nbs)) +
-#'         s(elev_m, bs = 'cr', k = 5) +
-#'         s(year, bs = 'cr', k = 10) +
-#'         s(doy, bs = 'cc', k = 10),
-#'       ~ s(cell_id, bs = 'mrf', k = 200, xt = list(nb = nbs)) +
-#'         s(elev_m, bs = 'cr', k = 5) +
-#'         s(year, bs = 'cr', k = 10) +
-#'         s(doy, bs = 'cc', k = 10)),
-#'       family = betals(),
-#'       knots = list(doy = c(0, 1)),
-#'       data = d,
-#'       method = 'REML',
-#'       control = gam.control(nthreads = 10, trace = TRUE))
-#'   )
-#'   saveRDS(m_betals, 'models/sardinia-test/betals-gam.rds')
-#'   
-#'   draw(m_betals, rug = FALSE)
-#'   ggsave('figures/sardinia-test/sardinia-ndvi-betals-terms.png',
-#'          width = 9, height = 12, units = 'in', dpi = 300, bg = 'white')
-#'   
-#'   summary(m_betals)
-#' }
+# fit a spatially explicit test model with a betals family ----
+#' requires `LAPACK = TRUE` in `base::qr.default()`, which can only be done with
+#' `assignInNamespace()` because `fixInNamespace()` can't edit the function
+if(FALSE) {
+  system.time(
+    m_betals <- gam(list(
+      ndvi_scaled ~
+        s(cell_id, bs = 'mrf', k = 200, xt = list(nb = nbs)) +
+        s(elev_m, bs = 'cr', k = 5) +
+        s(year, bs = 'cr', k = 10) +
+        s(doy, bs = 'cc', k = 10),
+      ~ s(cell_id, bs = 'mrf', k = 200, xt = list(nb = nbs)) +
+        s(elev_m, bs = 'cr', k = 5) +
+        s(year, bs = 'cr', k = 10) +
+        s(doy, bs = 'cc', k = 10)),
+      family = betals(),
+      knots = list(doy = c(0, 1)),
+      data = d,
+      method = 'REML',
+      control = gam.control(nthreads = 10, trace = TRUE))
+  )
+  saveRDS(m_betals, 'models/sardinia-test/betals-gam.rds')
+  
+  draw(m_betals, rug = FALSE)
+  ggsave('figures/sardinia-test/sardinia-ndvi-betals-terms.png',
+         width = 9, height = 12, units = 'in', dpi = 300, bg = 'white')
+  
+  summary(m_betals)
+}
 
 # plots of predicted means and squared residuals for day 1 ----
 preds_1 <- d %>%
