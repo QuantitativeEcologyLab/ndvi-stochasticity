@@ -1,6 +1,4 @@
 # PRIORITY
-- check fitting times on EME linux for sardinia test
-- test betals on EME linux for sardinia test
 
 # tests
 - look at green-up rates of areas wit rapid growth rates; e.g.: boreal canada, polar areas
