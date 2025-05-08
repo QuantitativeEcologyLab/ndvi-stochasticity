@@ -100,50 +100,56 @@ if(FALSE) {
 d <- mutate(d, elevation_m = if_else(elevation_m < 0, 0, elevation_m))
 
 # create list of neighbors ----
-ecoregions$in_data <- ecoregions$poly_id %in% unique(d$poly_id)
-filter(ecoregions, ! in_data) # some polygons have no data
-filter(ecoregions, ! in_data & n_neigh == 0) # some polygons have no data and have no neighbors
+# all rasters use same coords
+r_0 <- rast('H:/GitHub/ndvi-stochasticity/data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v005_AVH13C1_NOAA-07_19810624_c20170610041337.nc',
+            lyr = 'NDVI')
+values(r_0) <- 1
+r_0 <- mask(r_0, st_transform(ecoregions, crs(r_0)))
+names(r_0) <- 'z'
+plot(r_0)
 
-if(FALSE) {
-  ggplot(ecoregions, aes(log10(area_km2), in_data)) + geom_point()
-  
-  ggplot(ecoregions, aes(log10(area_km2), n_neigh)) +
-    facet_wrap(~ in_data) +
-    geom_point()
+if(file.exists('data/ecoregions/global-cell-nbs.rds')) {
+  nbs <- readRDS('data/ecoregions/global-cell-nbs.rds')
+} else {
+  nbs <-
+    adjacent(r_0, cells = cells(r_0), directions = 8, include = TRUE) %>%
+    as.data.frame() %>%
+    transmute(ref_cell = V1, # first column is the starting cell
+              # add the 8 surrounding neighbors
+              adjacent = map(1:n(), \(i) {
+                .z <- c(V2[i], V3[i], V4[i], V5[i], V6[i], V7[i], V8[i], V9[i])
+                
+                .values <- map_lgl(.z, \(.cell_id) {
+                  if(is.nan(.cell_id)) {
+                    return(NA)
+                  } else {
+                    return(r_0[.cell_id]$z[1])
+                  }})
+                
+                .z <- .z[which(! is.na(.values))] # drop cells w NA values
+                
+                if(length(.z) == 0) {
+                  return(0)
+                } else {
+                  return(as.character(.z))
+                }
+              })) %>%
+    as_tibble() # for easier viewing when printing
+  nbs
+  names(nbs$adjacent) <- nbs$ref_cell
+  nbs <- nbs$adjacent
+  head(nbs)
+  saveRDS(nbs, 'data/ecoregions/global-cell-nbs.rds')
 }
 
-ecoregions <- filter(ecoregions, in_data)
-
-nbs <- spdep::poly2nb(pl = ecoregions,
-                      row.names = ecoregions$poly_id, # so that names match IDs
-                      queen = TRUE) # 1 point in common is sufficient
-length(nbs) == nrow(ecoregions)
-names(nbs) <- ecoregions$poly_id # names do not need to match indices
-
-# add missing neighbors because of polygons that cross the edge of the map
-c('poly 8225', 'poly 8038', 'poly 7987', 'poly 8226', 'poly 7988', 'poly 8040') %in%
-  ecoregions$poly_id
-c('poly 8225', 'poly 8038', 'poly 7987', 'poly 8226', 'poly 7988', 'poly 8040') %in%
-  names(nbs)
-
-layout(matrix(1:6, ncol = 2))
-# 7987 and 8038 are already neighbors
-# 7988 and 8040 are already neighbors
-# 7987 and 8226 do not touch
-add_nb(p1 = 'poly 8225', p2 = 'poly 8226', add = TRUE)
-add_nb(p1 = 'poly 8038', p2 = 'poly 8040', add = TRUE)
-add_nb(p1 = 'poly 7987', p2 = 'poly 7988', add = TRUE)
-add_nb(p1 = 'poly 7987', p2 = 'poly 8040', add = TRUE)
-add_nb(p1 = 'poly 7988', p2 = 'poly 8038', add = TRUE)
-add_nb(p1 = 'poly 8980', p2 = 'poly 8987', add = TRUE)
-layout(1)
-
-all(names(nbs) == ecoregions$poly_id)
-
-d <- d %>%
-  mutate(poly_id = factor(poly_id, levels = names(nbs)),
+d <-
+  mutate(d,
+         cell_id = cellFromXY(r_0, xy = as.matrix(tibble(x, y))) %>%
+           factor(levels = names(nbs)),
          wwf_ecoregion = paste(wwf_ecoregion, if_else(y > 0, 'N', 'S')) %>%
            factor())
+
+#' **HERE (need to run code for nbs above) **
 
 # global smooths only
 # 2020 only: initial is 34 s, fit is 5 s
@@ -312,11 +318,11 @@ d <- d %>%
 # k = 1e3: fits in ~ 30 seconds
 # k = 2e3: fits in ~ 653 seconds
 m_sos <- bam(ndvi_15_day_mean ~ s(y, x, bs = 'sos', k = 2e3), # s(lat,long)
-  family = gaussian(),
-  data = d,
-  method = 'fREML',
-  discrete = TRUE,
-  control = gam.control(trace = TRUE))
+             family = gaussian(),
+             data = d,
+             method = 'fREML',
+             discrete = TRUE,
+             control = gam.control(trace = TRUE))
 saveRDS(m_sos, 'models/global-test/test-mean-gam-sos-only.rds')
 
 png('figures/test-hgams/test-hgam-sos.png', width = 7.5, height = 10,

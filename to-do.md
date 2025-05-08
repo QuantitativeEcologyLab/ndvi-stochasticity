@@ -22,7 +22,7 @@
   - use larger triangles near coast to avoid edge effects
   - fit an MRF using vertices of triangles as REs for the spatial smooth
   - use "barriers" to account for separating islands
-  - use adaptive splines for year to allow for rapid change in ~2010?
+  - use adaptive splines for year to allow for rapid change in ~2010? (no difference in sardinia test)
 
 # products
 - static raster for GIS people: exclude `s(year)`, `s(doy)`, and `ti(year,doy)`
