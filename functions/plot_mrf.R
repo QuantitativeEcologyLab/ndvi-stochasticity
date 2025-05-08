@@ -99,11 +99,10 @@ plot_mrf <- function(.model, .terms = NULL, .newdata, .type = 'link',
           return(p_ti)
         } #' close function for `purrr::map()`
       )
+      
+      .draws[[length(.draws) + (1:length(ti_plots))]] <-
+        ti_plots[[1:length(ti_plots)]]
     } #' close `if(length(mrf_terms) > 0)`
-
-    
-    .draws[[length(.draws) + (1:length(ti_plots))]] <-
-      ti_plots[[1:length(ti_plots)]]
     
     plots <- plot_grid(plotlist = .draws)
     
