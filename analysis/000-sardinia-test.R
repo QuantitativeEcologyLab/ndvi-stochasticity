@@ -358,8 +358,9 @@ if(file.exists('models/sardinia-test/beta-gam-mrf.rds')) {
 # fit a spatially explicit test model with a betals family ----
 #' requires `LAPACK = TRUE` in `base::qr.default()`, which can only be done with
 #' `assignInNamespace()` because `fixInNamespace()` can't edit the function
+#' fitting time is >> 120 hours = 5 days on EME Linux
 if(FALSE) {
-  system.time( # fitting time is >> 120 hours = 5 days
+  system.time(
     m_betals <- gam(list(
       ndvi_scaled ~
         s(cell_id, bs = 'mrf', k = 200, xt = list(nb = nbs)) +
@@ -482,4 +483,4 @@ if(file.exists('models/sardinia-test/gaus-gam-ti-mrf-gam.rds')) {
   plot_mrf(.model = m_gaus_ti_mrf, .newdata = d, .full_model = TRUE, ti_surfaces = FALSE)
 }
 
-summary(m_gaus_ti_ds)
+summary(m_gaus_ti_mrf)
