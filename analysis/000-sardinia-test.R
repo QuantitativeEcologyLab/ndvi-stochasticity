@@ -359,7 +359,7 @@ if(file.exists('models/sardinia-test/beta-gam-mrf.rds')) {
 #' requires `LAPACK = TRUE` in `base::qr.default()`, which can only be done with
 #' `assignInNamespace()` because `fixInNamespace()` can't edit the function
 if(FALSE) {
-  system.time(
+  system.time( # fitting time is >> 120 hours = 5 days
     m_betals <- gam(list(
       ndvi_scaled ~
         s(cell_id, bs = 'mrf', k = 200, xt = list(nb = nbs)) +
@@ -374,6 +374,7 @@ if(FALSE) {
       knots = list(doy = c(0, 1)),
       data = d,
       method = 'REML',
+      samfrac = 0.001,
       control = gam.control(nthreads = 10, trace = TRUE))
   )
   saveRDS(m_betals, 'models/sardinia-test/betals-gam.rds')
