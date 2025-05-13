@@ -1,4 +1,9 @@
 # PRIORITY
+- started re-downlodaing rasters to `~/bigdrive/shared/avhrr-viirs-ndvi-raster-files/` on EME linux
+- need to re-run all scripts for creating datasets and global neighbors:
+  - split data by continents
+  - not splitting neighbors by continents
+  - re-organize and clean up scripts
 
 # tests
 - look at green-up rates of areas wit rapid growth rates; e.g.: boreal canada, polar areas
