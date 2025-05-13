@@ -84,52 +84,7 @@ if(FALSE) {
 
 d <- mutate(d, elevation_m = if_else(elevation_m < 0, 0, elevation_m))
 
-# create list of neighbors ----
-# all rasters use same coords (about 1.6 M cells with values)
-r_0 <- rast('data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v005_AVH13C1_NOAA-07_19810624_c20170610041337.nc',
-            lyr = 'QA') %>% # to have a value for each cell irrespective of raster
-  aggregate(2) # because aggregated in the dataset
-values(r_0) <- 1
-r_0 <- mask(r_0, st_transform(ecoregions, crs(r_0)))
-names(r_0) <- 'z'
-plot(r_0)
-
-if(file.exists('data/global-cell-nbs.rds')) {
-  nbs <- readRDS('data/global-cell-nbs.rds')
-} else {
-  nbs <-
-    adjacent(r_0, cells = cells(r_0), directions = 8, include = TRUE) %>%
-    as.data.frame() %>%
-    transmute(ref_cell = V1, # first column is the starting cell
-              # add the 8 surrounding neighbors
-              adjacent = map(1:n(), \(i) {
-                .z <- c(V2[i], V3[i], V4[i], V5[i], V6[i], V7[i], V8[i], V9[i])
-                
-                .values <- map_lgl(.z, \(.cell_id) {
-                  if(is.nan(.cell_id)) {
-                    return(NA)
-                  } else {
-                    return(r_0[.cell_id]$z[1])
-                  }})
-                
-                .z <- .z[which(! is.na(.values))] # drop cells w NA values
-                
-                if(length(.z) == 0) {
-                  return(0)
-                } else {
-                  return(as.character(.z))
-                }
-              })) %>%
-    as_tibble() # for easier viewing when printing
-  nbs
-  names(nbs$adjacent) <- nbs$ref_cell
-  nbs <- nbs$adjacent
-  head(nbs)
-  saveRDS(nbs, 'data/global-cell-nbs.rds')
-  
-  # save raster of cell names
-  
-}
+nbs <- readRDS('data/cell-nbs-list.rds')
 
 d <-
   mutate(d,
