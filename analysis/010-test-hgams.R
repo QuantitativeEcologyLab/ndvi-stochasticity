@@ -9,8 +9,8 @@ library('terra')   # for rasters
 library('elevatr') # for extracting elevation
 library('gratia')  # for plotting GAMs
 source('analysis/figures/000-default-ggplot-theme.R')
-source('functions/add_nb.R')
 
+# shapefile of ecoregions for masking rasters
 ecoregions <- st_read('data/ecoregions/ecoregions-polygons.shp')
 
 if(file.exists('data/hbam-ndvi-data-2020-2021-only.rds')) {
@@ -21,6 +21,7 @@ if(file.exists('data/hbam-ndvi-data-2020-2021-only.rds')) {
               lyr = 'QA') %>% # to have a value for each cell irrespective of raster
     aggregate(2) # because aggregated in the dataset
   values(r_0) <- 1
+  r_0 <- mask(r_0, st_transform(ecoregions, crs(r_0)))
   plot(r_0)
   res(r_0)
   
@@ -58,58 +59,43 @@ if(file.exists('data/hbam-ndvi-data-2020-2021-only.rds')) {
     r_elev <- rast(r_elev) #' `{elevatr}` v.0.99.0 still uses `raster::raster()`
     res(r_elev)
     res(r_0)
-    plot(r_elev)
     r_elev <- project(r_elev, r_0) # project to common projection and resolution
+    plot(r_elev)
     writeRaster(r_elev, 'data/elev-raster.tif')
-  }
-  
-  # create raster of distance from coast
-  if(file.exists('data/distance-from-coast-m.tif')) {
-    r_dist <- rast('data/distance-from-coast-m.tif')
-  } else {
-    r_dist <- mask(r_0, vect(ecoregions), inverse = TRUE) %>%
-      distance()
-    r_dist <- mask(r_dist, st_transform(ecoregions, crs(r_dist)))
-    plot(r_dist, main = 'Distance from coast (m)')
-    plot(log10(r_dist), main = expression(bold(log['10'](Distance~(m)))))
-    writeRaster(r_dist, 'data/distance-from-coast-m.tif')
   }
   
   d <- bind_rows(readRDS('data/ndvi-global-15-day-average-2020-only.rds'),
                  readRDS('data/ndvi-global-15-day-average-2021-only.rds')) %>%
     #' use `exact_extract()` for more data?
     mutate(doy = lubridate::yday(central_date),
-           poly_id = extract(r_poly_id, data.frame(x, y))[, 2], # 1 is pixel ID
-           wwf_ecoregion = extract(r_eco, data.frame(x, y))[, 2],
-           distance_coast_m = extract(r_dist, data.frame(x, y))[, 2],
            elevation_m = extract(r_elev, data.frame(x, y))[, 2]) %>%
-    # convert strings to factors
-    mutate(wwf_ecoregion = factor(wwf_ecoregion)) %>%
     na.omit() # drop some NAs (< 0.1%)
   saveRDS(d, 'data/hbam-ndvi-data-2020-2021-only.rds')
 }
 
 # set excessively low elevations to sea level (occurs mostly near islands)
+range(d$elevation_m)
 if(FALSE) {
   plot(st_geometry(ecoregions))
   d %>%
     filter(elevation_m < 0) %>%
-    points(y ~ x, ., col = 'red', pch = 19)
+    points(y ~ x, ., col = 'red', pch = '.', cex = 2)
 }
 
 d <- mutate(d, elevation_m = if_else(elevation_m < 0, 0, elevation_m))
 
 # create list of neighbors ----
-# all rasters use same coords
-r_0 <- rast('H:/GitHub/ndvi-stochasticity/data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v005_AVH13C1_NOAA-07_19810624_c20170610041337.nc',
-            lyr = 'NDVI')
+# all rasters use same coords (about 1.6 M cells with values)
+r_0 <- rast('data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v005_AVH13C1_NOAA-07_19810624_c20170610041337.nc',
+            lyr = 'QA') %>% # to have a value for each cell irrespective of raster
+  aggregate(2) # because aggregated in the dataset
 values(r_0) <- 1
 r_0 <- mask(r_0, st_transform(ecoregions, crs(r_0)))
 names(r_0) <- 'z'
 plot(r_0)
 
-if(file.exists('data/ecoregions/global-cell-nbs.rds')) {
-  nbs <- readRDS('data/ecoregions/global-cell-nbs.rds')
+if(file.exists('data/global-cell-nbs.rds')) {
+  nbs <- readRDS('data/global-cell-nbs.rds')
 } else {
   nbs <-
     adjacent(r_0, cells = cells(r_0), directions = 8, include = TRUE) %>%
@@ -139,17 +125,16 @@ if(file.exists('data/ecoregions/global-cell-nbs.rds')) {
   names(nbs$adjacent) <- nbs$ref_cell
   nbs <- nbs$adjacent
   head(nbs)
-  saveRDS(nbs, 'data/ecoregions/global-cell-nbs.rds')
+  saveRDS(nbs, 'data/global-cell-nbs.rds')
+  
+  # save raster of cell names
+  
 }
 
 d <-
   mutate(d,
          cell_id = cellFromXY(r_0, xy = as.matrix(tibble(x, y))) %>%
-           factor(levels = names(nbs)),
-         wwf_ecoregion = paste(wwf_ecoregion, if_else(y > 0, 'N', 'S')) %>%
-           factor())
-
-#' **HERE (need to run code for nbs above) **
+           factor(levels = names(nbs)))
 
 # global smooths only
 # 2020 only: initial is 34 s, fit is 5 s
