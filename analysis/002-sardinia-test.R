@@ -359,6 +359,7 @@ if(file.exists('models/sardinia-test/beta-gam-mrf.rds')) {
 #' requires `LAPACK = TRUE` in `base::qr.default()`, which can only be done with
 #' `assignInNamespace()` because `fixInNamespace()` can't edit the function
 #' fitting time is >> 144 hours = 6 days on EME Linux (3 newtons in 6 days)
+#' uses too much RAM (> 68.4 GB) and swap memory (total: > 716 GB)
 if(FALSE) {
   system.time(
     m_betals <- gam(list(
