@@ -1,3 +1,4 @@
+# last run on 2025-05-13
 library('rvest') # for harvesting web pages; see https://rvest.tidyverse.org/
 library('ncdf4') # for nc rasters
 library('dplyr') # for data wrangling
@@ -8,7 +9,7 @@ plan(multisession, workers = ncores)
 
 # main url and years to find all folders in the parent directory
 url_main <- 'https://www.ncei.noaa.gov/data/land-normalized-difference-vegetation-index/access/'
-years <- 1981:2025 #' years to download; *downloading up to 2025-05-06*
+years <- 1981:2025 #' years to download; *downloading up to 2025-05-07*
 
 # find file names for each raster
 fn_tib <- tibble(
@@ -28,7 +29,7 @@ tail(fn_tib)
 # download the files for each year
 sum(grepl('preliminary', fn_tib$fn)) # check if any rasters are preliminary
 options('timeout') # in seconds
-options(timeout = 60 * 10) # increase timeout to 10 minutes
+options(timeout = 60 * 20) # increase timeout to 20 minutes
 options('timeout') # in seconds
 
 DIR <- '~/bigdrive/shared/avhrr-viirs-ndvi-raster-files/'
@@ -49,12 +50,10 @@ output <-
   }, .progress = TRUE)
 table(grepl('Downloaded', output))
 
-#' **HERE** --------------------------------------------------------------------
-
 #' There's a few days that have no raster associated with them, but it's
 #' generally rare. We have 8 2-day gaps, 3 3-day gaps, 2 4-day gaps, and
 #' one 16-day gap. The gaps range from 1982 to 2024, and the longest one
-#' is in summer of 2022.
+#' is in summer of 2022 (see `gaps` below).
 
 # check files
 fn_dates <- fn_tib %>%
@@ -65,19 +64,15 @@ fn_dates <- fn_tib %>%
   as.Date(format = '%Y%m%d')
 
 main_dates <-
-  list.files('data/avhrr-viirs-ndvi/raster-files', pattern = '*.nc',
-             recursive = FALSE) %>%
+  list.files(DIR, pattern = '*.nc', recursive = FALSE) %>%
   substr(.,
          nchar(.) - nchar('YYYYMMDD_cYYYYmmddHHMMSS.nc') + 1,
          nchar(.) - nchar('_cYYYYmmddHHMMSS.nc')) %>%
   as.Date(format = '%Y%m%d')
 
-# ensure date ranges are the same
 range(fn_dates)
-all(range(fn_dates) == range(main_dates))
-
-# ensure all rasters downloaded
-sum(! fn_dates %in% main_dates)
+all(range(fn_dates) == range(main_dates)) # ensure date ranges are the same
+sum(! fn_dates %in% main_dates) # ensure all rasters downloaded (should be 0)
 
 # check that all files were downloaded
 gaps <-
@@ -88,19 +83,15 @@ gaps <-
   relocate(before, .before = 1)
 table(gaps$gap)
 gaps %>%
-  filter(gap > 1) %>%
-  View()
+  filter(gap > 1)
 
-length(fn_dates) == length(main_dates)
-length(fn_dates) - length(main_dates)
-as.numeric(diff(range(main_dates), units = 'days')) / 365
+as.numeric(diff(range(main_dates), units = 'days')) / 365 # number of years
 
 # ensure no rasters are corrupt
+# if any cause errors, remove manually and then re-download with code above
 library('terra')
-file_names <- list.files(path = 'data/avhrr-viirs-ndvi/raster-files/',
-                         pattern = '.nc', full.names = TRUE, recursive = FALSE)
-table(map_chr(file_names, function(.fn) class(rast(.fn)), .progress = TRUE))
+file_names <- list.files(path = DIR, pattern = '.nc', full.names = TRUE,
+                         recursive = FALSE)
+unique(future_map_chr(file_names, function(.fn) class(rast(.fn)),
+                      .progress = TRUE))
 
-# if any are corrupt, download manually from
-# https://www.ncei.noaa.gov/data/land-normalized-difference-vegetation-index/access/
-#' *need to check if all files are in "//home/shared" folder on the lab Linux*

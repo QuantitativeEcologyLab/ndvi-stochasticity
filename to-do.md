@@ -1,9 +1,12 @@
 # PRIORITY
-- started re-downlodaing rasters to `~/bigdrive/shared/avhrr-viirs-ndvi-raster-files/` on EME linux
-- need to re-run all scripts for creating datasets and global neighbors:
-  - split data by continents
-  - not splitting neighbors by continents
+- need to re-run all scripts:
+  - create objects of global cell ids and neighbors 
+  - split data by continents (not splitting neighbors by continents)
   - re-organize and clean up scripts
+  - run canada test:
+    - create canada data and test for single-day mrf
+    - more complex models
+    - check that mrfs are giving good estimates for biomes and coastlines
 
 # tests
 - look at green-up rates of areas wit rapid growth rates; e.g.: boreal canada, polar areas
