@@ -24,31 +24,27 @@ assignInNamespace(x = 'qr.default',   # replace `base::qr.default()`
                   value = qr.default, # with the local version sourced above
                   ns = 'base')        # specify the base package
 
-# the bounding box for sardinia (large enough to include all coast)
-sardinia_bbox <- tibble(x = c(7.6, 10.4), y = c(38.8, 41.3)) %>%
-  st_as_sf(coords = c('x', 'y')) %>%
-  st_bbox() %>%
-  st_as_sfc() %>%
-  st_as_sf() %>%
-  st_set_crs('EPSG:4326')
-
 # shapefile of the world's terrestrial ecoregions
 sardinia <- read_sf('data/world-ecosystems/data/commondata/data0/tnc_terr_ecoregions.shp') %>%
   st_make_valid() %>%
-  st_intersection(sardinia_bbox) %>%
+  st_intersection(
+    # the bounding box for sardinia (large enough to include all coast)
+    tibble(x = c(7.6, 10.4), y = c(38.8, 41.3)) %>%
+      st_as_sf(coords = c('x', 'y')) %>%
+      st_bbox() %>%
+      st_as_sfc() %>%
+      st_as_sf() %>%
+      st_set_crs('EPSG:4326')) %>%
   st_cast('POLYGON') %>%
   st_as_sf() %>%
-  mutate(poly_id = paste('poly', 1:n()),
-         area_km2 = as.numeric(st_area(.)) / 1e6)
-hist(sardinia$area_km2)
-
-sardinia_geom <- st_geometry(sardinia)
+  st_geometry()
 
 # import ndvi data (downloaded from the NASA website) ----
 if(file.exists('data/sardinia-test/sardinia-ndvi.rds')) {
   d <- readRDS('data/sardinia-test/sardinia-ndvi.rds')
 } else {
-  if(.Platform$OS.type != 'unix') stop('AVHRR/VIIRS rasters are on the H: Drive, and you may want to use nultiple cores.')
+  if(.Platform$OS.type != 'unix')
+    stop('AVHRR/VIIRS rasters are on the H: Drive, and you may want to use multiple cores.')
   future::availableCores(logical = FALSE)
   plan(multisession, workers = min(30, availableCores(logical = FALSE) - 2))
   d <-
@@ -58,8 +54,8 @@ if(file.exists('data/sardinia-test/sardinia-ndvi.rds')) {
     future_map(\(fn) {
       r <- rast(fn, lyr = 'NDVI')
       r %>%
-        crop(sardinia_geom) %>% # to avoid including the rest of italy
-        mask(sardinia_geom) %>%
+        crop(sardinia) %>%
+        mask(sardinia) %>%
         as.data.frame(xy = TRUE, na.rm = TRUE) %>%
         mutate(date = as.Date(unique(time(r))))
     }, .progress = TRUE) %>%
@@ -85,7 +81,7 @@ if(file.exists('data/sardinia-test/sardinia-ndvi.rds')) {
     rast(crs = 'EPSG:4326') %>%
     get_elev_raster(z = 6)
   plot(elevs)
-  plot(sardinia_geom, add = TRUE, col = 'transparent')
+  plot(sardinia, add = TRUE, col = 'transparent')
   
   d <- mutate(d, 
               elev_m = extract(elevs, select(d, x, y)),
@@ -103,11 +99,11 @@ if(file.exists('data/sardinia-test/sardinia-ndvi.rds')) {
     st_set_crs('EPSG:4326') %>%
     filter(., st_as_sf(., coords = c('x', 'y')) %>%
              st_set_crs('EPSG:4326') %>%
-             st_intersects(sardinia_geom, sparse = TRUE) %>%
+             st_intersects(sardinia, sparse = TRUE) %>%
              map_lgl(\(x) length(x) > 0))
   nrow(locs) # all rasters use same coords
   
-  plot(sardinia_geom)
+  plot(sardinia)
   plot(locs, add = TRUE)
   
   d <- filter(d, paste(x, y) %in%
@@ -115,7 +111,7 @@ if(file.exists('data/sardinia-test/sardinia-ndvi.rds')) {
                       st_coordinates(locs)[, 2]))
   d
   
-  plot(sardinia_geom)
+  plot(sardinia)
   plot(locs, add = TRUE)
   
   saveRDS(d, 'data/sardinia-test/sardinia-ndvi.rds')
@@ -132,13 +128,13 @@ locs <- d %>%
   st_set_crs('EPSG:4326') %>%
   filter(., st_as_sf(., coords = c('x', 'y')) %>%
            st_set_crs('EPSG:4326') %>%
-           st_intersects(sardinia_geom, sparse = TRUE) %>%
+           st_intersects(sardinia, sparse = TRUE) %>%
            map_lgl(\(x) length(x) > 0))
 nrow(locs) # all rasters use same coords
 
 p_locs <-
   ggplot() +
-  geom_sf(data = sardinia_geom) +
+  geom_sf(data = sardinia) +
   geom_sf(data = locs)
 p_locs
 
