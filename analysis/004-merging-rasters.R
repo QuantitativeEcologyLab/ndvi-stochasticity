@@ -117,6 +117,9 @@ s_res <- 4 # spatial resolution
 t_res <- 3.5 # temporal resolution
 n_cells / s_res^2 / t_res / max_rows # modeling as a single dataset
 
+# non-integer time interval gives alternating repetition:
+table((0:20 - 0:20 %% t_res))
+
 # check cell sizes before and after spatial aggregation
 tibble(
   lat = seq(-90, 90, by = 30),
@@ -153,12 +156,54 @@ dates %>%
   group_by(n) %>%
   summarize(total = n())
 
-#' **HERE: need to decide s and t resoulutions, and split by WWF_REALM** 
-
 # need to aggregate temporally to reduce file size before saving ----
 # spatRast objects cannot be serialized (i.e., run in parallel):
 # https://stackoverflow.com/questions/67445883/terra-package-returns-error-when-try-to-run-parallel-operations/67449818#67449818
-# data for 2020 omly ----
+
+# calculate aggregated mean NDVI for each realm ---
+# cannot serialize rasters across cores, but can serialize realm names
+realms <- unique(ecoregions$WWF_REALM)
+
+plan(multisession(workers = min(availableCores() - 2, length(realms))))
+
+#' **RUNNING**
+future_map_chr(realms, function(.realm) {
+  shp <- filter(ecoregions, WWF_REALM == .realm) %>%
+    st_geometry() %>%
+    st_as_sf()
+  
+  dates %>%
+    filter(! is.na(file_name)) %>% # drop missing rasters
+    nest(cluster = ! group) %>%
+    mutate(central_date = map_dbl(cluster, function(.cl) {
+      mean(.cl$date)
+    }, .progress = 'Getting mean dates') %>%
+      as.Date(), # convert numeric back to date
+    n_rasters = map_int(cluster, nrow), # find number of rasters per group
+    # aggregate temporaly
+    ndvi_rast = map(cluster, function(.cl) {
+      map(.cl$file_name, \(.fn) rast(.fn, lyr = 'NDVI')) %>% # import
+        rast() %>% # convert list to stack of rasters
+        mask(shp) %>% # only keep the realm of interest
+        mean(na.rm = TRUE) %>% # aggregate temporally
+        return()
+    }, .progress = 'Calculating mean raster across time'),
+    # aggregating spatially
+    ndvi_rast = map(ndvi_rast, \(x) {
+      as.data.frame(terra::aggregate(x, s_res), xy = TRUE)
+    }, .progress = 'Aggregating spatially and converting to data frame')) %>%
+    select(group, central_date, ndvi_rast) %>%
+    unnest(ndvi_rast) %>%
+    rename(ndvi_aggr = mean) %>%
+    saveRDS(paste0('data/avhrr-viirs-ndvi/aggregated-', .realm,
+                   '-t-', t_res, '-s-', s_res, '-ndvi-data.rds'))
+  
+  return(paste('Realm', .realm, 'saved.'))
+})
+
+plan(sequential)
+
+# data for 2020 only ----
 tictoc::tic() # ~8 minutes on EME Linux
 dates_aggr_2020 <-
   dates %>%
