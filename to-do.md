@@ -1,10 +1,12 @@
 # PRIORITY
+
 - need to re-run all scripts:
   - create objects of global cell ids and neighbors 
   - split data by continents (not splitting neighbors by continents)
   - re-organize and clean up scripts
 
 # tests
+
 - north america test:
   - create canada data and test for single-day mrf
   - check that mrfs are giving good estimates for biomes and coastlines
@@ -17,12 +19,14 @@
 - try increasing max dataframe size (ensure `R` is 64-bit): https://stat.ethz.ch/R-manual/R-devel/library/base/html/Memory-limits.html
 
 # modeling
+
 - vector size on EME linux is not limited to `2^32 - 1`
 - should be using `R` 4.4.x: 
 - split by continent to remove issues with monotonicity across greenland with latitude and also increase dataset size
 - use adaptive splines for year to allow for rapid change in ~2010? (no difference in sardinia test)
 
 # products
+
 - static raster for GIS people: exclude `s(year)`, `s(doy)`, and `ti(year,doy)`
 - shiny app for predicting from the model given the data
 - gif of mean and var over the years and over doy
