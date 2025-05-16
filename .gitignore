@@ -32,6 +32,7 @@ vignettes/*.pdf
 # knitr and R markdown default cache directories
 *_cache/
 /cache/
+/writing/*_files
 
 # Temporary files created by R markdown
 *.utf8.md
@@ -49,12 +50,8 @@ po/*~
 # RStudio Connect folder
 rsconnect/
 
-# MODIS and NASA rasters
-data/modis-world-ndvi-rasters/*
+# AVHRR and VIIRS rasters
 data/avhrr-viirs-ndvi/raster-files/*
-
-# ignore login info
-earthdata-login-info.R
 
 # ignore thumbnail files
 *.db
