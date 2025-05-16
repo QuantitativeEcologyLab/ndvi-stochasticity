@@ -3,6 +3,8 @@ title: "DENVar: A global Dynamic Estimate of NDVI Variance"
 author:
   - name: Stefano Mezzini
     institute: [braes, biol]
+  - name: Gavin L. Simpson
+    institute: [au]
   - name: Michael J. Noonan
     email: michael.noonan@ubc.ca
     institute: [braes, biol, cmps]
@@ -10,6 +12,7 @@ author:
 institute:
   - braes: Okanagan Institute for Biodiversity, Resilience, and Ecosystem Services, The University of British Columbia Okanagan, Kelowna, British Columbia, Canada.
   - biol: Department of Biology, The University of British Columbia Okanagan, Kelowna, British Columbia, Canada.
+  - au: Department of Animal & Veterinary Sciences, Aarhus University, Denmark.
   - cmps: Department of Computer Science, Math, Physics, and Statistics, The University of British Columbia Okanagan, Kelowna, British Columbia, Canada.
 bibliography: 'ndvi-stochasticity.bib'
 csl: 'freshwater-biology.csl'
@@ -24,6 +27,7 @@ header-includes:
     - \usepackage{hanging} # for hanging indents in references
     - \usepackage[left]{lineno} # for line numbers
 subparagraph: true # needed for \usepackage[small]{titlesec}
+urlcolor: cyan
 output:
   bookdown::pdf_document2:
     pandoc_args:
@@ -73,7 +77,7 @@ if(FALSE) {
 \doublespacing
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, out.width = '100%', fig.align = 'center')
+knitr::opts_chunk$set(echo = FALSE, out.width = '100%', fig.align = 'center', message = FALSE, warning = FALSE, comment = '#')
 ```
 
 \linenumbers
@@ -88,12 +92,13 @@ knitr::opts_chunk$set(echo = FALSE, out.width = '100%', fig.align = 'center')
 
 <!-- remote sensing allows us to study landscapes in detail and over large spatiotemporal scales -->
 
-\noindent Since its early uses in the 1970s, the Normalized Difference Vegetation Index (NDVI) has greatly expanded our ability to quantify and monitor landscapes using satellite imagery
-
-- NDVI is an estimate of greenness, NPP, forage availability
-- NDVI has many uses and is often convenient because it's free, well-established, and 
+\noindent Since its early uses in the 1970s, the Normalized Difference Vegetation Index (NDVI) has greatly expanded our ability to quantify and monitor landscapes using remotely sensed imagery [@pettorelli_using_2005; @pettorelli_normalized_2011; @anyamba_historical_2012]. NDVI is an estimate of a landscape's greenness, and it often a good proxy of primary productivity, forage availability, and vegetative cover [@pettorelli_normalized_2011; @merkle_large_2016]. However, as NDVI a proxy, it is not a direct measurement of such variables, and it should be interpreted carefully. NDVI is prone to loss of sensitivity in highly saturated (i.e., very green) environments [@matsushita_sensitivity_2007], and estimates can vary substantially across sensors [@huang_commentary_2021]. Still, NDVI is often used because it is free, well-established, and available at a wide variety of spatiotemporal scales [@ref].
 
 <!-- successes of NDVI: pettorelli, Aikens -->
+
+NDVI has been particularly useful when studying the movement behavior of herbivorous mammals, such as when testing the relationship between resource availability and range size [@ref] 
+
+NDVI has also been used to test the "green wave hypothesis", which was first developed by @ref in relation to migratory birds and states that animals will time their migration with the early green-up phases of forage growth to maximize forage nutrient content. 
 
 many people focus on changes in the mean
 
@@ -101,10 +106,77 @@ many people focus on changes in the mean
 
 ability to predict and respond to changes in mean conditions (forage availability, phenology, etc.) depends on the scale of changes relative to the perception scale [@levin_problem_1992; @frankham_importance_2004; @riotte-lambert_environmental_2020; @steixner-kumar_strategies_2020] and memory [@abrahms_memory_2019]. Consequently, environmental stochasticity is also an important driver, besides changes in the mean [@mezzini_how_2025]
 
+scale in remote sensing and GIS: @goodchild_scale_2023
+
 <!-- difficulties in estimating variance -->
 
-* variance is hard to calculate, as it depends on a correct estimate of the mean
+* variance is hard to calculate, as it depends on a the estimated mean
 * paper on estimating the asymptote of environmental variance globally, but variance for a closed system must converge towards a finite value [@bachmaier_variogram_2011; @fleming_fine-scale_2014]
+
+```{r fig-smooth-wiggly, cache=TRUE, fig.cap="Examples of smooth and wiggly estimated trends in simulated NDVI data (points). Smooth estimates of the mean (top left) result in wiggly and large variance estimates (bottom left), as short-term trends in the data are assumed to be extreme events. In contrast, wiggly (i.e., flexible) estimates of the mean (top right) result in smooth and small variance estimates (bottom right), since short-term trends in the data are assumed to be trends in the mean. The data is the same in both columns.", fig.width=9, fig.height=4.5}
+library('dplyr')   # for data wrangling
+library('tidyr')   # for data wrangling
+library('mgcv')    # for modeling
+library('ggplot2') # for plotting
+source('../analysis/figures/000-default-ggplot-theme.R')
+
+# OU process given samples times, reversion time, standard deviation 
+ou <- function(t, theta, sigma){
+  n <- length(t) # number of samples
+  dw  <- rnorm(n = n, mean = 0, sd = sqrt(sigma)) # noise between steps
+  
+  x <- numeric(n)
+  x[1] <- 0 # set starting point
+  for (i in 2:n) {
+    x[i] <- (1 - theta) * x[i-1] + dw[i - 1]
+  }
+  return(x)
+}
+
+set.seed(3)
+d <- tibble(t = seq(0, 1, length.out = 400),
+            mu = (sinpi(sqrt(t + 0.5) * 10 - 0.5) + 1 * sqrt(t)) / 50 + 0.3,
+            s2 = cospi(sqrt(t) - 0.5) * 0.001^2,
+            noise = ou(t = t, theta = 0.2, sigma = sqrt(s2)),
+            y = mu + noise)
+
+if(FALSE) {
+  ggplot(d) +
+    geom_line(aes(t, mu), color = 'red') +
+    geom_line(aes(t, y), alpha = 0.5)
+}
+
+m_wiggly <- gam(list(y ~ s(t, k = 30, bs = 'ad'), ~ s(t)),
+                family = gaulss(), data = d, method = 'REML')
+m_smooth <- gam(list(y ~ s(t, k = 10), ~ s(t)),
+                family = gaulss(), data = d, method = 'REML')
+
+get_preds <- function(mod, prefix = 'mod_') {
+  predict(mod, newdata = tibble(t = seq(0, 1, by = 1e-3)),
+          type = 'response', se.fit = FALSE) %>%
+    as.data.frame() %>%
+    transmute(Mean_est = V1, Variance_est = 1 / V2^2) %>%
+    rename_with(.fn = \(.x) paste0(prefix, .x), .cols = 1:2)
+}
+
+bind_cols(tibble(t = seq(0, 1, by = 1e-3)),
+          get_preds(m_wiggly, 'Wiggly_'), get_preds(m_smooth, 'Smooth_')) %>%
+  pivot_longer(-t, names_sep = '_',
+               names_to = c('model', 'lab', 'measure')) %>%
+  pivot_wider(names_from = measure, values_from = value) %>%
+  mutate(model = paste(model, 'estimate')) %>%
+  ggplot() +
+  geom_point(aes(t, y), tibble(t = 0, y = 0, lab = 'Variance'),
+             color = 'transparent') +
+  facet_grid(lab ~ model, scales = 'free', switch = 'y', ) +
+  geom_point(aes(t, y), mutate(d, lab = 'Mean'), alpha = 0.1) +
+  geom_line(aes(t, est), linewidth = 0.75) +
+  ylab(NULL) +
+  scale_x_continuous('Time', breaks = NULL) +
+  theme(strip.placement = 'outside', strip.background.y = element_blank(),
+        strip.text = element_text(size = 10),
+        axis.title.x = element_text(size = 10))
+```
 
 <!-- we present a new measure that is estimated in an understandable way -->
 
@@ -128,7 +200,7 @@ We obtained NDVI data using the image composites from the AVHRR and VIIRS sensor
 
 The predictor data for the models included: WWF biome [@olson_global_2002, see Fig. A3], ecoregion [the individual polygons from @olson_global_2002, see Fig. A4], integer day of year (1 to 366), integer year (1981 to 2025), and elevation above sea level (Fig. A5). We excluded all polygons that did not have any NDVI data (0.06% of land, 29% of the polygons, maximum area: $452~\text{km}^2 \approx (21~\text{km})^2$). We distinguished between biomes in the northern and southern hemisphere to allow for different seasonal trends between hemispheres. The 15-day averages allowed us to have non-repeating values of day of year across years, since 15 is not a factor of 365 or 366. We downloaded the global digital elevation model using the `get_elev_raster()` function from the `elevatr` package for `R` [v. 0.99.0, @hollister_elevatr_2023] with a resolution of 0.076 degrees.
 
-```{r, eval=FALSE}
+```{r n_doys, eval=FALSE}
 # approximate estimate of the number of unique DOY values
 length(unique(lubridate::yday(as.Date('1981-09-01') + seq(0, 15800, by = 15))))
 ```
@@ -203,6 +275,14 @@ m_var <- bam(
 
 # Results
 
+figures:
+
+- plot grid of mean over space, `s(year)`, `s(doy)`, `s(elev)`
+- plot grid of DENVar over space, `s(year)`, `s(doy)`, `s(elev)`, `s(mean)`
+- histograms of DENVar around flat map of biomes (change colors)
+- hex plots of DENVAr with other variables (add temperature, annual precip, extreme weather events, fires, invasive species, max body size, disease occurrence, ...)
+
+
 ## General results
 
 * two Orthographic projections of DENVar: Northern and southern hemispheres on spring solstice
@@ -210,7 +290,7 @@ m_var <- bam(
 ## Correlations with other metrics
 
 ```{r hex-plots, fig.cap="Hex plots of the relationship between the global Dynamic Estimate of NDVI Variance (DENVar) and common ecological metricts. The fill of the hexagonal cells represents the log-10-transformed number of points within the cell. Rowwise, the variables are: mean NDVI (as estimated in this manuscript); the machine-learning Human Footprint Index (ml-HFI) of Keys, Barnes \\& Carter (2021); the 2015 cumulative, minimum, and seasonal range in the Dynamic Habitat Index of XXX, (F)."}
-knitr::include_graphics('../figures/hexplots-canada-test.png')
+knitr::include_graphics('../figures/hexplots-global-test.png')
 ```
 
 * temperature
@@ -311,6 +391,13 @@ read @lande_risks_1993
 TO READ:
 * Site fidelity as a maladaptive behavior in the Anthropocene: https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/fee.2456
 * Pettorelli N., Vik J.O., Mysterud A., Gaillard J.-M., Tucker C.J. & Stenseth N.Chr. (2005). Using the satellite-derived NDVI to assess ecological responses to environmental change. Trends in Ecology & Evolution 20, 503–510. https://doi.org/10.1016/j.tree.2005.05.011
+
+\clearpage
+
+supplementary material:
+
+- hex plots of pred vs obs for mean and var
+- histograms of mean around flat map of biomes (change colors)
 
 \clearpage
 
