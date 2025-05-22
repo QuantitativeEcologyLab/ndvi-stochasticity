@@ -1,5 +1,16 @@
 # PRIORITY
 
+- test aggregation with sardinia example (plot preds vs preds for original model and aggregated):
+  - DS
+  - MRF
+  - MRF aggr
+  - bottom row:
+    - comparison of preds vs preds (not aggr vs aggr)
+    - raster of difference of spatial terms
+    - var estimates of two models
+
+- run afrotropics next, then islands
+
 - need to re-run all scripts:
   - create objects of global cell ids and neighbors 
   - split data by continents (not splitting neighbors by continents)
@@ -21,7 +32,6 @@
 # modeling
 
 - vector size on EME linux is not limited to `2^32 - 1`
-- should be using `R` 4.4.x: 
 - split by continent to remove issues with monotonicity across greenland with latitude and also increase dataset size
 - use adaptive splines for year to allow for rapid change in ~2010? (no difference in sardinia test)
 
