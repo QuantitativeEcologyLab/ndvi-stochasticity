@@ -10,9 +10,10 @@ sf_use_s2(FALSE)
 # get shapefile of each continent
 ecoregions <- st_read('data/world-ecosystems/data/commondata/data0/tnc_terr_ecoregions.shp') %>%
   mutate(group = case_when(WWF_REALM %in% c('NA', 'NT') ~ 'americas',
-                           WWF_REALM %in% c('AT', 'PA', 'IM') ~ 'africa+eurasia',
-                           WWF_REALM %in% c('AA', 'OC') ~ 'islands',
-                           WWF_REALM == 'AN' ~ 'Antarctica',
+                           WWF_REALM == 'AT' ~ 'afrotropic',
+                           WWF_REALM == 'PA' ~ 'paleoartctic',
+                           WWF_REALM %in% c('AA', 'IM', 'OC') ~ 'islands',
+                           WWF_REALM == 'AN' ~ 'antarctica',
                            .default = 'unassigned')) %>%
   select(group, ECO_NAME, ECO_NUM, WWF_REALM, WWF_MHTNAM) %>%
   st_make_valid() %>% # to drop duplicate vertices

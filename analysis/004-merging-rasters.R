@@ -1,9 +1,11 @@
-library('dplyr') # for data wrangling
-library('tidyr') # for data wrangling
-library('sf')    # for shapefiles
-library('terra') # for rasters
-library('purrr') # for functional programming
-library('furrr') # for parallelized functional programming
+library('dplyr')     # for data wrangling
+library('tidyr')     # for data wrangling
+library('sf')        # for shapefiles
+library('terra')     # for rasters
+library('purrr')     # for functional programming
+library('furrr')     # for parallelized functional programming
+library('lubridate') # for working with dates
+source('analysis/figures/000-default-ggplot-theme.R')
 
 file_names <-
   list.files(path = 'data/avhrr-viirs-ndvi/raster-files/',
@@ -109,52 +111,90 @@ if(file.exists('data/avhrr-viirs-ndvi/ndvi-raster-metadata.rds')) {
   saveRDS(dates, 'data/avhrr-viirs-ndvi/ndvi-raster-metadata.rds')
 }
 
-sum(grepl('Found', dates$file_name)) # ensure <= 1 raster per date
-n_cells <- sum(dates$n_cells, na.rm = TRUE) # total cells across rasters
-max_rows <- 2^31 - 1 # max number of rows for a data frame in R
-n_cells / max_rows # ~164 times over max data frame size
-s_res <- 4 # spatial resolution
-t_res <- 3.5 # temporal resolution
-n_cells / s_res^2 / t_res / max_rows # modeling as a single dataset
-
-# non-integer time interval gives alternating repetition:
-table((0:20 - 0:20 %% t_res))
-
-# check cell sizes before and after spatial aggregation
-tibble(
-  lat = seq(-90, 90, by = 30),
-  long = 0,
-  original_lat_km = 110,
-  original_long_km = 111 * cospi(lat / 180),
-  original_area_km2 = original_lat_km * original_long_km * 0.05,
-  aggr_lat_km = original_lat_km * s_res,
-  aggr_long_km = original_long_km * s_res,
-  aggr_area_km2 = original_area_km2 * s_res^2)
-
-# modeling each WWF realm separately
-ecoregions %>%
-  st_drop_geometry() %>%
-  group_by(WWF_REALM) %>%
-  summarize(total = sum(area_km2)) %>%
-  mutate(total = total / sum(total),
-         # data frame size (n rows), relative to max size: should be < 1
-         df_size = total * (n_cells / s_res^2 / t_res) / max_rows)
+sum(grepl('Found', dates$file_name)) # ensure only 1 raster per date
 
 # some dates are missing a raster (not available on the server)
 all(! is.na(dates$file_name))
 mean(! is.na(dates$file_name))
 filter(dates, is.na(file_name))
 
+# calculating number of cells and dataset size
+n_cells <- sum(dates$n_cells, na.rm = TRUE) # total cells across rasters
+max_rows <- 2^31 - 1 # max number of rows for a data frame in R
+n_cells / max_rows # ~164 times over max data frame size
+s_res <- 4 # spatial resolution
+t_res <- 4 # temporal resolution
+n_cells / s_res^2 / t_res / max_rows # modeling as a single dataset
+
+# non-integer time interval gives alternating repetition:
+table((0:365 - 0:365 %% t_res))
+
+# check cell sizes before and after spatial aggregation
+tibble(
+  lat = seq(-90, 90, by = 30),
+  long = 0,
+  original_lat_km = 110 * 0.05, # original res is 0.05 * 0.05 degrees
+  original_long_km = 111 * cospi(lat / 180) * 0.05,
+  original_area_km2 = original_lat_km * original_long_km,
+  aggr_lat_km = original_lat_km * s_res,
+  aggr_long_km = original_long_km * s_res,
+  aggr_area_km2 = original_area_km2 * s_res^2)
+
+# modeling each WWF realm separately
+df_sizes <-
+  ecoregions %>%
+  st_drop_geometry() %>%
+  group_by(group) %>%
+  summarize(area_1e6_km2 = sum(area_km2) / 1e6) %>%
+  mutate(prop_area = area_1e6_km2 / sum(area_1e6_km2),
+         # data frame size (n rows), relative to max size: should be < max
+         nrow_1e6 = prop_area * (n_cells / s_res^2 / t_res) / 1e6,
+         prop_max = nrow_1e6 * 1e6 / max_rows,
+         below_max = nrow_1e6 < max_rows / 1e6)
+df_sizes
+
+ggplot() +
+  geom_sf(data = ecoregions, aes(fill = group)) +
+  scale_fill_bright()
+  
 #' ensure at most two groups (start and end) have < `floor(t_res)` days
-dates <- mutate(dates,
-                julian = julian(date),
-                group = julian - (julian %% t_res))
+dates <-
+  mutate(dates,
+         julian = julian(date),
+         date_group = julian - (julian %% t_res)) %>%
+  # dates and number of rasters for each date_group
+  group_by(date_group) %>%
+  mutate(n_rasters = sum(! is.na(file_name)),
+         start_date = min(date),
+         central_date = mean(date),
+         end_date = max(date),
+         doy = yday(central_date),
+         year = year(central_date)) %>%
+  ungroup()
 
 dates %>%
-  group_by(group) %>%
-  summarise(n = n()) %>%
-  group_by(n) %>%
+  group_by(date_group) %>%
+  summarise(n_dates = n(),
+            n_rasters = unique(n_rasters)) %>%
+  group_by(n_dates, n_rasters) %>%
   summarize(total = n())
+
+# make a figure showing the data density (drops 12 groups with no rasters)
+dates %>%
+  ggplot() +
+  coord_equal(ratio = 4) +
+  geom_rect(aes(xmin = doy - 2.5, xmax = doy + 2.5,
+                ymin = year - 0.5, ymax = year + 0.5,
+                # fill = n_rasters)) +
+                fill = factor(n_rasters))) +
+  scale_x_continuous('Day of year', expand = c(0, 0)) +
+  scale_y_continuous('Year', expand = c(0, 0)) +
+  scale_fill_manual(
+    'Number of rasters',
+    values = c('#FAD3BE', '#7A9F9E', '#3572A3', '#21327F', '#190C65')) +
+  theme(legend.position = 'top')
+ggsave('figures/input-data/n-rasters-time.png',
+       width = 8.5, height = 5, units = 'in', dpi = 300, bg = 'white')
 
 # need to aggregate temporally to reduce file size before saving ----
 # spatRast objects cannot be serialized (i.e., run in parallel):
@@ -162,11 +202,10 @@ dates %>%
 
 # calculate aggregated mean NDVI for each realm ---
 # cannot serialize rasters across cores, but can serialize realm names
-realms <- unique(ecoregions$WWF_REALM)
+realms <- arrange(df_sizes, nrow_1e6)$WWF_REALM
 
 plan(multisession(workers = min(availableCores() - 2, length(realms))))
 
-#' **RUNNING**
 future_map_chr(realms, function(.realm) {
   shp <- filter(ecoregions, WWF_REALM == .realm) %>%
     st_geometry() %>%
@@ -174,25 +213,21 @@ future_map_chr(realms, function(.realm) {
   
   dates %>%
     filter(! is.na(file_name)) %>% # drop missing rasters
-    nest(cluster = ! group) %>%
-    mutate(central_date = map_dbl(cluster, function(.cl) {
-      mean(.cl$date)
-    }, .progress = 'Getting mean dates') %>%
-      as.Date(), # convert numeric back to date
-    n_rasters = map_int(cluster, nrow), # find number of rasters per group
-    # aggregate temporaly
-    ndvi_rast = map(cluster, function(.cl) {
-      map(.cl$file_name, \(.fn) rast(.fn, lyr = 'NDVI')) %>% # import
-        rast() %>% # convert list to stack of rasters
-        mask(shp) %>% # only keep the realm of interest
-        mean(na.rm = TRUE) %>% # aggregate temporally
-        return()
-    }, .progress = 'Calculating mean raster across time'),
-    # aggregating spatially
-    ndvi_rast = map(ndvi_rast, \(x) {
-      as.data.frame(terra::aggregate(x, s_res), xy = TRUE)
-    }, .progress = 'Aggregating spatially and converting to data frame')) %>%
-    select(group, central_date, ndvi_rast) %>%
+    nest(cluster = ! date_group) %>%
+    mutate(
+      # aggregate temporally
+      ndvi_rast = map(cluster, function(.cl) {
+        map(.cl$file_name, \(.fn) rast(.fn, lyr = 'NDVI')) %>% # import
+          rast() %>% # convert list to stack of rasters
+          mask(shp) %>% # only keep the realm of interest
+          mean(na.rm = TRUE) %>% # aggregate temporally
+          return()
+      }, .progress = 'Calculating mean raster across time'),
+      # aggregating spatially
+      ndvi_rast = map(ndvi_rast, \(x) {
+        as.data.frame(terra::aggregate(x, s_res, na.rm = TRUE), xy = TRUE)
+      }, .progress = 'Aggregating spatially and converting to data frame')) %>%
+    select(date_group, central_date, ndvi_rast) %>%
     unnest(ndvi_rast) %>%
     rename(ndvi_aggr = mean) %>%
     saveRDS(paste0('data/avhrr-viirs-ndvi/aggregated-', .realm,
@@ -209,7 +244,7 @@ dates_aggr_2020 <-
   dates %>%
   filter(! is.na(file_name)) %>% # drop missing rasters
   filter(lubridate::year(date) == 2020) %>%
-  nest(cluster = ! group) %>%
+  nest(cluster = ! date_group) %>%
   mutate(central_date = map_dbl(cluster, function(.cl) {
     mean(.cl$date)
   }, .progress = 'Getting mean dates') %>%
@@ -229,7 +264,7 @@ dates_aggr_2020 <-
     terra::aggregate(x, s_res) %>%
       as.data.frame(xy = TRUE)
   }, .progress = 'Aggregating rasters and converting to data frame')) %>%
-  select(group, central_date, ndvi_rast) %>%
+  select(date_group, central_date, ndvi_rast) %>%
   unnest(ndvi_rast) %>%
   rename(ndvi_aggr_mean = mean)
 
@@ -259,7 +294,7 @@ dates_aggr_2021 <-
   dates %>%
   filter(! is.na(file_name)) %>% # drop missing rasters
   filter(lubridate::year(date) == 2021) %>%
-  nest(cluster = ! group) %>%
+  nest(cluster = ! date_group) %>%
   mutate(central_date = map_dbl(cluster, function(.cl) {
     mean(.cl$date)
   }, .progress = 'Getting mean dates') %>%
@@ -279,7 +314,7 @@ dates_aggr_2021 <-
     terra::aggregate(x, s_res) %>%
       as.data.frame(xy = TRUE)
   }, .progress = 'Aggregating rasters and converting to data frame')) %>%
-  select(group, central_date, ndvi_rast) %>%
+  select(date_group, central_date, ndvi_rast) %>%
   unnest(ndvi_rast) %>%
   rename(ndvi_aggr_mean = mean)
 
@@ -292,7 +327,7 @@ tictoc::tic()
 dates_aggr <-
   dates %>%
   filter(! is.na(file_name)) %>% # drop missing rasters
-  nest(cluster = ! group) %>%
+  nest(cluster = ! date_group) %>%
   mutate(central_date = map_dbl(cluster, function(.cl) {
     mean(.cl$date)
   }, .progress = 'Getting mean dates') %>%
@@ -312,7 +347,7 @@ dates_aggr <-
     terra::aggregate(x, 2) %>%
       as.data.frame(xy = TRUE)
   }, .progress = 'Aggregating rasters')) %>%
-  select(group, central_date, ndvi_rast) %>%
+  select(date_group, central_date, ndvi_rast) %>%
   unnest(ndvi_rast) %>%
   rename(ndvi_aggr_mean = mean)
 
@@ -325,7 +360,7 @@ if(FALSE) {
   source('analysis/figures/000-default-ggplot-theme.R')
   
   dates_aggr %>%
-    filter(group == group[1]) %>%
+    filter(date_group == date_group[1]) %>%
     ggplot() +
     coord_equal() +
     geom_raster(aes(x, y, fill = ndvi_aggr_mean)) +

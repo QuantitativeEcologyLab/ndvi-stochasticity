@@ -161,23 +161,6 @@ dates <- tibble(
   doy = lubridate::yday(date),
   year = lubridate::year(date))
 
-p_n <-
-  dates %>%
-  ggplot(aes(year, doy)) +
-  coord_equal(ratio = 1 / 15) +
-  geom_bin_2d(binwidth = c(0.9999999, 15)) +
-  xlab('Year') +
-  scale_y_continuous('Day of year', expand = c(0, 0),
-                     breaks = c(1, 100, 200, 300, 366)) +
-  scale_fill_lapaz(name = 'Number of rasters', reverse = TRUE,
-                   limits = c(1, NA), range = c(0, 1),
-                   breaks = c(1, 5, 10, 15)) +
-  theme(legend.position = 'top')
-p_n
-
-ggsave('figures/input-data/n-rasters-time.png', p_n,
-       width = 10, height = 5, units = 'in', dpi = 300, bg = 'white')
-
 #' function similar to `khroma::plot_scheme_colorblind()`
 plot_pal <- function(pal) {
   .d <- tibble(x = floor((1:length(pal))),
