@@ -8,7 +8,7 @@ library('khroma')    # for colorblind-friendly palettes
 source('analysis/figures/000-default-ggplot-theme.R')
 pal_polys <- c(color('okabeito')(8), 'grey')
 
-eco <- read_sf('data/ecoregions/ecoregions-polygons.shp') %>%
+eco <- read_sf('data/world-ecosystems/data/commondata/data0/tnc_terr_ecoregions.shp') %>%
   filter(WWF_MHTNAM != 'Inland Water') %>%
   mutate(WWF_MHTNAM = factor(WWF_MHTNAM, levels = c(
     'Rock and Ice',

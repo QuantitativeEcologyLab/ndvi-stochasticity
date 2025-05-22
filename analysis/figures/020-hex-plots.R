@@ -8,7 +8,7 @@ source('analysis/figures/000-default-ggplot-theme.R')
 source('functions/get_legend.R')
 
 r_s2 <- rast('data/output/var-ndvi-raster-mod-5-no-res-2025-04-21-THINNED-50.tif')
-ecoregions <- read_sf('data/ecoregions/ecoregions-polygons.shp') %>%
+ecoregions <- read_sf('data/world-ecosystems/data/commondata/data0/tnc_terr_ecoregions.shp') %>%
   # drop polygons not in data
   filter(poly_id %in% names(readRDS('data/ecoregions/poly-nbs-global.rds'))) %>%
   vect() %>% # convert to spatVect
