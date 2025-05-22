@@ -11,7 +11,8 @@ plot_mrf <- function(.model, .terms = NULL, .newdata, .type = 'link',
   .newdata <- .newdata %>%
     group_by(x, y) %>%
     slice(1) %>%
-    ungroup()
+    ungroup() %>%
+    filter(! is.na(cell_id))
   
   if(.full_model) {
     # find predictions
@@ -69,8 +70,8 @@ plot_mrf <- function(.model, .terms = NULL, .newdata, .type = 'link',
             ggplot(d_ti, aes(x, y)) +
             facet_wrap(~ facets) +
             coord_equal() +
-            geom_raster(aes(fill = mu_hat)) +
-            geom_contour(aes(z = mu_hat), color = 'black') +
+            geom_raster(aes(fill = mu_hat), na.rm = TRUE) +
+            geom_contour(aes(z = mu_hat), color = 'black', na.rm = TRUE) +
             labs(x = NULL, y = NULL, title = .ti,
                  caption = 'Basis: Tensor product int.') +
             scale_fill_distiller('Partial\neffect', type = 'div', palette = 5,
