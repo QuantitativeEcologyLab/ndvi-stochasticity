@@ -1,17 +1,9 @@
 # PRIORITY
 
-- test aggregation with sardinia example (plot preds vs preds for original model and aggregated):
-  - DS
-  - MRF
-  - MRF aggr
-  - bottom row:
-    - comparison of preds vs preds (not aggr vs aggr)
-    - raster of difference of spatial terms
-    - var estimates of two models
-
+- test aggregation with arctic example (plot preds vs preds for original model and aggregated):
 - run afrotropics next, then islands
 
-- need to re-run all scripts:
+- need to re-run scripts:
   - create objects of global cell ids and neighbors 
   - split data by continents (not splitting neighbors by continents)
   - re-organize and clean up scripts
