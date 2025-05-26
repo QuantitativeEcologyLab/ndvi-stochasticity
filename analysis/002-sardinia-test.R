@@ -911,8 +911,8 @@ p_4_4 <-
       labs(x = 'Elevation (m)', y = 'Mean NDVI'),
     NULL); p_4_4
 
-# ggsave('figures/sardinia-test/model-comparisons.png',
-#        width = 15, height = 20, units = 'in', dpi = 300, bg = 'white')
+ggsave('figures/sardinia-test/model-comparisons.png',
+       width = 15, height = 20, units = 'in', dpi = 300, bg = 'white')
 
 # plots not used
 if(FALSE) {
