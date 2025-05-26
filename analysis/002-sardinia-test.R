@@ -6,6 +6,7 @@ library('sf')        # for shapefiles
 library('terra')     # for rasters
 library('elevatr')   # for digital elevation models
 library('dplyr')     # for data wrangling
+library('tidyr')     # for data wrangling
 library('lubridate') # for working with dates
 library('purrr')     # for functional programming
 library('furrr')     # for parallelized functional programming
@@ -316,7 +317,6 @@ if(file.exists('models/sardinia-test/beta-gam-mrf.rds')) {
     m_beta_mrf <- bam(
       ndvi_scaled ~
         s(cell_id, bs = 'mrf', k = 200, xt = list(nb = nbs)) +
-        #s(x, y, bs = 'ds', k = 200) +
         s(elev_m, bs = 'cr', k = 5) +
         s(year, bs = 'cr', k = 10) +
         s(doy, bs = 'cc', k = 10),
@@ -387,8 +387,8 @@ ggsave(paste0('sardinia-ndvi-mrf-model-agreement-gaussian-beta-',
        dpi = 300, bg = 'white')
 
 preds_1_long <- preds_1 %>%
-  tidyr::pivot_longer(cols = c(mu_gaus, mu_beta), names_to = 'model',
-                      names_prefix = 'mu_', values_to = 'mu') %>%
+  pivot_longer(cols = c(mu_gaus, mu_beta), names_to = 'model',
+               names_prefix = 'mu_', values_to = 'mu') %>%
   mutate(model = case_when(model == 'beta' ~ 'Beta MRF GAM',
                            model == 'gaus' ~ 'Gaussian MRF GAM'),
          e2 = (ndvi - mu)^2)
@@ -680,14 +680,129 @@ elevs_aggr <- d %>%
 gratia::smooths(m_gaus_ds)
 gratia::smooths(m_gaus_mrf)
 
+# get model predictions ----
+get_preds <- function(nd, space = TRUE) {
+  if(space) {
+    preds <- nd %>%
+      mutate(.,
+             ds_mu =
+               predict(object = m_gaus_ds, newdata = .,
+                       type = 'response', se.fit = FALSE,
+                       terms = c('(Intercept)', 's(x,y)', 's(elev_m)')),
+             mrf_mu =
+               rename(., cell_id = cell_id_fine) %>%
+               predict(object = m_gaus_mrf, newdata = .,
+                       type = 'response', se.fit = FALSE,
+                       terms = c('(Intercept)', 's(cell_id)', 's(elev_m)')),
+             mrfa_mu =
+               rename(., cell_id = cell_id_aggr) %>%
+               predict(object = m_gaus_mrf_aggr, newdata = .,
+                       type = 'response', se.fit = FALSE,
+                       terms = c('(Intercept)', 's(cell_id)', 's(elev_m)')))
+  } else {
+    preds <- nd %>% # new data
+      mutate(
+        ds_mu = predict(object = m_gaus_ds, newdata = .,
+                        type = 'response', se.fit = FALSE,
+                        terms = c('(Intercept)', 's(doy)')),
+        mrf_mu = predict(object = m_gaus_mrf, newdata = .,
+                         type = 'response', se.fit = FALSE,
+                         terms = c('(Intercept)', 's(doy)')),
+        mrfa_mu = predict(object = m_gaus_mrf_aggr, newdata =.,
+                          type = 'response', se.fit = FALSE,
+                          terms = c('(Intercept)', 's(doy)')))
+  }
+  
+  preds <- preds %>%
+    mutate(diff_mu = mrfa_mu - mrf_mu) %>%
+    select(x, y, elev_m, doy, ds_mu:diff_mu)
+  
+  if(space) {
+    # get temporally static maps of estimated variance
+    get_s2 <- function(.model) {
+      .m <- if(.model == 'Duchon spline') {
+        .m <- m_gaus_ds
+      } else if(.model == 'MRF') {
+        .m <- m_gaus_mrf
+      } else if(.model == 'MRF (aggregated)') {
+        .m <- m_gaus_mrf_aggr
+      }
+      
+      # need to select the dataset based on the model but keep (x,y) coords
+      .d <- if(.model == 'Duchon spline' | .model == 'MRF') {
+        .d <- d
+      } else if(.model == 'MRF (aggregated)') {
+        .d <- na.omit(d_aggr)
+      }
+      
+      .d %>%
+        transmute(x, y, e2 = resid(.m)^2) %>%
+        group_by(x, y) %>%
+        summarise(s2 = mean(e2), .groups = 'drop') %>%
+        rast() %>%
+        `crs<-`('EPSG:4326') %>%
+        project(elevs, res = res(elevs)) %>%
+        extract(., select(as.data.frame(elevs, xy = TRUE), 1:2)) %>%
+        select(! ID) %>%
+        bind_cols(select(as.data.frame(elevs, xy = TRUE), 1:2), .) %>%
+        mutate(model = .model) %>%
+        filter(! is.na(s2)) %>%
+        as_tibble() %>%
+        mutate(model = .model) %>%
+        return()
+    }
+    
+    s2 <- bind_rows(map(c('Duchon spline', 'MRF', 'MRF (aggregated)'), get_s2)) %>%
+      pivot_wider(names_from = model, values_from = s2) %>%
+      mutate(diff = `MRF (aggregated)` - `MRF`) %>%
+      pivot_longer(`Duchon spline`:diff, names_to = 'model', values_to = 'value')
+    
+    preds <-
+      bind_rows(pivot_longer(preds, ds_mu:diff_mu,
+                             names_to = c('model', 'param'),
+                             values_to = 'value', names_sep = '_'),
+                mutate(s2, param = 's2'))
+  } else {
+    preds <- preds %>%
+      mutate(
+        ds_s2 = d %>%
+          mutate(e2 = resid(m_gaus_ds)^2) %>%
+          group_by(doy) %>%
+          summarize(s2 = mean(e2)) %>%
+          pull(s2),
+        mrf_s2 = d %>%
+          mutate(e2 = resid(m_gaus_mrf)^2) %>%
+          group_by(doy) %>%
+          summarize(s2 = mean(e2)) %>%
+          pull(s2),
+        mrfa_s2 = d_aggr %>%
+          na.omit() %>%
+          mutate(e2 = resid(m_gaus_mrf_aggr)^2) %>%
+          group_by(doy) %>%
+          summarize(s2 = mean(e2)) %>%
+          pull(s2),
+        diff_s2 = mrfa_s2 - mrf_s2) %>%
+      select(doy, ds_mu:diff_s2) %>%
+      pivot_longer(ds_mu:diff_s2,
+                   names_to = c('model', 'param'), values_to = 'value',
+                   names_sep = '_')
+  }
+  preds %>%
+    mutate(model = case_when(model == 'ds' ~ 'Duchon spline',
+                             model == 'mrf' ~ 'MRF',
+                             model == 'mrfa' ~ 'MRF (aggregated)',
+                             model == 'diff' ~ 'diff',
+                             TRUE ~ model)) %>%
+    return()
+}
+
 # spatial predictions
-preds_4_4_s <-
+preds_comp_s <-
   elevs %>%
   mask(sardinia) %>%
   as.data.frame(xy = TRUE) %>%
-  rename(elev_m_fine = 3) %>%
-  mutate(elev_m_aggr = extract(elevs_aggr, select(., x, y))) %>%
-  filter(! is.na(elev_m_fine)) %>%
+  rename(elev_m = 3) %>%
+  filter(! is.na(elev_m)) %>%
   mutate(cell_id_fine = factor(cells(r_0, vect(tibble(x, y),
                                                geom = c('x', 'y')))[, 2],
                                levels = levels(d$cell_id)),
@@ -696,234 +811,108 @@ preds_4_4_s <-
                                           geom = c('x', 'y')))[, 2],
                                levels = levels(d_aggr$cell_id)),
          year = 0, doy = 0) %>%
-  # add model predictions
-  mutate(
-    pred_gaus_ds =
-      rename(., elev_m = elev_m_fine) %>%
-      predict(object = m_gaus_ds, newdata = .,
-              type = 'response', se.fit = FALSE,
-              terms = c('(Intercept)', 's(x,y)', 's(elev_m)')),
-    pred_gaus_mrf =
-      rename(., elev_m = elev_m_fine, cell_id = cell_id_fine) %>%
-      predict(object = m_gaus_mrf, newdata = .,
-              type = 'response', se.fit = FALSE,
-              terms = c('(Intercept)', 's(cell_id)', 's(elev_m)')),
-    pred_gaus_mrf_aggr =
-      rename(., elev_m = elev_m_aggr, cell_id = cell_id_aggr) %>%
-      predict(object = m_gaus_mrf_aggr, newdata = .,
-              type = 'response', se.fit = FALSE,
-              terms = c('(Intercept)', 's(cell_id)', 's(elev_m)')),
-    difference = pred_gaus_mrf_aggr - pred_gaus_mrf) %>%
-  as_tibble()
+  get_preds(space = TRUE) # add model predictions
 
 # temporal doy predictions
-preds_4_4_t <-
-  tibble(doy = 1:366, x = 0, y = 0, elev_m = 0,
-         cell_id = factor('22'), year = 0) %>%
-  # add model predictions
-  mutate(.,
-         pred_gaus_ds = predict(object = m_gaus_ds, newdata = .,
-                                type = 'response', se.fit = FALSE,
-                                terms = c('(Intercept)', 's(doy)')),
-         pred_gaus_mrf = predict(object = m_gaus_mrf, newdata = .,
-                                 type = 'response', se.fit = FALSE,
-                                 terms = c('(Intercept)', 's(doy)')),
-         pred_gaus_mrf_aggr = predict(object = m_gaus_mrf_aggr, newdata =.,
-                                      type = 'response', se.fit = FALSE,
-                                      terms = c('(Intercept)', 's(doy)')),
-         difference = pred_gaus_mrf_aggr - pred_gaus_mrf) %>%
-  as_tibble() %>%
-  mutate(
-    s2_gaus_ds = d %>%
-      mutate(e2 = resid(m_gaus_ds)^2) %>%
-      group_by(doy) %>%
-      summarize(s2 = mean(e2)) %>%
-      pull(s2),
-    s2_gaus_mrf = d %>%
-      mutate(e2 = resid(m_gaus_mrf)^2) %>%
-      group_by(doy) %>%
-      summarize(s2 = mean(e2)) %>%
-      pull(s2),
-    s2_gaus_mrf_aggr = d_aggr %>%
-      na.omit() %>%
-      mutate(e2 = resid(m_gaus_mrf_aggr)^2) %>%
-      group_by(doy) %>%
-      summarize(s2 = mean(e2)) %>%
-      pull(s2),
-    difference_s2 = s2_gaus_mrf_aggr - s2_gaus_mrf)
+preds_comp_t <- tibble(doy = 1:366, x = 0, y = 0, elev_m = 0,
+                       cell_id = factor('22'), year = 0) %>%
+  get_preds(space = FALSE)
 
-# get temporally static maps of estimated variance
-get_s2 <- function(.model) {
-  .m <- if(.model == 'DS') {
-    .m <- m_gaus_ds
-  } else if(.model == 'MRF') {
-    .m <- m_gaus_mrf
-  } else if(.model == 'Aggregated MRF') {
-    .m <- m_gaus_mrf_aggr
-  }
-  
-  # need to select the dataset based on the model but keep (x,y) coords
-  .d <- if(.model == 'DS' | .model == 'MRF') {
-    .d <- d
-  } else if(.model == 'Aggregated MRF') {
-    .d <- na.omit(d_aggr)
-  }
-  
-  .d %>%
-    transmute(x, y, e2 = resid(.m)^2) %>%
-    group_by(x, y) %>%
-    summarise(s2 = mean(e2), .groups = 'drop') %>%
-    select(x, y, s2) %>%
-    rast() %>%
-    `crs<-`('EPSG:4326') %>%
-    project(elevs, res = res(elevs)) %>%
-    extract(., select(as.data.frame(elevs, xy = TRUE), 1:2)) %>%
-    bind_cols(select(as.data.frame(elevs, xy = TRUE), 1:2), .) %>%
-    mutate(model = .model) %>%
-    filter(! is.na(s2)) %>%
-    return()
-}
-
-s2 <- bind_rows(map(c('DS', 'MRF', 'Aggregated MRF'), get_s2))
-
-p_4_4 <-
+# make the final figure ----
+p_comp <-
   plot_grid(
-    ncol = 4, labels = 'AUTO',
+    ncol = 2, labels = 'AUTO', rel_widths = c(3, 1.5),
+    rel_heights = c(3, 3, 2, 2, 2),
     # row 1: map of mean NDVI
-    ggplot() +
-      geom_raster(aes(x, y, fill = pred_gaus_ds), preds_4_4_s) +
+    ggplot(filter(preds_comp_s, param == 'mu', model != 'diff')) +
+      facet_grid(. ~ model) +
+      geom_raster(aes(x, y, fill = value)) +
       geom_sf(data = sardinia, fill = 'transparent', color = 'black') +
       scale_fill_viridis_c('NDVI', limits = c(0, 0.4), option = 'A') +
       labs(x = NULL, y = NULL),
-    ggplot() +
-      geom_raster(aes(x, y, fill = pred_gaus_mrf), preds_4_4_s) +
-      geom_sf(data = sardinia, fill = 'transparent', color = 'black') +
-      scale_fill_viridis_c('NDVI', limits = c(0, 0.4), option = 'A') +
-      labs(x = NULL, y = NULL),
-    ggplot() +
-      geom_raster(aes(x, y, fill = pred_gaus_mrf_aggr),
-                  filter(preds_4_4_s, ! is.na(cell_id_aggr))) +
-      geom_sf(data = sardinia, fill = 'transparent', color = 'black') +
-      scale_fill_viridis_c('NDVI', limits = c(0, 0.4), option = 'A') +
-      labs(x = NULL, y = NULL),
-    ggplot() +
-      geom_raster(aes(x, y, fill = difference), preds_4_4_s, na.rm = TRUE) +
+    ggplot(filter(preds_comp_s, param == 'mu', model == 'diff')) +
+      geom_raster(aes(x, y, fill = value)) +
       geom_sf(data = sardinia, fill = 'transparent', color = 'black') +
       scale_fill_distiller(
-        expression(atop(bold('AMRF - MRF'), bold('(mean)'))),
+        expression(atop(bold('Difference in'), bold('mean NDVI'))),
         type = 'div', palette = 5,
-        limits = max(abs(preds_4_4_s$difference)) * c(-1, 1)) +
+        limits = max(abs(filter(preds_comp_s, model == 'diff',
+                                param == 'mu')$value)) * c(-1, 1)) +
       labs(x = NULL, y = NULL),
     # row 2: map of variance in NDVI
-    ggplot() +
-      geom_raster(aes(x, y, fill = s2), filter(s2, model == 'DS')) +
+    filter(preds_comp_s, param == 's2', model != 'diff') %>%
+      group_by(model) %>%
+      mutate(value = value / max(value, na.rm = TRUE)) %>%
+      ggplot() +
+      facet_grid(. ~ model) +
+      geom_raster(aes(x, y, fill = value)) +
       geom_sf(data = sardinia, fill = 'transparent', color = 'black') +
-      scale_fill_viridis_c(expression(bold(s^'2')),
-                           limits = c(0, max(s2$s2))) +
+      scale_fill_viridis_c(expression(bold(s^'2'))) +
       labs(x = NULL, y = NULL),
-    ggplot() +
-      geom_raster(aes(x, y, fill = s2), filter(s2, model == 'MRF')) +
-      geom_sf(data = sardinia, fill = 'transparent', color = 'black') +
-      scale_fill_viridis_c(expression(bold(s^'2')),
-                           limits = c(0, max(s2$s2))) +
-      labs(x = NULL, y = NULL),
-    ggplot() +
-      geom_raster(aes(x, y, fill = s2), filter(s2, model == 'Aggregated MRF')) +
-      geom_sf(data = sardinia, fill = 'transparent', color = 'black') +
-      scale_fill_viridis_c(expression(bold(s^'2')),
-                           limits = c(0, NA)) +
-      labs(x = NULL, y = NULL),
-    ggplot() +
-      geom_raster(
-        aes(x, y, fill = difference),
-        tidyr::pivot_wider(s2, names_from = model, values_from = s2) %>%
-          mutate(difference = `Aggregated MRF` - MRF)) +
+    ggplot(filter(preds_comp_s, param == 's2', model == 'diff')) +
+      geom_raster(aes(x, y, fill = value)) +
       geom_sf(data = sardinia, fill = 'transparent', color = 'black') +
       scale_fill_distiller(
-        expression(bold(atop('AMRF - MRF', paste('(', s^'2', ')')))),
+        expression(bold(atop('Difference in', 'estimated s'^'2'))),
         type = 'div', palette = 4) +
       labs(x = NULL, y = NULL),
     # row 3: mean NDVI over day of year
-    ggplot() +
-      geom_line(aes(doy, pred_gaus_ds), preds_4_4_t) +
-      geom_rug(aes(x = unique(d$doy)), alpha = 0.1) +
+    ggplot(filter(preds_comp_t, param == 'mu', model != 'diff')) +
+      facet_grid(. ~ model) +
+      geom_line(aes(doy, value)) +
       labs(x = 'Day of year', y = 'Mean NDVI'),
-    ggplot() +
-      geom_line(aes(doy, pred_gaus_mrf), preds_4_4_t) +
-      geom_rug(aes(x = unique(d$doy)), alpha = 0.1) +
-      labs(x = 'Day of year', y = 'Mean NDVI'),
-    ggplot() +
-      geom_line(aes(doy, pred_gaus_mrf_aggr), preds_4_4_t) +
-      geom_rug(aes(x = unique(d$doy)), alpha = 0.1) +
-      labs(x = 'Day of year', y = 'Mean NDVI'),
-    ggplot() +
-      geom_line(aes(doy, difference), preds_4_4_t) +
+    ggplot(filter(preds_comp_t, param == 'mu', model == 'diff')) +
+      geom_line(aes(doy, value)) +
       geom_hline(yintercept = 0, color = 'grey', lty = 'dashed') +
-      geom_rug(aes(x = unique(d$doy)), alpha = 0.1) +
       labs(x = 'Day of year', y = 'Difference in mean NDVI'),
-    # row 4: variance in NDVi over day of year
-    ggplot(preds_4_4_t, aes(doy, s2_gaus_ds)) +
+    # row 4: variance in NDVI over day of year
+    ggplot(filter(preds_comp_t, param == 's2', model != 'diff'),
+           aes(doy, value)) +
+      facet_grid(. ~ model) +
       geom_point(alpha = 0.3) +
-      geom_smooth(formula = y ~ s(x, bs = 'tp'), method = 'gam',
+      geom_smooth(formula = y ~ s(x, bs = 'cc'), method = 'gam',
+                  method.args = list(knots = list(x = c(0.5, 366.5)))) +
+      geom_hline(yintercept = 0, color = 'grey', lty = 'dashed') +
+      labs(x = 'Day of year',
+           y = expression(bold(paste('Daily mean e'^'2')))),
+    ggplot(filter(preds_comp_t, param == 's2', model == 'diff'),
+           aes(doy, value)) +
+      geom_point(alpha = 0.3) +
+      geom_smooth(formula = y ~ s(x, bs = 'cc'), method = 'gam',
                   method.args = list(knots = list(x = c(0.5, 366.5)))) +
       geom_hline(yintercept = 0, color = 'grey', lty = 'dashed') +
       geom_rug(aes(x = unique(d$doy)), alpha = 0.1, inherit.aes = FALSE) +
       labs(x = 'Day of year',
-           y = expression(bold(paste('Mean e'^'2')))),
-    ggplot(preds_4_4_t, aes(doy, s2_gaus_mrf)) +
-      geom_point(alpha = 0.3) +
-      geom_smooth(formula = y ~ s(x, bs = 'tp'), method = 'gam',
-                  method.args = list(knots = list(x = c(0.5, 366.5)))) +
-      geom_hline(yintercept = 0, color = 'grey', lty = 'dashed') +
-      geom_rug(aes(x = unique(d$doy)), alpha = 0.1, inherit.aes = FALSE) +
-      labs(x = 'Day of year',
-           y = expression(bold(paste('Mean e'^'2')))),
-    ggplot(preds_4_4_t, aes(doy, s2_gaus_mrf_aggr)) +
-      geom_point(alpha = 0.3) +
-      geom_smooth(formula = y ~ s(x, bs = 'tp'), method = 'gam',
-                  method.args = list(knots = list(x = c(0.5, 366.5)))) +
-      geom_hline(yintercept = 0, color = 'grey', lty = 'dashed') +
-      geom_rug(aes(x = unique(d$doy)), alpha = 0.1, inherit.aes = FALSE) +
-      labs(x = 'Day of year',
-           y = expression(bold(paste('Mean e'^'2')))),
-    ggplot(preds_4_4_t, aes(doy, difference_s2)) +
-      geom_point(alpha = 0.3) +
-      geom_smooth(formula = y ~ s(x, bs = 'tp'), method = 'gam',
-                  method.args = list(knots = list(x = c(0.5, 366.5)))) +
-      geom_hline(yintercept = 0, color = 'grey', lty = 'dashed') +
-      geom_rug(aes(x = unique(d$doy)), alpha = 0.1, inherit.aes = FALSE) +
-      labs(x = 'Day of year',
-           y = expression(bold(paste('Difference in mean e'^'2')))),
+           y = expression(bold(paste('Difference in daily mean e'^'2')))),
     # row 5: NDVI over elevation
-    ggplot() +
-      geom_point(aes(elev_m_fine, pred_gaus_ds), preds_4_4_s, alpha = 0.1) +
-      geom_rug(aes(x = elev_m_fine), preds_4_4_s, alpha = 0.01) +
+    ggplot(filter(preds_comp_s, param == 'mu', model != 'diff') %>%
+             filter(! is.na(value))) +
+      facet_grid(. ~ model) +
+      geom_point(aes(elev_m, value), alpha = 0.1) +
+      geom_rug(aes(x = elev_m), alpha = 0.1) +
       labs(x = 'Elevation (m)', y = 'Mean NDVI'),
-    ggplot() +
-      geom_point(aes(elev_m_fine, pred_gaus_mrf), preds_4_4_s, alpha = 0.1,
-                 na.rm = TRUE) +
-      geom_rug(aes(x = elev_m_fine), preds_4_4_s, alpha = 0.01) +
-      labs(x = 'Elevation (m)', y = 'Mean NDVI'),
-    ggplot() +
-      geom_point(aes(elev_m_fine, pred_gaus_mrf_aggr), preds_4_4_s,
-                 alpha = 0.1, na.rm = TRUE) +
-      geom_rug(aes(x = elev_m_fine), preds_4_4_s, alpha = 0.01) +
-      labs(x = 'Elevation (m)', y = 'Mean NDVI'),
-    NULL); p_4_4
+    ggplot(filter(preds_comp_s, param == 'mu', model == 'diff') %>%
+             filter(! is.na(value))) +
+      geom_point(aes(elev_m, value), alpha = 0.1) +
+      geom_smooth(aes(elev_m, value), formula = y ~ s(x, k = 5),
+                  method = 'gam') +
+      geom_hline(yintercept = 0, color = 'grey', lty = 'dashed') +
+      geom_rug(aes(x = elev_m), alpha = 0.01) +
+      labs(x = 'Elevation (m)', y = 'Difference in mean NDVI'))
 
 ggsave('figures/sardinia-test/model-comparisons.png',
-       width = 15, height = 20, units = 'in', dpi = 300, bg = 'white')
+       width = 12.5, height = 20, units = 'in', dpi = 300, bg = 'white')
 
 # plots not used
 if(FALSE) {
   ggplot() +
     geom_point(aes(MRF, `Aggregated MRF`),
-               tidyr::pivot_wider(s2, names_from = model, values_from = s2),
+               pivot_wider(s2, names_from = model, values_from = s2),
                alpha = 0.1) +
     geom_abline(intercept = 0, slope = 1, color = 'red')
   
   ggplot() +
-    geom_hex(aes(pred_gaus_mrf, pred_gaus_mrf_aggr), preds_4_4_s) +
+    geom_hex(aes(pred_gaus_mrf, pred_gaus_mrf_aggr), preds_comp_s) +
     geom_abline(intercept = 0, slope = 1, color = 'red') +
     labs(x = 'MRF', y = 'Aggregated MRF') +
     scale_fill_bamako(name = 'Count', reverse = TRUE)
