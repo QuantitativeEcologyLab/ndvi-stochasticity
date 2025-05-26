@@ -905,14 +905,18 @@ ggsave('figures/sardinia-test/model-comparisons.png',
 
 # plots not used
 if(FALSE) {
-  ggplot() +
-    geom_point(aes(MRF, `Aggregated MRF`),
-               pivot_wider(s2, names_from = model, values_from = s2),
-               alpha = 0.1) +
+  filter(preds_comp_s, param == 'mu', model != 'diff') %>%
+    pivot_wider(values_from = value, names_from = model) %>%
+    filter(! is.na(`MRF (aggregated)`), ! is.na(`MRF`)) %>%
+    ggplot() +
+    geom_point(aes(MRF, `MRF (aggregated)`), alpha = 0.1) +
     geom_abline(intercept = 0, slope = 1, color = 'red')
   
-  ggplot() +
-    geom_hex(aes(pred_gaus_mrf, pred_gaus_mrf_aggr), preds_comp_s) +
+  filter(preds_comp_s, param == 'mu', model != 'diff') %>%
+    pivot_wider(values_from = value, names_from = model) %>%
+    filter(! is.na(`MRF (aggregated)`), ! is.na(`MRF`)) %>%
+    ggplot() +
+    geom_hex(aes(MRF, `MRF (aggregated)`)) +
     geom_abline(intercept = 0, slope = 1, color = 'red') +
     labs(x = 'MRF', y = 'Aggregated MRF') +
     scale_fill_bamako(name = 'Count', reverse = TRUE)
