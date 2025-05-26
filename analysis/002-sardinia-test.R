@@ -173,75 +173,77 @@ all.equal(sort(levels(d$cell_id)),
           sort(as.character(unique(unlist(nbs)))))
 
 # test spatial terms with a single day of data ----
-# data for only the first day
-d_1981_06_25 <- filter(d, date == '1981-06-25')
-
-# not all points have data
-ggplot(d_1981_06_25) +
-  geom_raster(aes(x, y, fill = ndvi)) +
-  geom_sf(data = locs, color = 'darkorange')
-
-m_mrf_1981_06_25 <-
-  bam(ndvi ~ s(cell_id, bs = 'mrf', k = 200,
-               # need to subset the neighbors to those in the data
-               xt = list(nb = nbs[unique(d_1981_06_25$cell_id)])),
-      family = gaussian(),
-      data = d_1981_06_25,
-      method = 'fREML',
-      discrete = TRUE,
-      drop.unused.levels = TRUE,
-      control = gam.control(trace = TRUE))
-
-m_ds_1981_06_25 <- bam(ndvi ~ s(x, y, bs = 'ds'),
-                       family = gaussian(),
-                       data = d_1981_06_25,
-                       method = 'fREML',
-                       discrete = TRUE,
-                       drop.unused.levels = TRUE,
-                       control = gam.control(trace = TRUE))
-ggplot() +
-  coord_equal() +
-  geom_point(aes(fitted(m_mrf_1981_06_25), fitted(m_ds_1981_06_25)),
-             alpha = 0.2) +
-  geom_abline(intercept = 0, slope = 1, color = 'red') +
-  labs(x = 'Fitted values from the cell-level MRF GAM',
-       y = 'Fitted values from Douchon-spline GAM')
-ggsave('figures/sardinia-test/douchon-vs-cell-mrf-1981-06-25.png',
-       width = 5, height = 4, units = 'in', dpi = 600, bg = 'white')
-
-# MRF model is more flexible, gives a better fit, and has good shrinkage
-plot_grid(
-  plot_mrf(.model = m_mrf_1981_06_25, .terms = c('(Intercept)', 's(cell_id)'),
-           .newdata = d_1981_06_25) +
-    ggtitle('Cell-level MRF'),
-  plot_mrf(.model = m_mrf_1981_06_25, .terms = c('(Intercept)', 's(cell_id)'),
-           .newdata = d_1981_06_25, .limits = c(NA, NA),
-           .pal = viridis::viridis(10)) +
-    ggtitle(''),
-  d_1981_06_25 %>%
-    mutate(mu_hat = fitted(m_mrf_1981_06_25)) %>%
-    ggplot(aes(ndvi, mu_hat)) +
-    coord_equal() +
-    geom_point(alpha = 0.2) +
-    geom_smooth(method = 'gam', formula = y ~ s(x)) +
-    geom_abline(intercept = 0, slope = 1, color = 'red') +
-    labs(x = 'Fitted', y = 'Observed'),
+if(FALSE) {
+  # data for only the first day
+  d_1981_06_25 <- filter(d, date == '1981-06-25')
   
-  draw(m_ds_1981_06_25, dist = 0.02),
-  draw(m_ds_1981_06_25, dist = 0.02, fun = \(x) x + coef(m_ds_1981_06_25)['(Intercept)']) &
-    # to specify limits manually
-    scale_fill_viridis_c('NDVI', limits = range(fitted(m_mrf_1981_06_25))),
-  d_1981_06_25 %>%
-    mutate(mu_hat = fitted(m_ds_1981_06_25)) %>%
-    ggplot(aes(ndvi, mu_hat)) +
+  # not all points have data
+  ggplot(d_1981_06_25) +
+    geom_raster(aes(x, y, fill = ndvi)) +
+    geom_sf(data = locs, color = 'darkorange')
+  
+  m_mrf_1981_06_25 <-
+    bam(ndvi ~ s(cell_id, bs = 'mrf', k = 200,
+                 # need to subset the neighbors to those in the data
+                 xt = list(nb = nbs[unique(d_1981_06_25$cell_id)])),
+        family = gaussian(),
+        data = d_1981_06_25,
+        method = 'fREML',
+        discrete = TRUE,
+        drop.unused.levels = TRUE,
+        control = gam.control(trace = TRUE))
+  
+  m_ds_1981_06_25 <- bam(ndvi ~ s(x, y, bs = 'ds'),
+                         family = gaussian(),
+                         data = d_1981_06_25,
+                         method = 'fREML',
+                         discrete = TRUE,
+                         drop.unused.levels = TRUE,
+                         control = gam.control(trace = TRUE))
+  ggplot() +
     coord_equal() +
-    geom_point(alpha = 0.2) +
-    geom_smooth(method = 'gam', formula = y ~ s(x)) +
+    geom_point(aes(fitted(m_mrf_1981_06_25), fitted(m_ds_1981_06_25)),
+               alpha = 0.2) +
     geom_abline(intercept = 0, slope = 1, color = 'red') +
-    labs(x = 'Fitted', y = 'Observed'),
-  nrow = 2)
-ggsave('figures/sardinia-test/douchon-vs-cell-mrf-1981-06-25-predictions.png',
-       width = 15, height = 10, units = 'in', dpi = 300, bg = 'white')
+    labs(x = 'Fitted values from the cell-level MRF GAM',
+         y = 'Fitted values from Douchon-spline GAM')
+  ggsave('figures/sardinia-test/douchon-vs-cell-mrf-1981-06-25.png',
+         width = 5, height = 4, units = 'in', dpi = 600, bg = 'white')
+  
+  # MRF model is more flexible, gives a better fit, and has good shrinkage
+  plot_grid(
+    plot_mrf(.model = m_mrf_1981_06_25, .terms = c('(Intercept)', 's(cell_id)'),
+             .newdata = d_1981_06_25) +
+      ggtitle('Cell-level MRF'),
+    plot_mrf(.model = m_mrf_1981_06_25, .terms = c('(Intercept)', 's(cell_id)'),
+             .newdata = d_1981_06_25, .limits = c(NA, NA),
+             .pal = viridis::viridis(10)) +
+      ggtitle(''),
+    d_1981_06_25 %>%
+      mutate(mu_hat = fitted(m_mrf_1981_06_25)) %>%
+      ggplot(aes(ndvi, mu_hat)) +
+      coord_equal() +
+      geom_point(alpha = 0.2) +
+      geom_smooth(method = 'gam', formula = y ~ s(x)) +
+      geom_abline(intercept = 0, slope = 1, color = 'red') +
+      labs(x = 'Fitted', y = 'Observed'),
+    
+    draw(m_ds_1981_06_25, dist = 0.02),
+    draw(m_ds_1981_06_25, dist = 0.02, fun = \(x) x + coef(m_ds_1981_06_25)['(Intercept)']) &
+      # to specify limits manually
+      scale_fill_viridis_c('NDVI', limits = range(fitted(m_mrf_1981_06_25))),
+    d_1981_06_25 %>%
+      mutate(mu_hat = fitted(m_ds_1981_06_25)) %>%
+      ggplot(aes(ndvi, mu_hat)) +
+      coord_equal() +
+      geom_point(alpha = 0.2) +
+      geom_smooth(method = 'gam', formula = y ~ s(x)) +
+      geom_abline(intercept = 0, slope = 1, color = 'red') +
+      labs(x = 'Fitted', y = 'Observed'),
+    nrow = 2)
+  ggsave('figures/sardinia-test/douchon-vs-cell-mrf-1981-06-25-predictions.png',
+         width = 15, height = 10, units = 'in', dpi = 300, bg = 'white')
+}
 
 # fit a spatially explicit test model with a gaussian family ----
 # MRF model is faster and gives more flexible predictions while keeping
@@ -634,8 +636,6 @@ all.equal(sort(as.character(cells(r_0_aggr))), sort(names(nbs_aggr)))
 all.equal(sort(levels(d_aggr$cell_id)),
           sort(as.character(unique(unlist(nbs_aggr)))))
 
-
-#' **HERE**
 if(file.exists('models/sardinia-test/gaussian-gam-ds.rds')) {
   m_gaus_mrf_aggr <- readRDS('models/sardinia-test/gaussian-gam-mrf-aggr.rds')
 } else {
@@ -660,46 +660,271 @@ if(file.exists('models/sardinia-test/gaussian-gam-ds.rds')) {
 }
 
 # make a figure comparing ds gam, mrf gam, and mrf_aggr gam ----
+elevs <- d %>%
+  filter(date == first(date)) %>%
+  select(x, y) %>%
+  mutate(z = 1) %>%
+  rast(crs = 'EPSG:4326') %>%
+  get_elev_raster(z = 4) %>% # nearest finer res than 0.05x0.05
+  crop(st_buffer(sardinia, 1e4)) # crop to area near sardinia
 
-#' *include:*
-#' row 1: DS
-#' row 2: MRF
-#' row 3: MRF aggr
-#' row 4:
-#'    - comparison of preds vs preds (MRF vs MRF aggr)
-#'    - raster of difference of spatial terms (use raster for finer model)
-#'    - var estimates of two models
+elevs_aggr <- d %>%
+  filter(date == first(date)) %>%
+  select(x, y) %>%
+  mutate(z = 1) %>%
+  rast(crs = 'EPSG:4326') %>%
+  aggregate(4, na.rm = TRUE) %>%
+  get_elev_raster(z = 2) %>% # nearest finer res than 0.20x0.20
+  crop(st_buffer(sardinia, 1e4))
 
-# plot_grid(
-#   plot_mrf(.model = m_mrf_1981_06_25, .terms = c('(Intercept)', 's(cell_id)'),
-#            .newdata = d_1981_06_25) +
-#     ggtitle('Cell-level MRF'),
-#   plot_mrf(.model = m_mrf_1981_06_25, .terms = c('(Intercept)', 's(cell_id)'),
-#            .newdata = d_1981_06_25, .limits = c(NA, NA),
-#            .pal = viridis::viridis(10)) +
-#     ggtitle(''),
-#   d_1981_06_25 %>%
-#     mutate(mu_hat = fitted(m_mrf_1981_06_25)) %>%
-#     ggplot(aes(ndvi, mu_hat)) +
-#     coord_equal() +
-#     geom_point(alpha = 0.2) +
-#     geom_smooth(method = 'gam', formula = y ~ s(x)) +
-#     geom_abline(intercept = 0, slope = 1, color = 'red') +
-#     labs(x = 'Fitted', y = 'Observed'),
-#   
-#   draw(m_ds_1981_06_25, dist = 0.02),
-#   draw(m_ds_1981_06_25, dist = 0.02, fun = \(x) x + coef(m_ds_1981_06_25)['(Intercept)']) &
-#     # to specify limits manually
-#     scale_fill_viridis_c('NDVI', limits = range(fitted(m_mrf_1981_06_25))),
-#   d_1981_06_25 %>%
-#     mutate(mu_hat = fitted(m_ds_1981_06_25)) %>%
-#     ggplot(aes(ndvi, mu_hat)) +
-#     coord_equal() +
-#     geom_point(alpha = 0.2) +
-#     geom_smooth(method = 'gam', formula = y ~ s(x)) +
-#     geom_abline(intercept = 0, slope = 1, color = 'red') +
-#     labs(x = 'Fitted', y = 'Observed'),
-#   nrow = 2)
-# 
+gratia::smooths(m_gaus_ds)
+gratia::smooths(m_gaus_mrf)
+
+# spatial predictions
+preds_4_4_s <-
+  elevs %>%
+  mask(sardinia) %>%
+  as.data.frame(xy = TRUE) %>%
+  rename(elev_m_fine = 3) %>%
+  mutate(elev_m_aggr = extract(elevs_aggr, select(., x, y))) %>%
+  filter(! is.na(elev_m_fine)) %>%
+  mutate(cell_id_fine = factor(cells(r_0, vect(tibble(x, y),
+                                               geom = c('x', 'y')))[, 2],
+                               levels = levels(d$cell_id)),
+         cell_id_aggr = factor(cells(r_0_aggr,
+                                     vect(tibble(x, y),
+                                          geom = c('x', 'y')))[, 2],
+                               levels = levels(d_aggr$cell_id)),
+         year = 0, doy = 0) %>%
+  # add model predictions
+  mutate(
+    pred_gaus_ds =
+      rename(., elev_m = elev_m_fine) %>%
+      predict(object = m_gaus_ds, newdata = .,
+              type = 'response', se.fit = FALSE,
+              terms = c('(Intercept)', 's(x,y)', 's(elev_m)')),
+    pred_gaus_mrf =
+      rename(., elev_m = elev_m_fine, cell_id = cell_id_fine) %>%
+      predict(object = m_gaus_mrf, newdata = .,
+              type = 'response', se.fit = FALSE,
+              terms = c('(Intercept)', 's(cell_id)', 's(elev_m)')),
+    pred_gaus_mrf_aggr =
+      rename(., elev_m = elev_m_aggr, cell_id = cell_id_aggr) %>%
+      predict(object = m_gaus_mrf_aggr, newdata = .,
+              type = 'response', se.fit = FALSE,
+              terms = c('(Intercept)', 's(cell_id)', 's(elev_m)')),
+    difference = pred_gaus_mrf_aggr - pred_gaus_mrf) %>%
+  as_tibble()
+
+# temporal doy predictions
+preds_4_4_t <-
+  tibble(doy = 1:366, x = 0, y = 0, elev_m = 0,
+         cell_id = factor('22'), year = 0) %>%
+  # add model predictions
+  mutate(.,
+         pred_gaus_ds = predict(object = m_gaus_ds, newdata = .,
+                                type = 'response', se.fit = FALSE,
+                                terms = c('(Intercept)', 's(doy)')),
+         pred_gaus_mrf = predict(object = m_gaus_mrf, newdata = .,
+                                 type = 'response', se.fit = FALSE,
+                                 terms = c('(Intercept)', 's(doy)')),
+         pred_gaus_mrf_aggr = predict(object = m_gaus_mrf_aggr, newdata =.,
+                                      type = 'response', se.fit = FALSE,
+                                      terms = c('(Intercept)', 's(doy)')),
+         difference = pred_gaus_mrf_aggr - pred_gaus_mrf) %>%
+  as_tibble() %>%
+  mutate(
+    s2_gaus_ds = d %>%
+      mutate(e2 = resid(m_gaus_ds)^2) %>%
+      group_by(doy) %>%
+      summarize(s2 = mean(e2)) %>%
+      pull(s2),
+    s2_gaus_mrf = d %>%
+      mutate(e2 = resid(m_gaus_mrf)^2) %>%
+      group_by(doy) %>%
+      summarize(s2 = mean(e2)) %>%
+      pull(s2),
+    s2_gaus_mrf_aggr = d_aggr %>%
+      na.omit() %>%
+      mutate(e2 = resid(m_gaus_mrf_aggr)^2) %>%
+      group_by(doy) %>%
+      summarize(s2 = mean(e2)) %>%
+      pull(s2),
+    difference_s2 = s2_gaus_mrf_aggr - s2_gaus_mrf)
+
+# get temporally static maps of estimated variance
+get_s2 <- function(.model) {
+  .m <- if(.model == 'DS') {
+    .m <- m_gaus_ds
+  } else if(.model == 'MRF') {
+    .m <- m_gaus_mrf
+  } else if(.model == 'Aggregated MRF') {
+    .m <- m_gaus_mrf_aggr
+  }
+  
+  # need to select the dataset based on the model but keep (x,y) coords
+  .d <- if(.model == 'DS' | .model == 'MRF') {
+    .d <- d
+  } else if(.model == 'Aggregated MRF') {
+    .d <- na.omit(d_aggr)
+  }
+  
+  .d %>%
+    transmute(x, y, e2 = resid(.m)^2) %>%
+    group_by(x, y) %>%
+    summarise(s2 = mean(e2), .groups = 'drop') %>%
+    select(x, y, s2) %>%
+    rast() %>%
+    `crs<-`('EPSG:4326') %>%
+    project(elevs, res = res(elevs)) %>%
+    extract(., select(as.data.frame(elevs, xy = TRUE), 1:2)) %>%
+    bind_cols(select(as.data.frame(elevs, xy = TRUE), 1:2), .) %>%
+    mutate(model = .model) %>%
+    filter(! is.na(s2)) %>%
+    return()
+}
+
+s2 <- bind_rows(map(c('DS', 'MRF', 'Aggregated MRF'), get_s2))
+
+p_4_4 <-
+  plot_grid(
+    ncol = 4, labels = 'AUTO',
+    # row 1: map of mean NDVI
+    ggplot() +
+      geom_raster(aes(x, y, fill = pred_gaus_ds), preds_4_4_s) +
+      geom_sf(data = sardinia, fill = 'transparent', color = 'black') +
+      scale_fill_viridis_c('NDVI', limits = c(0, 0.4), option = 'A') +
+      labs(x = NULL, y = NULL),
+    ggplot() +
+      geom_raster(aes(x, y, fill = pred_gaus_mrf), preds_4_4_s) +
+      geom_sf(data = sardinia, fill = 'transparent', color = 'black') +
+      scale_fill_viridis_c('NDVI', limits = c(0, 0.4), option = 'A') +
+      labs(x = NULL, y = NULL),
+    ggplot() +
+      geom_raster(aes(x, y, fill = pred_gaus_mrf_aggr),
+                  filter(preds_4_4_s, ! is.na(cell_id_aggr))) +
+      geom_sf(data = sardinia, fill = 'transparent', color = 'black') +
+      scale_fill_viridis_c('NDVI', limits = c(0, 0.4), option = 'A') +
+      labs(x = NULL, y = NULL),
+    ggplot() +
+      geom_raster(aes(x, y, fill = difference), preds_4_4_s, na.rm = TRUE) +
+      geom_sf(data = sardinia, fill = 'transparent', color = 'black') +
+      scale_fill_distiller(
+        expression(atop(bold('AMRF - MRF'), bold('(mean)'))),
+        type = 'div', palette = 5,
+        limits = max(abs(preds_4_4_s$difference)) * c(-1, 1)) +
+      labs(x = NULL, y = NULL),
+    # row 2: map of variance in NDVI
+    ggplot() +
+      geom_raster(aes(x, y, fill = s2), filter(s2, model == 'DS')) +
+      geom_sf(data = sardinia, fill = 'transparent', color = 'black') +
+      scale_fill_viridis_c(expression(bold(s^'2')),
+                           limits = c(0, max(s2$s2))) +
+      labs(x = NULL, y = NULL),
+    ggplot() +
+      geom_raster(aes(x, y, fill = s2), filter(s2, model == 'MRF')) +
+      geom_sf(data = sardinia, fill = 'transparent', color = 'black') +
+      scale_fill_viridis_c(expression(bold(s^'2')),
+                           limits = c(0, max(s2$s2))) +
+      labs(x = NULL, y = NULL),
+    ggplot() +
+      geom_raster(aes(x, y, fill = s2), filter(s2, model == 'Aggregated MRF')) +
+      geom_sf(data = sardinia, fill = 'transparent', color = 'black') +
+      scale_fill_viridis_c(expression(bold(s^'2')),
+                           limits = c(0, NA)) +
+      labs(x = NULL, y = NULL),
+    ggplot() +
+      geom_raster(
+        aes(x, y, fill = difference),
+        tidyr::pivot_wider(s2, names_from = model, values_from = s2) %>%
+          mutate(difference = `Aggregated MRF` - MRF)) +
+      geom_sf(data = sardinia, fill = 'transparent', color = 'black') +
+      scale_fill_distiller(
+        expression(bold(atop('AMRF - MRF', paste('(', s^'2', ')')))),
+        type = 'div', palette = 4) +
+      labs(x = NULL, y = NULL),
+    # row 3: mean NDVI over day of year
+    ggplot() +
+      geom_line(aes(doy, pred_gaus_ds), preds_4_4_t) +
+      geom_rug(aes(x = unique(d$doy)), alpha = 0.1) +
+      labs(x = 'Day of year', y = 'Mean NDVI'),
+    ggplot() +
+      geom_line(aes(doy, pred_gaus_mrf), preds_4_4_t) +
+      geom_rug(aes(x = unique(d$doy)), alpha = 0.1) +
+      labs(x = 'Day of year', y = 'Mean NDVI'),
+    ggplot() +
+      geom_line(aes(doy, pred_gaus_mrf_aggr), preds_4_4_t) +
+      geom_rug(aes(x = unique(d$doy)), alpha = 0.1) +
+      labs(x = 'Day of year', y = 'Mean NDVI'),
+    ggplot() +
+      geom_line(aes(doy, difference), preds_4_4_t) +
+      geom_hline(yintercept = 0, color = 'grey', lty = 'dashed') +
+      geom_rug(aes(x = unique(d$doy)), alpha = 0.1) +
+      labs(x = 'Day of year', y = 'Difference in mean NDVI'),
+    # row 4: variance in NDVi over day of year
+    ggplot(preds_4_4_t, aes(doy, s2_gaus_ds)) +
+      geom_point(alpha = 0.3) +
+      geom_smooth(formula = y ~ s(x, bs = 'tp'), method = 'gam',
+                  method.args = list(knots = list(x = c(0.5, 366.5)))) +
+      geom_hline(yintercept = 0, color = 'grey', lty = 'dashed') +
+      geom_rug(aes(x = unique(d$doy)), alpha = 0.1, inherit.aes = FALSE) +
+      labs(x = 'Day of year',
+           y = expression(bold(paste('Mean e'^'2')))),
+    ggplot(preds_4_4_t, aes(doy, s2_gaus_mrf)) +
+      geom_point(alpha = 0.3) +
+      geom_smooth(formula = y ~ s(x, bs = 'tp'), method = 'gam',
+                  method.args = list(knots = list(x = c(0.5, 366.5)))) +
+      geom_hline(yintercept = 0, color = 'grey', lty = 'dashed') +
+      geom_rug(aes(x = unique(d$doy)), alpha = 0.1, inherit.aes = FALSE) +
+      labs(x = 'Day of year',
+           y = expression(bold(paste('Mean e'^'2')))),
+    ggplot(preds_4_4_t, aes(doy, s2_gaus_mrf_aggr)) +
+      geom_point(alpha = 0.3) +
+      geom_smooth(formula = y ~ s(x, bs = 'tp'), method = 'gam',
+                  method.args = list(knots = list(x = c(0.5, 366.5)))) +
+      geom_hline(yintercept = 0, color = 'grey', lty = 'dashed') +
+      geom_rug(aes(x = unique(d$doy)), alpha = 0.1, inherit.aes = FALSE) +
+      labs(x = 'Day of year',
+           y = expression(bold(paste('Mean e'^'2')))),
+    ggplot(preds_4_4_t, aes(doy, difference_s2)) +
+      geom_point(alpha = 0.3) +
+      geom_smooth(formula = y ~ s(x, bs = 'tp'), method = 'gam',
+                  method.args = list(knots = list(x = c(0.5, 366.5)))) +
+      geom_hline(yintercept = 0, color = 'grey', lty = 'dashed') +
+      geom_rug(aes(x = unique(d$doy)), alpha = 0.1, inherit.aes = FALSE) +
+      labs(x = 'Day of year',
+           y = expression(bold(paste('Difference in mean e'^'2')))),
+    # row 5: NDVI over elevation
+    ggplot() +
+      geom_point(aes(elev_m_fine, pred_gaus_ds), preds_4_4_s, alpha = 0.1) +
+      geom_rug(aes(x = elev_m_fine), preds_4_4_s, alpha = 0.01) +
+      labs(x = 'Elevation (m)', y = 'Mean NDVI'),
+    ggplot() +
+      geom_point(aes(elev_m_fine, pred_gaus_mrf), preds_4_4_s, alpha = 0.1,
+                 na.rm = TRUE) +
+      geom_rug(aes(x = elev_m_fine), preds_4_4_s, alpha = 0.01) +
+      labs(x = 'Elevation (m)', y = 'Mean NDVI'),
+    ggplot() +
+      geom_point(aes(elev_m_fine, pred_gaus_mrf_aggr), preds_4_4_s,
+                 alpha = 0.1, na.rm = TRUE) +
+      geom_rug(aes(x = elev_m_fine), preds_4_4_s, alpha = 0.01) +
+      labs(x = 'Elevation (m)', y = 'Mean NDVI'),
+    NULL); p_4_4
+
 # ggsave('figures/sardinia-test/model-comparisons.png',
 #        width = 15, height = 20, units = 'in', dpi = 300, bg = 'white')
+
+# plots not used
+if(FALSE) {
+  ggplot() +
+    geom_point(aes(MRF, `Aggregated MRF`),
+               tidyr::pivot_wider(s2, names_from = model, values_from = s2),
+               alpha = 0.1) +
+    geom_abline(intercept = 0, slope = 1, color = 'red')
+  
+  ggplot() +
+    geom_hex(aes(pred_gaus_mrf, pred_gaus_mrf_aggr), preds_4_4_s) +
+    geom_abline(intercept = 0, slope = 1, color = 'red') +
+    labs(x = 'MRF', y = 'Aggregated MRF') +
+    scale_fill_bamako(name = 'Count', reverse = TRUE)
+}
