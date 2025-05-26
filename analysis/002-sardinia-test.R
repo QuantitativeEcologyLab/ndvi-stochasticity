@@ -206,8 +206,8 @@ if(FALSE) {
                alpha = 0.2) +
     geom_abline(intercept = 0, slope = 1, color = 'red') +
     labs(x = 'Fitted values from the cell-level MRF GAM',
-         y = 'Fitted values from Douchon-spline GAM')
-  ggsave('figures/sardinia-test/douchon-vs-cell-mrf-1981-06-25.png',
+         y = 'Fitted values from Duchon-spline GAM')
+  ggsave('figures/sardinia-test/duchon-vs-cell-mrf-1981-06-25.png',
          width = 5, height = 4, units = 'in', dpi = 600, bg = 'white')
   
   # MRF model is more flexible, gives a better fit, and has good shrinkage
@@ -241,7 +241,7 @@ if(FALSE) {
       geom_abline(intercept = 0, slope = 1, color = 'red') +
       labs(x = 'Fitted', y = 'Observed'),
     nrow = 2)
-  ggsave('figures/sardinia-test/douchon-vs-cell-mrf-1981-06-25-predictions.png',
+  ggsave('figures/sardinia-test/duchon-vs-cell-mrf-1981-06-25-predictions.png',
          width = 15, height = 10, units = 'in', dpi = 300, bg = 'white')
 }
 
