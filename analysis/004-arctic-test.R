@@ -1,7 +1,3 @@
-# specs of my personal laptop:
-# 64.0 GB RAM, 13th Gen Intel Core i7-1370P processor, 14 cores
-# specs of the EME Linux:
-# 2.2 TB RAM, Intel Xeon Platinum 8462Y+ processor, 64 cores
 library('dplyr')     # for data wrangling
 library('tidyr')     # for data wrangling
 library('sf')        # for shapefiles
@@ -14,8 +10,6 @@ library('mgcv')      # for GAMs
 library('ggplot2')   # for fancy plots
 library('cowplot')   # for fancy plots in grids
 library('gratia')    # for fancy plots of GAMs
-library('ggplot2')   # for fanct plots
-source('functions/scale-ndvi.R')
 source('functions/ndvi-palette.R')
 source('functions/plot_mrf.R') # for plotting markov random field smooths
 source('analysis/figures/000-default-ggplot-theme.R')
@@ -651,22 +645,3 @@ p_comp <-
 
 ggsave('figures/arctic-test/model-comparisons.png',
        width = 12.5, height = 17, units = 'in', dpi = 300, bg = 'white')
-
-# plots not used
-if(FALSE) {
-  filter(preds_comp_s, param == 'mu', model != 'diff') %>%
-    pivot_wider(values_from = value, names_from = model) %>%
-    filter(! is.na(`MRF (aggregated)`), ! is.na(`MRF`)) %>%
-    ggplot() +
-    geom_point(aes(MRF, `MRF (aggregated)`), alpha = 0.1) +
-    geom_abline(intercept = 0, slope = 1, color = 'red')
-  
-  filter(preds_comp_s, param == 'mu', model != 'diff') %>%
-    pivot_wider(values_from = value, names_from = model) %>%
-    filter(! is.na(`MRF (aggregated)`), ! is.na(`MRF`)) %>%
-    ggplot() +
-    geom_hex(aes(MRF, `MRF (aggregated)`)) +
-    geom_abline(intercept = 0, slope = 1, color = 'red') +
-    labs(x = 'MRF', y = 'Aggregated MRF') +
-    scale_fill_bamako(name = 'Count', reverse = TRUE)
-}

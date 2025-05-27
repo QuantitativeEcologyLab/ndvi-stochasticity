@@ -14,7 +14,6 @@ library('mgcv')      # for GAMs
 library('ggplot2')   # for fancy plots
 library('cowplot')   # for fancy plots in grids 
 library('gratia')    # for fancy plots of GAMs
-library('ggplot2')   # for fanct plots
 source('functions/betals.r') # custom beta location-scale family
 source('functions/scale-ndvi.R')
 source('functions/ndvi-palette.R')
