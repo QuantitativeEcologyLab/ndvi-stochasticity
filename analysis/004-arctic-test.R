@@ -650,7 +650,7 @@ p_comp <-
       labs(x = 'Elevation (m)', y = 'Difference in mean NDVI'))
 
 ggsave('figures/arctic-test/model-comparisons.png',
-       width = 12.5, height = 20, units = 'in', dpi = 300, bg = 'white')
+       width = 12.5, height = 17, units = 'in', dpi = 300, bg = 'white')
 
 # plots not used
 if(FALSE) {
