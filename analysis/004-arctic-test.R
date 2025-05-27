@@ -29,8 +29,13 @@ arctic <- eco %>%
   st_geometry() %>%
   st_as_sf() %>%
   slice(100)
-plot(st_geometry(eco), col = 'grey')
-plot(arctic, col = 'red', add = TRUE)
+
+ggplot() +
+  geom_sf(data = st_geometry(eco)) +
+  geom_sf(data = arctic, fill = 'red3')
+
+ggsave('figures/arctic-test/arctic-map.png', width = 10, height = 6.4,
+       units = 'in', dpi = 300, bg = 'white')
 
 # there are some oddly large NDVI values in winter
 list.files(path = 'data/avhrr-viirs-ndvi/raster-files',
