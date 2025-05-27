@@ -22,6 +22,7 @@ source('functions/plot_mrf.R') # for plotting markov random field smooths
 source('functions/qr.default_with_LAPACK.R')
 source('analysis/figures/000-default-ggplot-theme.R')
 source('functions/get_legend.R')
+source('functions/nbs_from_rast.R')
 assignInNamespace(x = 'qr.default',   # replace `base::qr.default()`
                   value = qr.default, # with the local version sourced above
                   ns = 'base')        # specify the base package
@@ -37,9 +38,18 @@ sardinia <- read_sf('data/world-ecosystems/data/commondata/data0/tnc_terr_ecoreg
       st_as_sfc() %>%
       st_as_sf() %>%
       st_set_crs('EPSG:4326')) %>%
-  st_cast('POLYGON') %>%
+  st_cast('POLYGON', warn = FALSE) %>%
   st_geometry() %>%
-  st_as_sf()
+  st_as_sf() %>%
+  st_transform(crs(rast('data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v005_AVH13C1_NOAA-07_19810625_c20170610042839.nc')))
+
+# some data cleaning has already been done
+list.files(path = 'data/avhrr-viirs-ndvi/raster-files',
+           pattern = '.nc', full.names = TRUE)[2] %>%
+  rast() %>%
+  crop(sardinia) %>%
+  mask(sardinia) %>%
+  plot()
 
 # import ndvi data ----
 if(file.exists('data/sardinia-test/sardinia-ndvi.rds')) {
@@ -90,7 +100,7 @@ if(file.exists('data/sardinia-test/sardinia-ndvi.rds')) {
   plot(sardinia, add = TRUE, col = 'transparent')
   
   d <- mutate(d, 
-              elev_m = extract(elevs, select(d, x, y)),
+              elev_m = terra::extract(elevs, select(d, x, y)),
               year = year(date),
               doy = yday(date))
   range(d$elev_m)
@@ -112,6 +122,7 @@ locs <- d %>%
   st_set_crs('EPSG:4326') %>%
   filter(., st_as_sf(., coords = c('x', 'y')) %>%
            st_set_crs('EPSG:4326') %>%
+           st_transform(crs(sardinia)) %>%
            st_intersects(sardinia, sparse = TRUE) %>%
            map_lgl(\(x) length(x) > 0))
 nrow(locs) # all rasters use same coords
@@ -133,31 +144,7 @@ p_locs +
   geom_raster(aes(x, y), as.data.frame(r_0, xy = TRUE), fill = '#FF000030') +
   labs(x = NULL, y = NULL)
 
-nbs <-
-  adjacent(r_0, cells = cells(r_0), directions = 8, include = TRUE) %>%
-  as.data.frame() %>%
-  transmute(ref_cell = V1, # first column is the starting cell
-            # add the 8 surrounding neighbors
-            adjacent = map(1:n(), \(i) {
-              .z <- c(V2[i], V3[i], V4[i], V5[i], V6[i], V7[i], V8[i], V9[i])
-              
-              .values <- map_lgl(.z, \(.cell_id) {
-                if(is.nan(.cell_id)) {
-                  return(NA)
-                } else {
-                  return(r_0[.cell_id]$z[1])
-                }})
-              
-              .z <- .z[which(! is.na(.values))]
-              
-              if(length(.z) == 0) {
-                return(0)
-              } else {
-                return(as.character(.z))
-              }
-            }))
-names(nbs$adjacent) <- nbs$ref_cell
-nbs <- nbs$adjacent
+nbs <- nbs_from_rast(r_0)
 
 d <-
   mutate(d,
@@ -185,22 +172,21 @@ if(FALSE) {
   
   m_mrf_1981_06_25 <-
     bam(ndvi ~ s(cell_id, bs = 'mrf', k = 200,
-                 # need to subset the neighbors to those in the data
-                 xt = list(nb = nbs[unique(d_1981_06_25$cell_id)])),
+                 # need to subset the neighbors to the factor levels
+                 xt = list(nb = nbs[levels(d_1981_06_25$cell_id)])),
         family = gaussian(),
         data = d_1981_06_25,
         method = 'fREML',
         discrete = TRUE,
-        drop.unused.levels = TRUE,
-        control = gam.control(trace = TRUE))
+        drop.unused.levels = FALSE)
   
   m_ds_1981_06_25 <- bam(ndvi ~ s(x, y, bs = 'ds'),
                          family = gaussian(),
                          data = d_1981_06_25,
                          method = 'fREML',
                          discrete = TRUE,
-                         drop.unused.levels = TRUE,
-                         control = gam.control(trace = TRUE))
+                         drop.unused.levels = TRUE)
+  
   ggplot() +
     coord_equal() +
     geom_point(aes(fitted(m_mrf_1981_06_25), fitted(m_ds_1981_06_25)),
@@ -264,7 +250,7 @@ if(all(file.exists(c('models/sardinia-test/gaussian-gam-ds.rds',
         s(year, bs = 'cr', k = 10) +
         s(doy, bs = 'cc', k = 10),
       family = gaussian(),
-      knots = list(doy = c(0, 1)),
+      knots = list(doy = c(0.5, 366.5)),
       data = d,
       method = 'fREML',
       discrete = TRUE,
@@ -282,7 +268,7 @@ if(all(file.exists(c('models/sardinia-test/gaussian-gam-ds.rds',
         s(year, bs = 'cr', k = 10) +
         s(doy, bs = 'cc', k = 10),
       family = gaussian(),
-      knots = list(doy = c(0, 1)),
+      knots = list(doy = c(0.5, 366.5)),
       data = d,
       method = 'fREML',
       discrete = TRUE,
@@ -321,7 +307,7 @@ if(file.exists('models/sardinia-test/beta-gam-mrf.rds')) {
         s(year, bs = 'cr', k = 10) +
         s(doy, bs = 'cc', k = 10),
       family = betar(),
-      knots = list(doy = c(0, 1)),
+      knots = list(doy = c(0.5, 366.5)),
       data = d,
       method = 'fREML',
       discrete = TRUE,
@@ -354,7 +340,7 @@ if(FALSE) {
         s(year, bs = 'cr', k = 10) +
         s(doy, bs = 'cc', k = 10)),
       family = betals(),
-      knots = list(doy = c(0, 1)),
+      knots = list(doy = c(0.5, 366.5)),
       data = d,
       method = 'REML',
       samfrac = 0.001,
@@ -396,17 +382,17 @@ preds_1_long <- preds_1 %>%
 cowplot::plot_grid(
   # plot estimated mean
   ggplot() +
-    coord_equal() +
     facet_wrap(~ model) +
     geom_raster(aes(x, y, fill = mu), preds_1_long) +
+    geom_sf(data = sardinia, fill = 'transparent') +
     scale_fill_viridis_c(expression(hat('\U1D6CE')),
                          option = 'A') +
     labs(title = paste('Predictions for', d$date[1]), x = NULL, y = NULL),
   # plot squared residuals
   ggplot() +
-    coord_equal() +
     facet_wrap(~ model) +
     geom_raster(aes(x, y, fill = e2), preds_1_long) +
+    geom_sf(data = sardinia, fill = 'transparent') +
     scale_fill_viridis_c(expression(
       paste('(', hat('\U1D6CE'), ' - \U1D53C(', hat('\U1D6CE'), '\U00B2)')),
       limits = c(0, NA)) +
@@ -451,7 +437,7 @@ if(file.exists('models/sardinia-test/gaus-gam-ti-mrf-gam.rds')) {
         ti(doy, cell_id, bs = c('cc', 'mrf'), k = c(5, 10),
            xt = list(nb = nbs)),
       family = gaussian(),
-      knots = list(doy = c(0, 1)),
+      knots = list(doy = c(0.5, 366.5)),
       data = d,
       method = 'fREML',
       discrete = TRUE,
@@ -530,10 +516,10 @@ if(file.exists('data/sardinia-test/sardinia-ndvi-t-4-s-4-aggr.rds')) {
   plot(elevs_aggr)
   plot(sardinia, add = TRUE, col = 'transparent')
   
-  d_aggr <- mutate(d_aggr, 
-                   elev_m = extract(elevs_aggr, select(d_aggr, x, y)),
-                   year = year(central_date),
-                   doy = yday(central_date))
+  d_aggr <- d_aggr %>%
+    mutate(elev_m = terra::extract(elevs_aggr, select(d_aggr, x, y)),
+           year = year(central_date),
+           doy = yday(central_date))
   
   range(d_aggr$elev_m)
   quantile(d_aggr$elev_m, c(0.1, 0.01, 0.001))
@@ -568,6 +554,7 @@ locs_aggr <- d_aggr %>%
   st_set_crs('EPSG:4326') %>%
   filter(., st_as_sf(., coords = c('x', 'y')) %>%
            st_set_crs('EPSG:4326') %>%
+           st_transform(st_crs(sardinia)) %>%
            st_intersects(sardinia, sparse = TRUE) %>%
            map_lgl(\(x) length(x) > 0))
 nrow(locs_aggr) # all rasters use same coords
@@ -590,42 +577,17 @@ p_locs_aggr +
               fill = '#FF000030') +
   labs(x = NULL, y = NULL)
 
-nbs_aggr <-
-  adjacent(r_0_aggr, cells = cells(r_0_aggr), directions = 8,
-           include = TRUE) %>%
-  as.data.frame() %>%
-  transmute(ref_cell = V1, # first column is the starting cell
-            # add the 8 surrounding neighbors
-            adjacent = map(1:n(), \(i) {
-              .z <- c(V2[i], V3[i], V4[i], V5[i], V6[i], V7[i], V8[i], V9[i])
-              
-              .values <- map_lgl(.z, \(.cell_id) {
-                if(is.nan(.cell_id)) {
-                  return(NA)
-                } else {
-                  return(r_0_aggr[.cell_id]$z[1])
-                }})
-              
-              .z <- .z[which(! is.na(.values))]
-              
-              if(length(.z) == 0) {
-                return(0)
-              } else {
-                return(as.character(.z))
-              }
-            }))
-names(nbs_aggr$adjacent) <- nbs_aggr$ref_cell
-nbs_aggr <- nbs_aggr$adjacent
+nbs_aggr <- nbs_from_rast(r_0_aggr)
 
 d_aggr <-
   mutate(d_aggr,
          cell_id = cellFromXY(r_0_aggr, xy = as.matrix(tibble(x, y))) %>%
            factor(levels = names(nbs_aggr)))
-mean(is.na(d_aggr$cell_id)) # some cell centers fall outside of the polygon
-n_distinct(d_aggr$cell_id)
 
-length(names(nbs_aggr))
+mean(is.na(d_aggr$cell_id)) # some cell centers fall outside of the polygon
+d_aggr <- filter(d_aggr, ! is.na(cell_id))
 n_distinct(d_aggr$cell_id)
+length(names(nbs_aggr))
 
 # all cell names match the neighbor list names
 # there cannot be any list elements with names that are not in the dataset
@@ -639,20 +601,17 @@ all.equal(sort(levels(d_aggr$cell_id)),
 if(file.exists('models/sardinia-test/gaussian-gam-ds.rds')) {
   m_gaus_mrf_aggr <- readRDS('models/sardinia-test/gaussian-gam-mrf-aggr.rds')
 } else {
-  system.time(
-    m_gaus_mrf_aggr <- bam(
-      ndvi ~
-        s(cell_id, bs = 'mrf', k = 60, xt = list(nb = nbs_aggr)) +
-        s(elev_m, bs = 'cr', k = 5) +
-        s(year, bs = 'cr', k = 10) +
-        s(doy, bs = 'cc', k = 10),
-      family = gaussian(),
-      knots = list(doy = c(0, 1)),
-      data = filter(d_aggr, ! is.na(cell_id)),
-      method = 'fREML',
-      discrete = TRUE,
-      control = gam.control(nthreads = 1, trace = TRUE))
-  )
+  m_gaus_mrf_aggr <- bam(
+    ndvi ~
+      s(cell_id, bs = 'mrf', k = 60, xt = list(nb = nbs_aggr)) +
+      s(elev_m, bs = 'cr', k = 5) +
+      s(year, bs = 'cr', k = 10) +
+      s(doy, bs = 'cc', k = 10),
+    family = gaussian(),
+    knots = list(doy = c(0.5, 366.5)),
+    data = filter(d_aggr, ! is.na(cell_id)),
+    method = 'fREML',
+    discrete = TRUE)
   plot_mrf(.model = m_gaus_mrf_aggr, .newdata = d_aggr, .full_model = TRUE)
   ggsave('figures/sardinia-test/sardinia-ndvi-gaussian-mrf-aggr-terms.png',
          width = 9, height = 6, units = 'in', dpi = 300, bg = 'white')
@@ -742,7 +701,7 @@ get_preds <- function(nd, space = TRUE) {
         rast() %>%
         `crs<-`('EPSG:4326') %>%
         project(elevs, res = res(elevs)) %>%
-        extract(., select(as.data.frame(elevs, xy = TRUE), 1:2)) %>%
+        terra::extract(., select(as.data.frame(elevs, xy = TRUE), 1:2)) %>%
         select(! ID) %>%
         bind_cols(select(as.data.frame(elevs, xy = TRUE), 1:2), .) %>%
         mutate(model = .model) %>%
