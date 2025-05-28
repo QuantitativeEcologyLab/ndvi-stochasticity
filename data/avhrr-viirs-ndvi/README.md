@@ -1,0 +1,1 @@
+data filtering was done based on the `QA` (quality assessment) raster layer and the values highlighted in the document called "`CDRP-ATBD-1267 Rev 0 Surface Reflectance & NDVI C-ATBD (01B-20a & 01B-20b) (DSR-1605).pdf`".
