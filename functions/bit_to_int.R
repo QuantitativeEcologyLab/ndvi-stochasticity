@@ -1,4 +1,4 @@
-bits_to_int <- function(bits) {
+bit_to_int <- function(bits) {
   if(class(bits) == 'raw') {
     bits <- as.numeric(bits)
   } else if(! class(bits) %in% c('numeric', 'integer')) {
@@ -8,7 +8,7 @@ bits_to_int <- function(bits) {
 }
 
 if(FALSE) { # some tests
-  bits_to_int(intToBits(-10))
-  bits_to_int(intToBits(0))
-  bits_to_int(intToBits(10))
+  bit_to_int(intToBits(-10))
+  bit_to_int(intToBits(0))
+  bit_to_int(intToBits(10))
 }
