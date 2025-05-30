@@ -51,6 +51,7 @@ list.files(path = 'data/avhrr-viirs-ndvi/raster-files',
   plot()
 
 # import ndvi data ----
+#' *NOTE: skipping data cleaning for simplicity*
 if(file.exists('data/sardinia-test/sardinia-ndvi.rds')) {
   d <- readRDS('data/sardinia-test/sardinia-ndvi.rds')
 } else {
