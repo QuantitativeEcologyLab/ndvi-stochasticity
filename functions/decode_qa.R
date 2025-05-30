@@ -73,14 +73,15 @@ decode_qa <- function(qa_values, return_bit = FALSE, warn = FALSE) {
           #'    110 ---
           #'    111 ---
           land_type = case_when(
-            ! k[4] & ! k[5] & ! k[6] ~ 'Land & Desert',
-            ! k[4] & ! k[5] &   k[6] ~ 'Land no desert',
-            ! k[4] &   k[5] & ! k[6] ~ 'Inland Water',
-            ! k[4] &   k[5] &   k[6] ~ 'Sea Water',
-            k[4] & ! k[5] & ! k[6] ~ NA_character_,
-            k[4] & ! k[5] &   k[6] ~ 'Coastal',
-            k[4] &   k[5] & ! k[6] ~ NA_character_,
-            k[4] &   k[5] &   k[6] ~ NA_character_),
+            # using 6 -> 4 to respect bit direction
+            ! k[6] & ! k[5] & ! k[4] ~ 'Land & Desert',
+            ! k[6] & ! k[5] &   k[4] ~ 'Land no desert',
+            ! k[6] &   k[5] & ! k[4] ~ 'Inland Water',
+            ! k[6] &   k[5] &   k[4] ~ 'Sea Water',
+            k[6] & ! k[5] & ! k[4] ~ NA_character_,
+            k[6] & ! k[5] &   k[4] ~ 'Coastal',
+            k[6] &   k[5] & ! k[4] ~ NA_character_,
+            k[6] &   k[5] &   k[4] ~ NA_character_),
           #' 6 Overall Aerosol Quality
           #'    1 OK
           #'    0 Poor
@@ -150,6 +151,7 @@ if(FALSE) {
     r[[cn]] <- mask(r[[cn]], r$QA)
   }
   plot(r)
+  plot(r$land_type)
   
   # the 7th flag is occasionally either 1 or 0 despite not being used...
   map(strsplit(filter(decoded, ! is.na(qa))$bit, '*'), \(l) l[7 + 1]) %>%
