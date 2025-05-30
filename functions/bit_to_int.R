@@ -3,8 +3,10 @@
 bit_to_int <- function(bit) {
   if(class(bit) == 'raw') {
     bit <- as.numeric(bit)
-  } else if(! class(bit) %in% c('numeric', 'integer')) {
-    stop('`bit` must be of class "raw", "numeric" or "integer".\n')
+  } else if(class(bit) == 'character') {
+    bit <- as.numeric(strsplit(bit, '*')[[1]])
+    } else if(! class(bit) %in% c('numeric', 'integer')) {
+    stop('`bit` must be of class "raw", "character", numeric" or "integer".\n')
   }
   
   if(length(bit) != 16) {
