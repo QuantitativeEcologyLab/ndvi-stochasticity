@@ -1,3 +1,5 @@
+# a function to convert bits to integers/numeric
+#' *NOTE: this function uses R-type (i.e., reversed) bits!*
 bit_to_int <- function(bits) {
   if(class(bits) == 'raw') {
     bits <- as.numeric(bits)
