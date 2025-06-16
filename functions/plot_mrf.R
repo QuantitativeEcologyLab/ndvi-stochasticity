@@ -38,7 +38,7 @@ plot_mrf <- function(.model, .terms = NULL, .newdata, .type = 'link',
     .smooths <- .smooths[! grepl('cell_id', .smooths)] # drop mrf smooths
     
     .draws <- purrr::map(
-      .smooths, \(.s) draw(.model, select = .s, rug = .rug)
+      .smooths, \(.s) draw(.model, select = .s, rug = .rug, n = .n)
     )
     
     .draws[[length(.draws) + 1]] <- p
