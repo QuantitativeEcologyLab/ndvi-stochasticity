@@ -87,16 +87,6 @@ if(file.exists('data/arctic-test/arctic-ndvi.rds')) {
     geom_point() +
     geom_smooth(formula = y ~ s(x, k = 5))
   
-  # plot the first few NDVI rasters
-  p_d <- filter(d, date %in% unique(date)[1:21]) %>%
-    ggplot() +
-    facet_wrap(~ date, nrow = 3) +
-    geom_raster(aes(x, y, fill = ndvi)) +
-    geom_sf(data = arctic, fill = 'transparent') +
-    scale_x_continuous(NULL, breaks = c(8.5, 9.5)) +
-    ylab(NULL) +
-    scale_fill_gradientn('NDVI', colors = ndvi_pal, limits = c(-1, 1))
-  
   # add altitude (get_elev_points results in a json error)
   elevs <- d %>%
     filter(date == first(date)) %>%
@@ -124,18 +114,21 @@ if(file.exists('data/arctic-test/arctic-ndvi.rds')) {
   saveRDS(d, 'data/arctic-test/arctic-ndvi.rds')
 }
 
-summary(d) # max(ndvi) = 1!
+summary(d) # max(ndvi) is 1!
+quantile(filter(d, doy < 150)$ndvi, c(0.8, 0.9, 0.95, 0.99, 0.995, 0.999))
 
-ggplot(slice_sample(d, n = 1e5), aes(doy, ndvi)) +
-  geom_point(alpha = 0.1) +
-  geom_smooth(formula = y ~ s(x, k = 10, bs = 'cc'), method = 'gam',
-              method.args = list(knots = list(doy = c(0.5, 366.5))),
-              fullrange = TRUE) +
-  xlim(c(0, 366))
+layout(t(1:2))
+slice_sample(d, n = 1e5) %>%
+  bam(ndvi ~ s(doy, bs = 'cc', k = 10), data = .,
+      method = 'REML', knots = list(doy = c(0.5, 366.5))) %>%
+  plot(scheme = 1, xlim = c(0.5, 366.5), n = 400, resid = TRUE)
 
-bam(ndvi ~ s(doy, bs = 'cc'), data = slice_sample(d, n = 1e5),
-    method = 'REML', knots = list(doy = c(0.5, 366.5))) %>%
-  plot(scheme = 1, xlim = c(0, 366), n = 400, resid = TRUE)
+d <- filter(d, ! (doy < 150 & ndvi > 0.1), ! (doy > 280 & ndvi > 0.2))
+
+slice_sample(d, n = 1e5) %>%
+  bam(ndvi ~ s(doy, bs = 'cc', k = 10), data = .,
+      method = 'REML', knots = list(doy = c(0.5, 366.5))) %>%
+  plot(scheme = 1, xlim = c(0.5, 366.5), n = 400, resid = TRUE)
 
 # add cell ID and make list of neighbor cells for all coordinates ----
 # unique coordinates inside arctic
@@ -220,13 +213,13 @@ if(all(file.exists(c('models/arctic-test/gaussian-gam-ds.rds',
   summary(m_gaus_ds)
   summary(m_gaus_mrf)
   
-  draw(m_gaus_ds, rug = FALSE, dist = 0.07)
+  draw(m_gaus_ds, rug = FALSE, dist = 0.07, n = 150)
   ggsave('figures/arctic-test/arctic-ndvi-gaussian-ds-terms.png',
-         width = 9, height = 6, units = 'in', dpi = 300, bg = 'white')
+         width = 13.5, height = 9, units = 'in', dpi = 300, bg = 'white')
   
-  plot_mrf(.model = m_gaus_mrf, .newdata = d, .full_model = TRUE)
+  plot_mrf(.model = m_gaus_mrf, .newdata = d, .full_model = TRUE, .n = 250)
   ggsave('figures/arctic-test/arctic-ndvi-gaussian-mrf-terms.png',
-         width = 9, height = 6, units = 'in', dpi = 300, bg = 'white')
+         width = 13.5, height = 9, units = 'in', dpi = 300, bg = 'white')
   
   saveRDS(m_gaus_ds, 'models/arctic-test/gaussian-gam-ds.rds')
   saveRDS(m_gaus_mrf, 'models/arctic-test/gaussian-gam-mrf.rds')
@@ -235,24 +228,27 @@ if(all(file.exists(c('models/arctic-test/gaussian-gam-ds.rds',
 # testing data aggregation ----
 s_res <- 4 # spatial resolution
 t_res <- 4 # temporal resolution
+AGGR <- paste0('data/arctic-test/arctic-ndvi-t-', t_res, '-s-', s_res,
+               '-aggr.rds')
 
-# import and aggregate the data ----
-if(file.exists('data/arctic-test/arctic-ndvi-t-4-s-4-aggr.rds')) {
-  d_aggr <- readRDS('data/arctic-test/arctic-ndvi-t-4-s-4-aggr.rds')
+# import and aggregate the data (takes < 10 minutes on EME linux) ----
+if(file.exists(AGGR)) {
+  d_aggr <- readRDS(AGGR)
 } else {
   if(.Platform$OS.type != 'unix')
     stop('AVHRR/VIIRS rasters are on the H: Drive, and you may want to use multiple cores.')
   future::availableCores(logical = FALSE)
   plan(multisession, workers = min(60, availableCores(logical = FALSE) - 2))
   d_aggr <-
-    list.files(path = 'data/avhrr-viirs-ndvi/raster-files/', #'/home/shared/NOAA_Files/',
+    list.files(path = 'data/avhrr-viirs-ndvi/raster-files/',
                pattern = '.nc',
                full.names = TRUE) %>%
     future_map(\(fn) {
       r <- rast(fn, lyr = 'NDVI') # to extract time below
       r %>%
         crop(., st_transform(arctic, crs(.))) %>%
-        terra::aggregate(s_res, na.rm = TRUE) %>%
+        #' *trying median() to see if it can help remove extreme values*
+        terra::aggregate(s_res, fun = median, na.rm = TRUE) %>%
         mask(st_transform(arctic, crs(.))) %>% # mask after aggregating
         as.data.frame(xy = TRUE, na.rm = TRUE) %>%
         mutate(date = as.Date(unique(time(r))))
@@ -303,18 +299,56 @@ if(file.exists('data/arctic-test/arctic-ndvi-t-4-s-4-aggr.rds')) {
   range(d_aggr$elev_m)
   quantile(d_aggr$elev_m, c(0.1, 0.01, 0.001))
   
-  saveRDS(d_aggr, paste0('data/arctic-test/arctic-ndvi-t-',
-                         t_res, '-s-', s_res, '-aggr.rds'))
+  saveRDS(d_aggr, AGGR)
 }
 
 # ndvi still has high max values
 summary(d_aggr)
 
+quantile(filter(d_aggr, doy < 150)$ndvi, c(0.8, 0.9, 0.95, 0.99, 0.995, 0.999))
+
+layout(t(1:2))
+slice_sample(d_aggr, n = 1e5) %>%
+  bam(ndvi ~ s(doy, bs = 'cc', k = 10), data = .,
+      method = 'REML', knots = list(doy = c(0.5, 366.5))) %>%
+  plot(scheme = 1, xlim = c(0.5, 366.5), n = 400, resid = TRUE)
+
+d_aggr <-
+  filter(d_aggr, ! (doy < 150 & ndvi > 0.05), ! (doy > 280 & ndvi > 0.1))
+
+slice_sample(d_aggr, n = 1e5) %>%
+  bam(ndvi ~ s(doy, bs = 'cc', k = 10), data = .,
+      method = 'REML', knots = list(doy = c(0.5, 366.5))) %>%
+  plot(scheme = 1, xlim = c(0.5, 366.5), n = 400, resid = TRUE)
+
+# plot the first few NDVI rasters
+p_d <- filter(d, date %in% unique(date)[1:21]) %>%
+  ggplot() +
+  facet_wrap(~ date, nrow = 3) +
+  geom_raster(aes(x, y, fill = ndvi)) +
+  geom_sf(data = arctic, fill = 'transparent') +
+  scale_x_continuous(NULL, breaks = c(8.5, 9.5)) +
+  ylab(NULL) +
+  scale_fill_gradientn('NDVI', colors = ndvi_pal, limits = c(-1, 1))
+
+# plot the first few NDVI rasters
+p_d_aggr <-
+  filter(d_aggr, central_date %in% unique(as.character(central_date))[1:21]) %>%
+  ggplot() +
+  facet_wrap(~ as.character(central_date), nrow = 3) +
+  geom_raster(aes(x, y, fill = ndvi)) +
+  geom_sf(data = arctic, fill = 'transparent') +
+  scale_x_continuous(NULL, breaks = c(8.5, 9.5)) +
+  ylab(NULL) +
+  scale_fill_gradientn('NDVI', colors = ndvi_pal, limits = c(-1, 1))
+
 # plot a comparison of the first 21 rasters
 plot_grid(
   get_legend(p_d +
                theme(legend.position = 'top', legend.key.width = rel(2))),
-  plot_grid(p_d + theme(legend.position = 'none'),
+  plot_grid(p_d + theme(legend.position = 'none') +
+              geom_raster(aes(x, y), fill = 'transparent',
+                          filter(d_aggr, central_date == central_date[1])),
             p_d_aggr + theme(legend.position = 'none'),
             labels = 'AUTO'),
   rel_heights = c(1, 15), ncol = 1)
@@ -420,7 +454,7 @@ gratia::smooths(m_gaus_mrf)
 
 # get model predictions ----
 get_preds <- function(nd, space = TRUE) {
-  if(space) {
+  if(space) { # if spatial
     preds <- nd %>%
       mutate(.,
              ds_mu =
@@ -437,7 +471,7 @@ get_preds <- function(nd, space = TRUE) {
                predict(object = m_gaus_mrf_aggr, newdata = .,
                        type = 'response', se.fit = FALSE,
                        terms = c('(Intercept)', 's(cell_id)', 's(elev_m)')))
-  } else {
+  } else { # else temporal
     preds <- nd %>% # new data
       mutate(
         ds_mu = predict(object = m_gaus_ds, newdata = .,
@@ -480,6 +514,7 @@ get_preds <- function(nd, space = TRUE) {
         rast() %>%
         `crs<-`('EPSG:4326') %>%
         project(elevs, res = res(elevs)) %>%
+        mask(arctic, touches = FALSE) %>%
         extract(., select(as.data.frame(elevs, xy = TRUE), 1:2)) %>%
         select(! ID) %>%
         bind_cols(select(as.data.frame(elevs, xy = TRUE), 1:2), .) %>%
@@ -545,9 +580,8 @@ get_preds <- function(nd, space = TRUE) {
 preds_comp_s <-
   elevs %>%
   mask(arctic) %>%
-  as.data.frame(xy = TRUE) %>%
+  as.data.frame(xy = TRUE, na.rm = TRUE) %>%
   rename(elev_m = 3) %>%
-  filter(! is.na(elev_m)) %>%
   mutate(elev_m = if_else(elev_m < 0, 0, elev_m)) %>%
   mutate(cell_id_fine = factor(cells(r_0, vect(tibble(x, y),
                                                geom = c('x', 'y')))[, 2],
@@ -584,7 +618,8 @@ p_comp <-
         expression(atop(bold('Difference in'), bold('mean NDVI'))),
         type = 'div', palette = 5,
         limits = max(abs(filter(preds_comp_s, model == 'diff',
-                                param == 'mu')$value)) * c(-1, 1)) +
+                                param == 'mu')$value), na.rm = TRUE) *
+          c(-1, 1)) +
       labs(x = NULL, y = NULL),
     # row 2: map of variance in NDVI
     filter(preds_comp_s, param == 's2', model != 'diff') %>%
@@ -594,14 +629,16 @@ p_comp <-
       facet_grid(. ~ model) +
       geom_raster(aes(x, y, fill = value)) +
       geom_sf(data = arctic, fill = 'transparent', color = 'black') +
-      scale_fill_viridis_c(expression(bold(s^'2'))) +
+      scale_fill_viridis_c(expression(bold(s^'2')), limits = c(0, 1)) +
       labs(x = NULL, y = NULL),
     ggplot(filter(preds_comp_s, param == 's2', model == 'diff')) +
       geom_raster(aes(x, y, fill = value)) +
       geom_sf(data = arctic, fill = 'transparent', color = 'black') +
       scale_fill_distiller(
         expression(bold(atop('Difference in', 'estimated s'^'2'))),
-        type = 'div', palette = 4) +
+        type = 'div', palette = 4, limits = c(-1, 1) *
+          max(abs(filter(preds_comp_s, model == 'diff',
+                         param == 's2')$value), na.rm = TRUE)) +
       labs(x = NULL, y = NULL),
     # row 3: mean NDVI over day of year
     ggplot(filter(preds_comp_t, param == 'mu', model != 'diff')) +
@@ -648,5 +685,27 @@ p_comp <-
       geom_rug(aes(x = elev_m), alpha = 0.01) +
       labs(x = 'Elevation (m)', y = 'Difference in mean NDVI'))
 
-ggsave('figures/arctic-test/model-comparisons.png',
+ggsave('figures/arctic-test/model-comparisons.png', p_comp,
        width = 12.5, height = 17, units = 'in', dpi = 300, bg = 'white')
+
+# make a figure comparing the effects of aggregation on prediction ----
+pred_vs_pred <- tibble(
+  mrf = d_aggr %>%
+    mutate(.,
+           cell_id = extract(slice(d, 1, .by = c(x, y)) %>%
+                               select(x, y, cell_id) %>%
+                               rast(),select(d_aggr, x, y))[[2]]) %>%
+    predict(m_gaus_mrf, newdata = ., type= 'response'),
+  mrf_aggr = fitted(m_gaus_mrf_aggr)) %>%
+  filter(! is.na(mrf))
+
+ggplot(pred_vs_pred, aes(mrf, mrf_aggr)) +
+  geom_point(alpha = 0.01) +
+  geom_smooth(method = 'gam', formula = y ~ s(x, k = 5),
+              color = 'cornflowerblue') +
+  geom_abline(intercept = 0, slope = 1, color = 'red') +
+  labs(x = 'MRF model with full dataset',
+       y = 'MRF model with aggregated dataset')
+
+ggsave('figures/arctic-test/pred-vs-pred.png', width = 8, height = 6,
+       units = 'in', dpi = 300, bg = 'white')

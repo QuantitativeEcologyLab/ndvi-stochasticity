@@ -1,6 +1,6 @@
 # PRIORITY
 
-- test aggregation with arctic example (plot preds vs preds for original model and aggregated):
+- clean each raster by removing values > 0.99 quantile for a given month and area?
 - run afrotropics next, then islands
 
 - need to re-run scripts:

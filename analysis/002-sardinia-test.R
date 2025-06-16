@@ -528,20 +528,21 @@ if(file.exists('data/sardinia-test/sardinia-ndvi-t-4-s-4-aggr.rds')) {
   
   saveRDS(d_aggr, paste0('data/sardinia-test/sardinia-ndvi-t-',
                          t_res, '-s-', s_res, '-aggr.rds'))
+  
+  # plot a comparison of the first 21 rasters
+  plot_grid(
+    get_legend(p_d +
+                 theme(legend.position = 'top', legend.key.width = rel(2))),
+    plot_grid(p_d + theme(legend.position = 'none'),
+              p_d_aggr + theme(legend.position = 'none'),
+              labels = 'AUTO'),
+    rel_heights = c(1, 15), ncol = 1)
+  
+  ggsave('figures/sardinia-test/example-rasters-aggregation.png',
+         width = 20, height = 8.5, units = 'in', dpi = 600, bg = 'white')
 }
+
 summary(d_aggr)
-
-# plot a comparison of the first 21 rasters
-plot_grid(
-  get_legend(p_d +
-               theme(legend.position = 'top', legend.key.width = rel(2))),
-  plot_grid(p_d + theme(legend.position = 'none'),
-            p_d_aggr + theme(legend.position = 'none'),
-            labels = 'AUTO'),
-  rel_heights = c(1, 15), ncol = 1)
-
-ggsave('figures/sardinia-test/example-rasters-aggregation.png',
-       width = 20, height = 8.5, units = 'in', dpi = 600, bg = 'white')
 
 # fit a model to show the changes in predictions ----
 # add cell ID and make list of neighbor cells for all coordinates ----
@@ -701,6 +702,7 @@ get_preds <- function(nd, space = TRUE) {
         rast() %>%
         `crs<-`('EPSG:4326') %>%
         project(elevs, res = res(elevs)) %>%
+        mask(sardinia, touches = FALSE) %>%
         terra::extract(., select(as.data.frame(elevs, xy = TRUE), 1:2)) %>%
         select(! ID) %>%
         bind_cols(select(as.data.frame(elevs, xy = TRUE), 1:2), .) %>%
@@ -759,7 +761,7 @@ get_preds <- function(nd, space = TRUE) {
 preds_comp_s <-
   elevs %>%
   mask(sardinia) %>%
-  as.data.frame(xy = TRUE) %>%
+  as.data.frame(xy = TRUE, na.rm = TRUE) %>%
   rename(elev_m = 3) %>%
   filter(! is.na(elev_m)) %>%
   mutate(cell_id_fine = factor(cells(r_0, vect(tibble(x, y),
@@ -859,7 +861,7 @@ p_comp <-
       geom_rug(aes(x = elev_m), alpha = 0.01) +
       labs(x = 'Elevation (m)', y = 'Difference in mean NDVI'))
 
-ggsave('figures/sardinia-test/model-comparisons.png',
+ggsave('figures/sardinia-test/model-comparisons.png', p_comp,
        width = 12.5, height = 20, units = 'in', dpi = 300, bg = 'white')
 
 # plots not used
@@ -880,3 +882,25 @@ if(FALSE) {
     labs(x = 'MRF', y = 'Aggregated MRF') +
     scale_fill_bamako(name = 'Count', reverse = TRUE)
 }
+
+# make a figure comparing the effects of aggregation on prediction ----
+pred_vs_pred <- tibble(
+  mrf = d_aggr %>%
+    mutate(.,
+           cell_id = extract(slice(d, 1, .by = c(x, y)) %>%
+                               select(x, y, cell_id) %>%
+                               rast(),select(d_aggr, x, y))[[2]]) %>%
+    predict(m_gaus_mrf, newdata = ., type= 'response'),
+  mrf_aggr = fitted(m_gaus_mrf_aggr)) %>%
+  filter(! is.na(mrf))
+
+ggplot(pred_vs_pred, aes(mrf, mrf_aggr)) +
+  geom_point(alpha = 0.01) +
+  geom_smooth(method = 'gam', formula = y ~ s(x, k = 5),
+              color = 'cornflowerblue') +
+  geom_abline(intercept = 0, slope = 1, color = 'red') +
+  labs(x = 'MRF model with full dataset',
+       y = 'MRF model with aggregated dataset')
+
+ggsave('figures/sardinia-test/pred-vs-pred.png', width = 8, height = 6,
+       units = 'in', dpi = 300, bg = 'white')
