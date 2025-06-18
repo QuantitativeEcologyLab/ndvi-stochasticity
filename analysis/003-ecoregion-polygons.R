@@ -18,7 +18,11 @@ ecoregions <- st_read('data/world-ecosystems/data/commondata/data0/tnc_terr_ecor
   select(group, ECO_NAME, ECO_NUM, WWF_REALM, WWF_MHTNAM) %>%
   st_make_valid() %>% # to drop duplicate vertices
   mutate(area_km2 = as.numeric(st_area(.)) / 1e6) %>%
-  filter(WWF_MHTNAM != 'Inland Water') %>% # rm 17 inland water polygons
+  # remove 17 inland water polygons
+  # great lakes are not among them, but there's no NDVI data for them
+  filter(WWF_MHTNAM != 'Inland Water') %>%
+  # not modeling Antarctica
+  filter(group != 'antarctica') %>%
   st_transform(crs = crs(rast('data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v005_AVH13C1_NOAA-07_19810624_c20170610041337.nc',
                               lyr = 'NDVI')))
 
