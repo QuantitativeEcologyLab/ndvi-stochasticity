@@ -77,3 +77,4 @@ data/hbam-var-ndvi-data*
 data/ndvi-global-*
 models/*
 data/cell-id.tif.aux.xml
+data/taiga-test/taiga-ndvi.rds
