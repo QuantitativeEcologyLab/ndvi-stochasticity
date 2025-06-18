@@ -1,12 +1,10 @@
 # PRIORITY
 
-- clean each raster by removing values > 0.99 quantile for a given month and area?
 - run afrotropics next, then islands
 
 - need to re-run scripts:
-  - create objects of global cell ids and neighbors 
+  - create objects of global cell ids and neighbors (already done in `007-cell-neighbors.R`?)
   - split data by continents (not splitting neighbors by continents)
-  - re-organize and clean up scripts
 
 # tests
 
@@ -24,7 +22,7 @@
 # modeling
 
 - vector size on EME linux is not limited to `2^32 - 1`
-- split by continent to remove issues with monotonicity across greenland with latitude and also increase dataset size
+- split by continent to increase dataset size
 - use adaptive splines for year to allow for rapid change in ~2010? (no difference in sardinia test)
 
 # products
