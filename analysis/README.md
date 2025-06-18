@@ -4,11 +4,12 @@ This folder contains all `R` scripts used in this project. The scripts are numbe
   * `001-download-ndvi-rasters.R` downloads all the NDVI data
   * `002-sardinia-test.R` runs some tests for model setup using the Mediterranean island of Sardigna (Sardinia)
   * `003-ecoregion-polygons.R` creates an `rds` file of ecoregion polygons used throughout the rest of the analyses
-  * `004-arctic-test.R`runs some tests using an island in Inuit Nunangat
-  * `005-taiga-test.R` runs some tests using a large taiga region that was historically and still is inhabited by many Indigenous Peoples
-  * `006-merging-rasters.R` merges the NDVI rasters into single-dataframe datasets for each study region
-  * `007-cell-neighbors.R` creates a list of each cell's neighboring cells, which is used for markov random fields smooths
-  * `008-test-hgams.R` fits some preliminary test models on the global dataset
+  * `004-arctic-test.R` runs some tests using an island in Inuit Nunangat
+  * `005-check-high-lat-data.R` runs some tests for removing excessively high NDVI values at high latitudes in winter
+  * `006-taiga-test.R` runs some tests using a large taiga region that was historically and still is inhabited by many Indigenous Peoples
+  * `007-merging-rasters.R` merges the NDVI rasters into single-dataframe datasets for each study region
+  * `008-cell-neighbors.R` creates a list of each cell's neighboring cells, which is used for markov random fields smooths
+  * `009-test-hgams.R` fits some preliminary test models on the global dataset
 * 02X: modeling mean NDVI
   * `011-mean-ndvi-hgam.R`
 * 03X: modeling variance in NDVI for a given mean
