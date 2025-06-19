@@ -163,8 +163,11 @@ dates %>%
     'Number of rasters',
     values = c('#FAD3BE', '#7A9F9E', '#3572A3', '#21327F', '#190C65')) +
   theme(legend.position = 'top')
-ggsave('figures/input-data/n-rasters-time.png',
-       width = 8.5, height = 5, units = 'in', dpi = 300, bg = 'white')
+  
+if(! file.exists('figures/input-data/n-rasters-time.png')) {
+  ggsave('figures/input-data/n-rasters-time.png',
+         width = 8.5, height = 5, units = 'in', dpi = 300, bg = 'white')
+}
 
 # need to aggregate temporally to reduce file size before saving ----
 # spatRast objects cannot be serialized (i.e., run in parallel):
@@ -244,3 +247,4 @@ if(FALSE) { # for testing
     labs(x = NULL, y = NULL) +
     scale_fill_gradientn('NDVI', colours = ndvi_pal, limits = c(-1, 1))
 }
+
