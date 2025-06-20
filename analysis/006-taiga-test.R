@@ -51,8 +51,10 @@ ggplot() +
   geom_sf(data = st_geometry(na)) +
   geom_sf(data = taiga, fill = 'red3')
 
-ggsave('figures/taiga-test/taiga-map.png', width = 10, height = 6.4,
-       units = 'in', dpi = 300, bg = 'white')
+if(! file.exists('figures/taiga-test/taiga-map.png')) {
+  ggsave('figures/taiga-test/taiga-map.png', width = 10, height = 6.4,
+         units = 'in', dpi = 300, bg = 'white')
+}
 
 #' `geom_smooth` of a subset of the first year of data
 #' there are too many values > 0.2 in winter
@@ -151,7 +153,6 @@ p_d <- filter(slice(d, 1:(nrow(d) / 44 / 4)), date <= date[1] + 20) %>%
   scale_fill_gradientn('NDVI', colors = ndvi_pal, limits = c(-1, 1))
 p_d
 
-
 # plot a sample of the data to check the seasonal trend
 layout(t(1:2))
 # with original ndvi data
@@ -165,65 +166,130 @@ bam(ndvi_clean ~ s(doy, bs = 'cc'), data = slice_sample(d, n = 1e5),
   plot(scheme = 2, xlim = c(0, 366), n = 400, resid = TRUE)
 layout(1)
 
-# add cell ID and make list of neighbor cells for all coordinates ----
-# unique coordinates inside taiga
-locs <- d %>%
-  select(x, y) %>%
-  group_by(x, y) %>%
-  slice(1) %>%
-  st_as_sf(coords = c('x', 'y')) %>%
-  st_set_crs('EPSG:4326') %>%
-  filter(., st_as_sf(., coords = c('x', 'y')) %>%
-           st_set_crs('EPSG:4326') %>%
-           st_intersects(st_transform(taiga, 'EPSG:4326'),
-                         sparse = TRUE) %>%
-           map_lgl(\(x) length(x) > 0))
-nrow(locs) # all rasters use same coords
-
-p_locs <-
-  ggplot() +
-  geom_sf(data = taiga) +
-  geom_sf(data = locs, alpha = 0.1)
-p_locs
-
-# make a raster of all locations
-r_0 <- locs %>%
-  st_coordinates() %>%
-  data.frame() %>%
-  mutate(z = 0) %>%
-  rast()
-
-p_locs +
-  geom_raster(aes(x, y), as.data.frame(r_0, xy = TRUE), fill = '#FF000030') +
-  labs(x = NULL, y = NULL)
-
-if(file.exists('data/taiga-test/nbs.rds')) {
-  nbs <- readRDS('data/taiga-test/nbs.rds')
-} else {
-  nbs <- nbs_from_rast(r_0)
-  saveRDS(nbs, 'data/taiga-test/nbs.rds')
+# the markov random field is excruciatigly slow for the region. the model
+# took over 23 hours to set the bases for a single day of data, so we are
+# abboandoning the mrf smooth. the tests below use a single day of data.
+if(FALSE) {
+  # add cell ID and make list of neighbor cells for all coordinates ----
+  # unique coordinates inside taiga
+  locs <- d %>%
+    select(x, y) %>%
+    group_by(x, y) %>%
+    slice(1) %>%
+    st_as_sf(coords = c('x', 'y')) %>%
+    st_set_crs('EPSG:4326') %>%
+    filter(., st_as_sf(., coords = c('x', 'y')) %>%
+             st_set_crs('EPSG:4326') %>%
+             st_intersects(st_transform(taiga, 'EPSG:4326'),
+                           sparse = TRUE) %>%
+             map_lgl(\(x) length(x) > 0))
+  nrow(locs) # all rasters use same coords
+  
+  p_locs <-
+    ggplot() +
+    geom_sf(data = taiga) +
+    geom_sf(data = locs, alpha = 0.1)
+  p_locs
+  
+  # make a raster of all locations
+  r_0 <- locs %>%
+    st_coordinates() %>%
+    data.frame() %>%
+    mutate(z = 0) %>%
+    rast()
+  
+  p_locs +
+    geom_raster(aes(x, y), as.data.frame(r_0, xy = TRUE), fill = '#FF000030') +
+    labs(x = NULL, y = NULL)
+  
+  if(file.exists('data/taiga-test/nbs.rds')) {
+    nbs <- readRDS('data/taiga-test/nbs.rds')
+  } else {
+    nbs <- nbs_from_rast(r_0)
+    saveRDS(nbs, 'data/taiga-test/nbs.rds')
+  }
+  
+  d <-
+    mutate(d,
+           cell_id = cellFromXY(r_0, xy = as.matrix(tibble(x, y))) %>%
+             factor(levels = names(nbs)))
+  
+  if(FALSE) { # check cell IDs
+    all.equal(sort(names(nbs)),
+              sort(as.character(unique(unlist(nbs)))))
+    
+    # there is one pixel in the north that has no neighbors
+    nbs[which(map_int(nbs, length) == 1 & map_lgl(nbs, \(.n) .n[1] == 0))]
+    
+    filter(d, cell_id == '501')
+  }
+  
+  # all cell names match the neighbor list names
+  # there cannot be any list elements with names that are not in the dataset
+  all.equal(sort(as.character(cells(r_0))), sort(names(nbs)))
+  
+  # all values in neighbor list are in the factor levels
+  # this is not crucial, as the model will predict for neighbors with data
+  all.equal(sort(levels(d$cell_id)),
+            sort(as.character(unique(unlist(nbs[-which(names(nbs) == '501')])))))
+  
+  all.equal(sort(as.character(unique(d$cell_id))),
+            sort(names(nbs)))
+  
+  # filter to a single day and drop the cell with no neighbors
+  z <- filter(d, cell_id != '501') %>%
+    filter(date == date[1]) %>%
+    filter(! is.na(ndvi_clean)) %>%
+    mutate(cell_id = factor(cell_id))
+  nbs_z <- nbs[levels(z$cell_id)]
+  
+  all.equal(sort(names(nbs_z)), sort(levels(z$cell_id)))
+  all.equal(sort(levels(z$cell_id)), sort(as.character(unique(unlist(nbs_z)))))
+  all.equal(sort(as.character(unique(z$cell_id))), sort(names(nbs_z)))
+  all.equal(sort(as.character(unique(z$cell_id))),
+            sort(as.character(unique(unlist(nbs_z)))))
+  
+  # too slow! setting up bases since about 2025-06-19 11:30, and it was
+  # still not done at 7:30 the next day (20 hours later)
+  system.time(m_test <- bam(
+    ndvi_clean ~
+      s(cell_id, bs = 'mrf', k = 1000,
+        xt = list(nb = nbs_z)),
+    family = gaussian(),
+    data = z,
+    method = 'fREML',
+    discrete = TRUE,
+    nthreads = 10,
+    control = gam.control(nthreads = 10, trace = TRUE)))
+  
+  # fits in < 25 seconds on the EME linux
+  system.time(m_test_ds <- bam(
+    ndvi_clean ~
+      s(x, y, bs = 'ds', k = 1000),
+    family = gaussian(),
+    data = z,
+    method = 'fREML',
+    discrete = TRUE,
+    nthreads = 10,
+    control = gam.control(nthreads = 10, trace = TRUE)))
+  
+  # also fits in < 25 seconds on the EME linux
+  system.time(m_test_sos <- bam(
+    ndvi_clean ~
+      s(x, y, bs = 'sos', k = 1000),
+    family = gaussian(),
+    data = z,
+    method = 'fREML',
+    discrete = TRUE,
+    nthreads = 10,
+    control = gam.control(nthreads = 10, trace = TRUE)))
 }
 
-d <-
-  mutate(d,
-         cell_id = cellFromXY(r_0, xy = as.matrix(tibble(x, y))) %>%
-           factor(levels = names(nbs)))
-
-# all cell names match the neighbor list names
-# there cannot be any list elements with names that are not in the dataset
-all.equal(sort(as.character(cells(r_0))), sort(names(nbs)))
-
-# all values in neighbor list are in the factor levels
-# this is not crucial, as the model will predict for neighbors with data
-all.equal(sort(levels(d$cell_id)),
-          sort(as.character(unique(unlist(nbs)))))
-
 # fit a spatially explicit test model with a gaussian family ----
-if(all(file.exists(c('models/taiga-test/gaussian-gam-ds.rds',
-                     'models/taiga-test/gaussian-gam-mrf.rds')))) {
+if(file.exists('models/taiga-test/gaussian-gam-ds.rds')) {
   m_gaus_ds <- readRDS('models/taiga-test/gaussian-gam-ds.rds')
-  m_gaus_mrf <- readRDS('models/taiga-test/gaussian-gam-mrf.rds')
 } else {
+  # fits in ~30 minutes
   m_gaus_ds <- bam(
     ndvi_clean ~
       s(x, y, bs = 'ds', k = 2000) +
@@ -237,36 +303,15 @@ if(all(file.exists(c('models/taiga-test/gaussian-gam-ds.rds',
     discrete = TRUE,
     nthreads = 10,
     control = gam.control(nthreads = 10, trace = TRUE))
-
-  m_gaus_mrf <- bam(
-    ndvi_clean ~
-      s(cell_id, bs = 'mrf', k = 2000, xt = list(nb = nbs)) +
-      s(elev_m, bs = 'cr', k = 5) +
-      s(year, bs = 'cr', k = 10) +
-      s(doy, bs = 'cc', k = 10),
-    family = gaussian(),
-    knots = list(doy = c(0.5, 366.5)),
-    data = d,
-    method = 'fREML',
-    discrete = TRUE,
-    nthreads = 10,
-    control = gam.control(nthreads = 10, trace = TRUE))
-
-  # deviance explained and complexity of the spatial terms are similar
-  summary(m_gaus_ds)
-  summary(m_gaus_mrf)
-
+  
+  saveRDS(m_gaus_ds, 'models/taiga-test/gaussian-gam-ds.rds')
   p_ds <- draw(m_gaus_ds, rug = FALSE, dist = 0.07)
   ggsave('figures/taiga-test/taiga-ndvi-gaussian-ds-terms.png', p_ds,
          width = 9, height = 6, units = 'in', dpi = 300, bg = 'white')
-
-  plot_mrf(.model = m_gaus_mrf, .newdata = d, .full_model = TRUE)
-  ggsave('figures/taiga-test/taiga-ndvi-gaussian-mrf-terms.png',
-         width = 9, height = 6, units = 'in', dpi = 300, bg = 'white')
-
-  saveRDS(m_gaus_ds, 'models/taiga-test/gaussian-gam-ds.rds')
-  saveRDS(m_gaus_mrf, 'models/taiga-test/gaussian-gam-mrf.rds')
 }
+
+# deviance explained and complexity of the spatial terms are similar
+summary(m_gaus_ds)
 
 # # testing data aggregation ----
 #' #' *need to add code to clean ndvi data*
