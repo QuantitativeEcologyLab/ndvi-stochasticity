@@ -173,7 +173,7 @@ if(! file.exists('figures/input-data/n-rasters-time.png')) {
 # spatRast objects cannot be serialized (i.e., run in parallel):
 # https://stackoverflow.com/questions/67445883/terra-package-returns-error-when-try-to-run-parallel-operations/67449818#67449818
 
-# calculate aggregated mean NDVI for each realm ---
+# calculate aggregated mean NDVI for each realm ----
 # preview the groups
 if(FALSE) {
   ggplot(ecoregions, aes(fill = group)) +
@@ -218,7 +218,7 @@ future_map_chr(GROUPS, function(.group) {
           return(.r)
         }) %>%
         rast() %>% # convert list to stack of rasters
-        # mask(shp) %>% # only keep the realm of interest
+        # mask(shp) %>% # masked in map() call above
         mean(na.rm = TRUE) %>% # aggregate temporally
         return()
       }, .progress = 'Calculating mean raster across time'),
