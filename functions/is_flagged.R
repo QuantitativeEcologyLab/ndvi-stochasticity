@@ -10,6 +10,9 @@
 source('functions/bit_to_int.R')
 
 is_flagged <- function(QA, flag_position) {
+  if(length(QA) > 1) {
+    stop('`QA` must be of length 1.\n')
+  }
   if(length(flag_position) > 1) {
     stop('`flag_position` must be of length 1.\n')
   }
