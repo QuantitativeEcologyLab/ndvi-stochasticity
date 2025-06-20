@@ -18,7 +18,6 @@ source('functions/ndvi-palette.R')
 source('functions/decode_qa.R')    # for cleaning rasters
 source('functions/bit_to_int.R')   # for cleaning rasters
 source('functions/is_flagged.R') # for cleaning rasters
-source('functions/plot_mrf.R') # for plotting markov random field smooths
 source('analysis/figures/000-default-ggplot-theme.R')
 source('functions/get_legend.R') # get_legend() from cowplot v. 1.1.3 fails
 source('functions/nbs_from_rast.R') # gives a list of neighboring cells
