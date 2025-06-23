@@ -56,9 +56,9 @@ decode_qa <- function(qa_values, return_bit = FALSE, warn = FALSE) {
           #'    10 Probably Cloudy
           #'    11 Confident Cloudy
           cloud_state = case_when(! k[1] & ! k[2] ~ 'Confident Clear',
+                                  k[1] & k[2] ~ 'Confident Cloudy',
                                   k[1] ~ 'Probably Clear',
-                                  k[2] ~ 'Probably Cloudy',
-                                  k[1] & k[2] ~ 'Confident Cloudy'),
+                                  k[2] ~ 'Probably Cloudy'),
           #' 2 Cloud shadow
           #'    1 Yes
           #'    0 No
