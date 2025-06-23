@@ -27,7 +27,7 @@ decode_qa <- function(qa_values, return_bit = FALSE, warn = FALSE) {
         if(! is.finite(.qa)) return(data.frame(qa = .qa, bit = NA))
         
         # extract a logical version of the short (indices works L -> R)
-        k <- as.logical(intToBits(.qa)[1:16])
+        k <- as.logical(intToBits(.qa)[1:16]) # drop bits 17:31
         
         unused <- c(7, 11:14) + 1 # bits start at 0, but indices start at 1
         
@@ -103,12 +103,14 @@ decode_qa <- function(qa_values, return_bit = FALSE, warn = FALSE) {
           #' 15 Snow/Ice Flag
           #'    1 Snow/Ice
           #'    0 No snow/Ice
-          snow_ice = if_else(k[16], true = 'Snow/Ice', false = 'No snow/Ice'))
+          snow_ice = if_else(k[16], true = 'Snow/Ice', false = 'No snow/Ice')) %>%
+          return()
       }) %>%
       bind_rows()
     
     out <- tibble(qa = all_qa_values) %>%
-      left_join(out, by = 'qa')
+      left_join(out, by = 'qa') %>%
+      select(! qa)
   } # close else
   
   return(out)
@@ -126,38 +128,27 @@ if(FALSE) {
   
   decode_qa(c(0:6), return_bit = TRUE) # check shorts
   decode_qa(0) # example of a possible flag
-  decode_qa(bit_to_int(c(rep(0, 7), 1, rep(0, 8)))) # with an unused flag
+  decode_qa(bit_to_int(c(rep(0, 7), 1, rep(0, 8))), TRUE) # w unused flag
   c(rep(0, 7), 1, rep(0, 2), 1, 1, 1, 1, 0, 0) %>% # multiple unused flags
     bit_to_int() %>%
-    decode_qa()
+    decode_qa(warn = TRUE)
   decode_qa(c(32, 33)) # example of multiple possible flags
   
   # use an exaple from a raster
-  sahara <- st_read('data/ecoregions/ecoregions-polygons.shp') %>%
-    filter(ECO_NAME == 'Sahara Desert') %>%
-    st_geometry() %>%
-    st_as_sf()
-  
-  r <- rast('data/avhrr-viirs-ndvi/raster-files/VIIRS-Land_v001_JP113C1_NOAA-20_20250507_c20250513122857.nc') %>%
-    crop(sahara, mask = TRUE)
+  r <- rast('data/avhrr-viirs-ndvi/raster-files/VIIRS-Land_v001_JP113C1_NOAA-20_20250507_c20250513122857.nc',
+            lyr = c('NDVI', 'QA')) %>% # not importing time layer
+    mask(st_read('data/ecoregions/ecoregions-polygons.shp') %>%
+           st_geometry() %>%
+           st_as_sf())
   plot(r)
   
   decoded <- decode_qa(as.numeric(values(r$QA)))
   
   # make rasters for each QA parameter
-  for(cn in colnames(decoded)[3:ncol(decoded)]) {
+  for(cn in colnames(decoded)[2:ncol(decoded)]) {
     r[[cn]] <- r$QA
     values(r[[cn]]) <- decoded[[cn]]
     r[[cn]] <- mask(r[[cn]], r$QA)
   }
-  plot(r)
-  plot(r$land_type)
-  
-  # the 7th flag is occasionally either 1 or 0 despite not being used...
-  map(strsplit(filter(decoded, ! is.na(qa))$bit, '*'), \(l) l[7 + 1]) %>%
-    unique()
-  
-  # and it's not due to incorrect reversal of the bit
-  map(strsplit(filter(decoded, ! is.na(qa))$bit, '*'), \(l) rev(l)[7 + 1]) %>%
-    unique()
+  plot(r); beepr::beep(4)
 }
