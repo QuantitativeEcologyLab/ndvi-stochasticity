@@ -18,9 +18,6 @@ is_flagged <- function(QA, flag_position) {
     stop('`flag_position` must be of length 1.\n')
   }
   
-  bit <- numeric(16)
-  bit[flag_position + 1] <- 1
-  bit_value <- bit_to_int(bit = bit) 
-  
-  return(QA %% (bit_value * 2) >= bit_value)
+  # find bit value using powers (incices start from 0)
+  return(QA %% ((2^flag_position) * 2) >= (2^flag_position))
 }
