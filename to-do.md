@@ -1,29 +1,12 @@
 # PRIORITY
 
+- split data by continents
 - run afrotropics next, then islands
-
-- need to re-run scripts:
-  - create objects of global cell ids and neighbors (already done in `007-cell-neighbors.R`?)
-  - split data by continents (not splitting neighbors by continents)
 
 # tests
 
-- north america test:
-  - create canada data and test for single-day mrf
-  - check that mrfs are giving good estimates for biomes and coastlines
-  - more complex models
-  - look at green-up rates of areas with rapid growth rates; e.g.: boreal canada, polar areas
-  - biomes run diagonally: check that smoooth effects recognize this rather than depending strongly on latitude and produce horizontal contours
-  - test effects of spatiotemporal aggregation on green-up rates
-  - try modeling e^2 using a lognormal distribution
-  - test coarser spatial resolution and finer temporal resultion
+- model e^2 using a lognormal distribution
 - try increasing max dataframe size (ensure `R` is 64-bit): https://stat.ethz.ch/R-manual/R-devel/library/base/html/Memory-limits.html
-
-# modeling
-
-- vector size on EME linux is not limited to `2^32 - 1`
-- split by continent to increase dataset size
-- use adaptive splines for year to allow for rapid change in ~2010? (no difference in sardinia test)
 
 # products
 
