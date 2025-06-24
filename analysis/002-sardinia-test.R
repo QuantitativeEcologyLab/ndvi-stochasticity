@@ -751,6 +751,7 @@ get_preds <- function(nd, space = TRUE) {
           pull(s2),
         mrf_s2 = d %>%
           mutate(e2 = (predict(m_gaus_mrf, newdata = .) - ndvi)^2) %>%
+          na.omit() %>%
           group_by(doy) %>%
           summarize(s2 = mean(e2)) %>%
           pull(s2),
@@ -869,6 +870,8 @@ p_comp <-
              filter(! is.na(value))) +
       facet_grid(. ~ model) +
       geom_point(aes(elev_m, value), alpha = 0.1) +
+      geom_smooth(aes(elev_m, value), formula = y ~ s(x, k = 5),
+                  method = 'gam') +
       geom_rug(aes(x = elev_m), alpha = 0.1) +
       labs(x = 'Elevation (m)', y = 'Mean NDVI'),
     ggplot(filter(preds_comp_s, param == 'mu', model == 'diff') %>%
