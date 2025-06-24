@@ -18,10 +18,12 @@ source('functions/betals.r') # custom beta location-scale family
 source('functions/scale-ndvi.R')
 source('functions/ndvi-palette.R')
 source('functions/plot_mrf.R') # for plotting markov random field smooths
-source('functions/qr.default_with_LAPACK.R')
+source('functions/qr.default_with_LAPACK.R') # for fitting large betals GAM
 source('analysis/figures/000-default-ggplot-theme.R')
 source('functions/get_legend.R')
 source('functions/nbs_from_rast.R')
+source('functions/is_flagged.R') # to flag bad values based on QA layer
+source('functions/decode_qa.R')
 assignInNamespace(x = 'qr.default',   # replace `base::qr.default()`
                   value = qr.default, # with the local version sourced above
                   ns = 'base')        # specify the base package
@@ -42,16 +44,26 @@ sardinia <- read_sf('data/world-ecosystems/data/commondata/data0/tnc_terr_ecoreg
   st_as_sf() %>%
   st_transform(crs(rast('data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v005_AVH13C1_NOAA-07_19810625_c20170610042839.nc')))
 
-# some data cleaning has already been done
-list.files(path = 'data/avhrr-viirs-ndvi/raster-files',
-           pattern = '.nc', full.names = TRUE)[2] %>%
+# data cover is not complete for every day
+r_0 <- list.files(path = 'data/avhrr-viirs-ndvi/raster-files',
+                  pattern = '.nc', full.names = TRUE) %>%
+  `[`(., length(.)) %>% # take the last raster
   rast() %>%
-  crop(sardinia) %>%
-  mask(sardinia) %>%
-  plot()
+  crop(sardinia, mask = TRUE)
+
+decoded_0 <- decode_qa(as.numeric(values(r_0$QA)))
+
+# make rasters for each QA parameter
+for(cn in colnames(decoded_0)[3:ncol(decoded_0)]) {
+  r_0[[cn]] <- r_0$QA
+  values(r_0[[cn]]) <- decoded_0[[cn]]
+  r_0[[cn]] <- mask(r_0[[cn]], r_0$QA)
+}
+plot(r_0)
+
+rm(r_0, decoded_0)
 
 # import ndvi data ----
-#' *NOTE: skipping data cleaning for simplicity*
 if(file.exists('data/sardinia-test/sardinia-ndvi.rds')) {
   d <- readRDS('data/sardinia-test/sardinia-ndvi.rds')
 } else {
@@ -64,32 +76,26 @@ if(file.exists('data/sardinia-test/sardinia-ndvi.rds')) {
                pattern = '.nc',
                full.names = TRUE) %>%
     future_map(\(fn) {
-      r <- rast(fn, lyr = 'NDVI')
-      r %>%
+      r <- rast(fn, lyr = c('NDVI', 'QA')) %>%
         crop(., st_transform(sardinia, crs(.))) %>%
-        mask(st_transform(sardinia, crs(.))) %>%
-        as.data.frame(xy = TRUE, na.rm = TRUE) %>%
-        mutate(date = as.Date(unique(time(r))))
-    }, .progress = TRUE) %>%
+        mask(., st_transform(sardinia, crs(.)))
+      
+      r$NDVI <- ifel(is_flagged(r$QA, 1), NA, r$NDVI) # drop cloudy pixels
+      
+      as.data.frame(r$NDVI, xy = TRUE, na.rm = TRUE) %>%
+        mutate(date = as.Date(unique(time(r)))) %>%
+        return()
+      
+    }, .progress = TRUE, .options = furrr_options(seed = NULL)) %>%
     bind_rows() %>%
     as_tibble() %>%
     rename(ndvi = NDVI) %>%
     mutate(ndvi_scaled = ndvi_to_01(ndvi))
   plan(sequential)
   
-  # plot the first few NDVI rasters
-  p_d <- filter(d, date %in% unique(date)[1:21]) %>%
-    ggplot() +
-    facet_wrap(~ date, nrow = 3) +
-    geom_raster(aes(x, y, fill = ndvi)) +
-    geom_sf(data = sardinia, fill = 'transparent') +
-    scale_x_continuous(NULL, breaks = c(8.5, 9.5)) +
-    ylab(NULL) +
-    scale_fill_gradientn('NDVI', colors = ndvi_pal, limits = c(-1, 1))
-  
   # add altitude (get_elev_points results in a json error)
   elevs <- d %>%
-    filter(date == first(date)) %>%
+    filter(date == date[2]) %>% # first has only one pixel
     select(x, y) %>%
     mutate(z = 1) %>%
     rast(crs = 'EPSG:4326') %>%
@@ -110,6 +116,17 @@ if(file.exists('data/sardinia-test/sardinia-ndvi.rds')) {
   
   saveRDS(d, 'data/sardinia-test/sardinia-ndvi.rds')
 }
+
+# plot the first few NDVI rasters
+p_d <- filter(d, date %in% unique(date)[1:21]) %>%
+  ggplot() +
+  facet_wrap(~ date, nrow = 3) +
+  geom_raster(aes(x, y, fill = ndvi)) +
+  geom_sf(data = sardinia, fill = 'transparent') +
+  scale_x_continuous(NULL, breaks = c(8.5, 9.5)) +
+  ylab(NULL) +
+  scale_fill_gradientn('NDVI', colors = ndvi_pal, limits = c(-1, 1))
+
 summary(d)
 
 # add cell ID and make list of neighbor cells for all coordinates ----
@@ -163,51 +180,54 @@ all.equal(sort(levels(d$cell_id)),
 # test spatial terms with a single day of data ----
 if(FALSE) {
   # data for only the first day
-  d_1981_06_25 <- filter(d, date == '1981-06-25')
+  d_0 <- filter(d, date == max(date) - 6)
   
   # not all points have data
-  ggplot(d_1981_06_25) +
+  ggplot(d_0) +
     geom_raster(aes(x, y, fill = ndvi)) +
     geom_sf(data = locs, color = 'darkorange')
   
-  m_mrf_1981_06_25 <-
+  m_mrf_0 <-
     bam(ndvi ~ s(cell_id, bs = 'mrf', k = 200,
                  # need to subset the neighbors to the factor levels
-                 xt = list(nb = nbs[levels(d_1981_06_25$cell_id)])),
+                 xt = list(nb = nbs[levels(d_0$cell_id)])),
         family = gaussian(),
-        data = d_1981_06_25,
+        data = d_0,
         method = 'fREML',
         discrete = TRUE,
         drop.unused.levels = FALSE)
   
-  m_ds_1981_06_25 <- bam(ndvi ~ s(x, y, bs = 'ds'),
-                         family = gaussian(),
-                         data = d_1981_06_25,
-                         method = 'fREML',
-                         discrete = TRUE,
-                         drop.unused.levels = TRUE)
+  m_ds_0 <- bam(ndvi ~ s(x, y, bs = 'ds'),
+                family = gaussian(),
+                data = d_0,
+                method = 'fREML',
+                discrete = TRUE,
+                drop.unused.levels = TRUE)
   
   ggplot() +
     coord_equal() +
-    geom_point(aes(fitted(m_mrf_1981_06_25), fitted(m_ds_1981_06_25)),
+    geom_point(aes(predict(m_mrf_0, newdata = d_0),
+                   predict(m_ds_0, newdata = d_0)),
                alpha = 0.2) +
     geom_abline(intercept = 0, slope = 1, color = 'red') +
     labs(x = 'Fitted values from the cell-level MRF GAM',
          y = 'Fitted values from Duchon-spline GAM')
-  ggsave('figures/sardinia-test/duchon-vs-cell-mrf-1981-06-25.png',
+  
+  ggsave(paste0('figures/sardinia-test/duchon-vs-cell-mrf-',
+                unique(d_0$date), '.png'),
          width = 5, height = 4, units = 'in', dpi = 600, bg = 'white')
   
   # MRF model is more flexible, gives a better fit, and has good shrinkage
   plot_grid(
-    plot_mrf(.model = m_mrf_1981_06_25, .terms = c('(Intercept)', 's(cell_id)'),
-             .newdata = d_1981_06_25) +
+    plot_mrf(.model = m_mrf_0, .terms = c('(Intercept)', 's(cell_id)'),
+             .newdata = d_0) +
       ggtitle('Cell-level MRF'),
-    plot_mrf(.model = m_mrf_1981_06_25, .terms = c('(Intercept)', 's(cell_id)'),
-             .newdata = d_1981_06_25, .limits = c(NA, NA),
+    plot_mrf(.model = m_mrf_0, .terms = c('(Intercept)', 's(cell_id)'),
+             .newdata = d_0, .limits = c(NA, NA),
              .pal = viridis::viridis(10)) +
       ggtitle(''),
-    d_1981_06_25 %>%
-      mutate(mu_hat = fitted(m_mrf_1981_06_25)) %>%
+    d_0 %>%
+      mutate(., mu_hat = predict(m_mrf_0, newdata = .)) %>%
       ggplot(aes(ndvi, mu_hat)) +
       coord_equal() +
       geom_point(alpha = 0.2) +
@@ -215,12 +235,12 @@ if(FALSE) {
       geom_abline(intercept = 0, slope = 1, color = 'red') +
       labs(x = 'Fitted', y = 'Observed'),
     
-    draw(m_ds_1981_06_25, dist = 0.02),
-    draw(m_ds_1981_06_25, dist = 0.02, fun = \(x) x + coef(m_ds_1981_06_25)['(Intercept)']) &
+    draw(m_ds_0, dist = 0.02),
+    draw(m_ds_0, dist = 0.02, fun = \(x) x + coef(m_ds_0)['(Intercept)']) &
       # to specify limits manually
-      scale_fill_viridis_c('NDVI', limits = range(fitted(m_mrf_1981_06_25))),
-    d_1981_06_25 %>%
-      mutate(mu_hat = fitted(m_ds_1981_06_25)) %>%
+      scale_fill_viridis_c('NDVI', limits = range(fitted(m_mrf_0))),
+    d_0 %>%
+      mutate(mu_hat = predict(m_ds_0)) %>%
       ggplot(aes(ndvi, mu_hat)) +
       coord_equal() +
       geom_point(alpha = 0.2) +
@@ -228,7 +248,8 @@ if(FALSE) {
       geom_abline(intercept = 0, slope = 1, color = 'red') +
       labs(x = 'Fitted', y = 'Observed'),
     nrow = 2)
-  ggsave('figures/sardinia-test/duchon-vs-cell-mrf-1981-06-25-predictions.png',
+  ggsave(paste0('figures/sardinia-test/duchon-vs-cell-mrf-',
+                unique(d_0$date), '-predictions.png'),
          width = 15, height = 10, units = 'in', dpi = 300, bg = 'white')
 }
 
@@ -240,8 +261,7 @@ if(all(file.exists(c('models/sardinia-test/gaussian-gam-ds.rds',
   m_gaus_ds <- readRDS('models/sardinia-test/gaussian-gam-ds.rds')
   m_gaus_mrf <- readRDS('models/sardinia-test/gaussian-gam-mrf.rds')
 } else {
-  # on personal laptop: fits in 34 s
-  # on EME: fits in 30 s
+  # fits in ~ 15 s
   system.time(
     m_gaus_ds <- bam(
       ndvi ~
@@ -258,8 +278,7 @@ if(all(file.exists(c('models/sardinia-test/gaussian-gam-ds.rds',
       control = gam.control(trace = TRUE))
   )
   
-  # on personal laptop: fits in 10 s
-  # on EME: fits in 30 s
+  # fits in ~6 s
   system.time(
     m_gaus_mrf <- bam(
       ndvi ~
@@ -279,7 +298,7 @@ if(all(file.exists(c('models/sardinia-test/gaussian-gam-ds.rds',
   summary(m_gaus_ds)
   summary(m_gaus_mrf)
   
-  draw(m_gaus_ds, rug = FALSE, dist = 0.015)
+  draw(m_gaus_ds, rug = FALSE, dist = 0.02)
   ggsave('figures/sardinia-test/sardinia-ndvi-gaussian-ds-terms.png',
          width = 9, height = 6, units = 'in', dpi = 300, bg = 'white')
   
@@ -292,10 +311,7 @@ if(all(file.exists(c('models/sardinia-test/gaussian-gam-ds.rds',
 }
 
 # fit a spatially explicit test model with a beta family ----
-# on personal laptop: mrf model fits in ~ 21 minutes
-#                     ds model fits in ~ 25 miutes
-# on EME linux: mrf model fits in ~ 9.0 minutes
-#                ds model fits in ~ 8.8 miutes
+# fits in ~14 minutes
 if(file.exists('models/sardinia-test/beta-gam-mrf.rds')) {
   m_beta_mrf <- readRDS('models/sardinia-test/beta-gam-mrf.rds')
 } else {
@@ -357,9 +373,10 @@ if(FALSE) {
 
 # plots of predicted means and squared residuals for day 1 ----
 preds_1 <- d %>%
-  mutate(mu_gaus = fitted(m_gaus_mrf),
-         mu_beta = ndvi_to_11(fitted(m_beta_mrf))) %>%
-  filter(date == min(date))
+  filter(date == max(date) - 5) %>%
+  mutate(mu_gaus = predict(m_gaus_mrf, newdata = .),
+         mu_beta = ndvi_to_11(predict(m_beta_mrf, newdata = .,
+                                      type = 'response')))
 
 ggplot(preds_1, aes(mu_beta, mu_gaus)) +
   geom_point(alpha = 0.1) +
@@ -453,28 +470,31 @@ if(file.exists('models/sardinia-test/gaus-gam-ti-mrf-gam.rds')) {
 
 summary(m_gaus_ti_mrf)
 
-# testing data aggregation ----
-s_res <- 4 # spatial resolution
-t_res <- 4 # temporal resolution
+# # testing data aggregation ----
+s_res <- 2 # spatial resolution
+t_res <- 2 # temporal resolution
 
 # import and aggregate the data ----
-if(file.exists('data/sardinia-test/sardinia-ndvi-t-4-s-4-aggr.rds')) {
-  d_aggr <- readRDS('data/sardinia-test/sardinia-ndvi-t-4-s-4-aggr.rds')
+if(file.exists(paste0('data/sardinia-test/sardinia-ndvi-t-', t_res,
+                      '-s-', s_res, '-aggr.rds'))) {
+  d_aggr <- readRDS(paste0('data/sardinia-test/sardinia-ndvi-t-', t_res,
+                           '-s-', s_res, '-aggr.rds'))
 } else {
   if(.Platform$OS.type != 'unix')
     stop('AVHRR/VIIRS rasters are on the H: Drive, and you may want to use multiple cores.')
   future::availableCores(logical = FALSE)
-  plan(multisession, workers = min(30, availableCores(logical = FALSE) - 2))
+  plan(multisession, workers = min(50, availableCores(logical = FALSE) - 2))
   d_aggr <-
-    list.files(path = 'data/avhrr-viirs-ndvi/raster-files/', #'/home/shared/NOAA_Files/',
-               pattern = '.nc',
-               full.names = TRUE) %>%
+    list.files(path = 'data/avhrr-viirs-ndvi/raster-files/',
+               pattern = '.nc', full.names = TRUE) %>%
     future_map(\(fn) {
-      r <- rast(fn, lyr = 'NDVI') # to extract time below
-      r %>%
-        crop(., st_transform(sardinia, crs(.))) %>%
+      r <- rast(fn, lyr = c('NDVI', 'QA')) %>%
+        crop(., st_transform(sardinia, crs(.)), mask = TRUE)
+      
+      r$NDVI <- ifel(is_flagged(r$QA, 1), NA, r$NDVI) # drop cloudy pixels
+      
+      r$NDVI %>%
         terra::aggregate(s_res, na.rm = TRUE) %>%
-        mask(st_transform(sardinia, crs(.))) %>% # mask after aggregating
         as.data.frame(xy = TRUE, na.rm = TRUE) %>%
         mutate(date = as.Date(unique(time(r))))
     }, .progress = TRUE) %>%
@@ -483,7 +503,7 @@ if(file.exists('data/sardinia-test/sardinia-ndvi-t-4-s-4-aggr.rds')) {
     rename(ndvi = NDVI) %>%
     # aggregate temporally
     mutate(julian = julian(date),
-           central_date = as.Date(julian - (julian %% t_res) + 2)) %>%
+           central_date = as.Date(julian - (julian %% t_res) + t_res / 2)) %>%
     group_by(central_date, x, y) %>%
     summarize(doy = yday(central_date),
               year = year(central_date),
@@ -491,26 +511,13 @@ if(file.exists('data/sardinia-test/sardinia-ndvi-t-4-s-4-aggr.rds')) {
     ungroup()
   plan(sequential)
   
-  # plot the first few NDVI rasters
-  p_d_aggr <-
-    filter(d_aggr, central_date %in% unique(as.character(central_date))[1:21]) %>%
-    ggplot() +
-    facet_wrap(~ as.character(central_date), nrow = 3) +
-    geom_raster(aes(x, y, fill = ndvi)) +
-    geom_sf(data = sardinia, fill = 'transparent') +
-    scale_x_continuous(NULL, breaks = c(8.5, 9.5)) +
-    ylab(NULL) +
-    scale_fill_gradientn('NDVI', colors = ndvi_pal, limits = c(-1, 1))
-  p_d_aggr
-  
   # add altitude (get_elev_points results in a json error)
   elevs_aggr <- d %>%
-    filter(date == first(date)) %>%
+    filter(date == date[2]) %>% # first date only has one data point
     select(x, y) %>%
     mutate(z = 1) %>%
     rast(crs = 'EPSG:4326') %>%
-    aggregate(4, na.rm = TRUE) %>%
-    get_elev_raster(z = 2) %>% # nearest finer res than 0.20x0.20
+    get_elev_raster(z = 3) %>% # nearest finer res than 0.10x0.10
     crop(st_buffer(sardinia, 1e4))
   
   plot(elevs_aggr)
@@ -528,19 +535,30 @@ if(file.exists('data/sardinia-test/sardinia-ndvi-t-4-s-4-aggr.rds')) {
   
   saveRDS(d_aggr, paste0('data/sardinia-test/sardinia-ndvi-t-',
                          t_res, '-s-', s_res, '-aggr.rds'))
-  
-  # plot a comparison of the first 21 rasters
-  plot_grid(
-    get_legend(p_d +
-                 theme(legend.position = 'top', legend.key.width = rel(2))),
-    plot_grid(p_d + theme(legend.position = 'none'),
-              p_d_aggr + theme(legend.position = 'none'),
-              labels = 'AUTO'),
-    rel_heights = c(1, 15), ncol = 1)
-  
-  ggsave('figures/sardinia-test/example-rasters-aggregation.png',
-         width = 20, height = 8.5, units = 'in', dpi = 600, bg = 'white')
 }
+
+# plot the first few NDVI rasters
+p_d_aggr <-
+  filter(d_aggr, central_date %in% unique(as.character(central_date))[1:21]) %>%
+  ggplot() +
+  facet_wrap(~ as.character(central_date), nrow = 3) +
+  geom_raster(aes(x, y, fill = ndvi)) +
+  geom_sf(data = sardinia, fill = 'transparent') +
+  scale_x_continuous(NULL, breaks = c(8.5, 9.5)) +
+  ylab(NULL) +
+  scale_fill_gradientn('NDVI', colors = ndvi_pal, limits = c(-1, 1))
+
+# plot a comparison of the first 21 rasters
+plot_grid(
+  get_legend(p_d +
+               theme(legend.position = 'top', legend.key.width = rel(2))),
+  plot_grid(p_d + theme(legend.position = 'none'),
+            p_d_aggr + theme(legend.position = 'none'),
+            labels = 'AUTO'),
+  rel_heights = c(1, 15), ncol = 1)
+
+ggsave('figures/sardinia-test/example-rasters-aggregation.png',
+       width = 20, height = 8.5, units = 'in', dpi = 600, bg = 'white')
 
 summary(d_aggr)
 
@@ -621,7 +639,7 @@ if(file.exists('models/sardinia-test/gaussian-gam-ds.rds')) {
 
 # make a figure comparing ds gam, mrf gam, and mrf_aggr gam ----
 elevs <- d %>%
-  filter(date == first(date)) %>%
+  filter(date == date[2]) %>%
   select(x, y) %>%
   mutate(z = 1) %>%
   rast(crs = 'EPSG:4326') %>%
@@ -629,12 +647,12 @@ elevs <- d %>%
   crop(st_buffer(sardinia, 1e4)) # crop to area near sardinia
 
 elevs_aggr <- d %>%
-  filter(date == first(date)) %>%
+  filter(date == date[2]) %>%
   select(x, y) %>%
   mutate(z = 1) %>%
   rast(crs = 'EPSG:4326') %>%
-  aggregate(4, na.rm = TRUE) %>%
-  get_elev_raster(z = 2) %>% # nearest finer res than 0.20x0.20
+  aggregate(s_res, na.rm = TRUE) %>%
+  get_elev_raster(z = 3) %>% # nearest finer res than 0.10x0.10
   crop(st_buffer(sardinia, 1e4))
 
 gratia::smooths(m_gaus_ds)
@@ -668,7 +686,7 @@ get_preds <- function(nd, space = TRUE) {
         mrf_mu = predict(object = m_gaus_mrf, newdata = .,
                          type = 'response', se.fit = FALSE,
                          terms = c('(Intercept)', 's(doy)')),
-        mrfa_mu = predict(object = m_gaus_mrf_aggr, newdata =.,
+        mrfa_mu = predict(object = m_gaus_mrf_aggr, newdata = .,
                           type = 'response', se.fit = FALSE,
                           terms = c('(Intercept)', 's(doy)')))
   }
@@ -696,13 +714,13 @@ get_preds <- function(nd, space = TRUE) {
       }
       
       .d %>%
-        transmute(x, y, e2 = resid(.m)^2) %>%
+        transmute(x, y, e2 = (predict(.m, newdata = .) - ndvi)^2) %>%
         group_by(x, y) %>%
         summarise(s2 = mean(e2), .groups = 'drop') %>%
         rast() %>%
         `crs<-`('EPSG:4326') %>%
         project(elevs, res = res(elevs)) %>%
-        mask(sardinia, touches = FALSE) %>%
+        mask(st_transform(sardinia, crs(elevs)), touches = FALSE) %>%
         terra::extract(., select(as.data.frame(elevs, xy = TRUE), 1:2)) %>%
         select(! ID) %>%
         bind_cols(select(as.data.frame(elevs, xy = TRUE), 1:2), .) %>%
@@ -727,18 +745,18 @@ get_preds <- function(nd, space = TRUE) {
     preds <- preds %>%
       mutate(
         ds_s2 = d %>%
-          mutate(e2 = resid(m_gaus_ds)^2) %>%
+          mutate(e2 = (predict(m_gaus_ds, newdata = .) - ndvi)^2) %>%
           group_by(doy) %>%
           summarize(s2 = mean(e2)) %>%
           pull(s2),
         mrf_s2 = d %>%
-          mutate(e2 = resid(m_gaus_mrf)^2) %>%
+          mutate(e2 = (predict(m_gaus_mrf, newdata = .) - ndvi)^2) %>%
           group_by(doy) %>%
           summarize(s2 = mean(e2)) %>%
           pull(s2),
         mrfa_s2 = d_aggr %>%
           na.omit() %>%
-          mutate(e2 = resid(m_gaus_mrf_aggr)^2) %>%
+          mutate(e2 = (predict(m_gaus_mrf_aggr, newdata = .) - ndvi)^2) %>%
           group_by(doy) %>%
           summarize(s2 = mean(e2)) %>%
           pull(s2),
@@ -771,12 +789,13 @@ preds_comp_s <-
                                      vect(tibble(x, y),
                                           geom = c('x', 'y')))[, 2],
                                levels = levels(d_aggr$cell_id)),
-         year = 0, doy = 0) %>%
+         year = 0, doy = 0, elev_m = if_else(elev_m > 0, elev_m, 0)) %>%
   get_preds(space = TRUE) # add model predictions
 
 # temporal doy predictions
-preds_comp_t <- tibble(doy = 1:366, x = 0, y = 0, elev_m = 0,
-                       cell_id = factor('22'), year = 0) %>%
+preds_comp_t <- tibble(doy = 1:366, x = 0, y = 0, elev_m = 0, year = 0,
+                       cell_id = factor(intersect(d$cell_id,
+                                                  d_aggr$cell_id)[1])) %>%
   get_preds(space = FALSE)
 
 # make the final figure ----
@@ -789,7 +808,7 @@ p_comp <-
       facet_grid(. ~ model) +
       geom_raster(aes(x, y, fill = value)) +
       geom_sf(data = sardinia, fill = 'transparent', color = 'black') +
-      scale_fill_viridis_c('NDVI', limits = c(0, 0.4), option = 'A') +
+      scale_fill_viridis_c('NDVI', option = 'A') +
       labs(x = NULL, y = NULL),
     ggplot(filter(preds_comp_s, param == 'mu', model == 'diff')) +
       geom_raster(aes(x, y, fill = value)) +
