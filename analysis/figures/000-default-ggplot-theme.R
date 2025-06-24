@@ -10,7 +10,7 @@ theme_set(theme_bw() +
 # custom NDVI color palette
 ndvi_pal <- color('bukavu')(30) # wrong order
 if(.PLOT_PALETTES) plot_scheme(ndvi_pal)
-ndvi_pal <- ndvi_pal[c(1:13, length(ndvi_pal):(length(ndvi_pal)/2 + 1))]
+ndvi_pal <- ndvi_pal[c(seq(1, 13, by = 2), 30, 23, 21:16)]
 if(.PLOT_PALETTES) plot_scheme(ndvi_pal)
 create_ndvi_pal <- colorRampPalette(ndvi_pal)
 ndvi_pal <- create_ndvi_pal(100)
