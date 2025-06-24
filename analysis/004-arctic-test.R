@@ -15,13 +15,17 @@ source('functions/plot_mrf.R') # for plotting markov random field smooths
 source('analysis/figures/000-default-ggplot-theme.R')
 source('functions/get_legend.R') # get_legend() from cowplot v. 1.1.3 fails
 source('functions/nbs_from_rast.R') # gives a list of neighboring cells
+source('functions/is_flagged.R') # to find bad data
 
 # pick a northern polygon
 eco <- read_sf('data/ecoregions/ecoregions-polygons.shp') %>%
   filter(WWF_REALM == 'NA') %>%
   st_transform(crs(rast('data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v005_AVH13C1_NOAA-07_19810624_c20170610041337.nc')))
-plot(st_geometry(eco), col = 'grey')
-plot(st_geometry(eco)[18, ], col = 'red', add = TRUE)
+
+if(FALSE) {
+  plot(st_geometry(eco), col = 'grey')
+  plot(st_geometry(eco)[18, ], col = 'red', add = TRUE)
+}
 
 arctic <- eco %>%
   slice(18) %>%
@@ -34,8 +38,10 @@ ggplot() +
   geom_sf(data = st_geometry(eco)) +
   geom_sf(data = arctic, fill = 'red3')
 
+if(! file.exists('figures/arctic-test/arctic-map.png')) {
 ggsave('figures/arctic-test/arctic-map.png', width = 10, height = 6.4,
        units = 'in', dpi = 300, bg = 'white')
+}
 
 # there are some oddly large NDVI values in winter
 list.files(path = 'data/avhrr-viirs-ndvi/raster-files',
@@ -43,8 +49,7 @@ list.files(path = 'data/avhrr-viirs-ndvi/raster-files',
   future_map(\(fn) {
     r <- rast(fn, lyr = 'NDVI')
     r %>%
-      crop(., st_transform(arctic, crs(.))) %>%
-      mask(st_transform(arctic, crs(.))) %>%
+      crop(st_transform(arctic, crs(.)), mask = TRUE) %>%
       as.data.frame(xy = TRUE, na.rm = TRUE) %>%
       mutate(date = as.Date(unique(time(r))))
   }, .progress = TRUE) %>%
@@ -52,6 +57,10 @@ list.files(path = 'data/avhrr-viirs-ndvi/raster-files',
   mutate(doy = yday(date)) %>%
   ggplot(aes(doy, NDVI)) +
   geom_point(alpha = 0.1) +
+  annotate(xmin = -Inf, xmax = 100, ymin = 0.2, ymax = Inf, color = 'red',
+           fill = '#FF000030', lty = 'dashed', geom = 'rect') +
+  annotate(xmin = 260, xmax = Inf, ymin = 0.2, ymax = Inf, color = 'red',
+           fill = '#FF000030', lty = 'dashed', geom = 'rect') +
   geom_smooth(formula = y ~ s(x, k = 5, bs = 'cc'), method = 'gam',
               method.args = list(knots = list(doy = c(0.5, 366.5))),
               fullrange = TRUE) +
@@ -70,16 +79,25 @@ if(file.exists('data/arctic-test/arctic-ndvi.rds')) {
                pattern = '.nc',
                full.names = TRUE) %>%
     future_map(\(fn) {
-      r <- rast(fn, lyr = 'NDVI')
-      r %>%
+      r <- rast(fn, lyr = c('NDVI', 'QA')) %>%
+        crop(., st_transform(arctic, crs(.)), mask = TRUE)
+      
+      r$NDVI <- ifel(is_flagged(r$QA, 1), NA, r$NDVI) # drop cloudy pixels
+      
+      r$NDVI %>%
         crop(., st_transform(arctic, crs(.))) %>%
         mask(st_transform(arctic, crs(.))) %>%
         as.data.frame(xy = TRUE, na.rm = TRUE) %>%
         mutate(date = as.Date(unique(time(r))))
-    }, .progress = TRUE) %>%
+    }, .progress = TRUE, .options = furrr_options(seed = NULL)) %>%
     bind_rows() %>%
     as_tibble() %>%
-    rename(ndvi = NDVI)
+    rename(ndvi = NDVI) %>%
+    mutate(year = year(date),
+           doy = yday(date)) %>%
+    # drop unrealistic NDVI values
+    filter(! (ndvi > 0.2 & doy < 150),
+           ! (ndvi > 0.2 & doy > 280))
   plan(sequential)
   
   # the period with NDVI > 0.1 is fairly narrow
@@ -89,7 +107,7 @@ if(file.exists('data/arctic-test/arctic-ndvi.rds')) {
   
   # add altitude (get_elev_points results in a json error)
   elevs <- d %>%
-    filter(date == first(date)) %>%
+    slice(1, .by = c(x, y)) %>%
     select(x, y) %>%
     mutate(z = 1) %>%
     rast(crs = 'EPSG:4326') %>%
@@ -100,30 +118,18 @@ if(file.exists('data/arctic-test/arctic-ndvi.rds')) {
   plot(elevs)
   plot(arctic, add = TRUE, col = 'transparent', lwd = 2)
   
-  d <- mutate(d,
-              elev_m = extract(elevs, select(d, x, y))[, 2],
-              year = year(date),
-              doy = yday(date))
+  d <- mutate(d, elev_m = extract(elevs, select(d, x, y))[, 2])
   range(d$elev_m)
   quantile(d$elev_m, c(0.1, 0.01, 0.001))
   
   d <- mutate(d, elev_m = if_else(elev_m < 0, 0, elev_m))
   
-  d <- filter(d, ! is.na(cell_id)) # drop rows with no cell id
-  
   saveRDS(d, 'data/arctic-test/arctic-ndvi.rds')
 }
 
 summary(d) # max(ndvi) is 1!
-quantile(filter(d, doy < 150)$ndvi, c(0.8, 0.9, 0.95, 0.99, 0.995, 0.999))
-
-layout(t(1:2))
-slice_sample(d, n = 1e5) %>%
-  bam(ndvi ~ s(doy, bs = 'cc', k = 10), data = .,
-      method = 'REML', knots = list(doy = c(0.5, 366.5))) %>%
-  plot(scheme = 1, xlim = c(0.5, 366.5), n = 400, resid = TRUE)
-
-d <- filter(d, ! (doy < 150 & ndvi > 0.1), ! (doy > 280 & ndvi > 0.2))
+quantile(filter(d, doy < 150 | doy > 280)$ndvi,
+         c(0.8, 0.9, 0.95, 0.99, 0.995, 0.999, 1))
 
 slice_sample(d, n = 1e5) %>%
   bam(ndvi ~ s(doy, bs = 'cc', k = 10), data = .,
@@ -226,8 +232,8 @@ if(all(file.exists(c('models/arctic-test/gaussian-gam-ds.rds',
 }
 
 # testing data aggregation ----
-s_res <- 4 # spatial resolution
-t_res <- 4 # temporal resolution
+s_res <- 2 # spatial resolution
+t_res <- 2 # temporal resolution
 AGGR <- paste0('data/arctic-test/arctic-ndvi-t-', t_res, '-s-', s_res,
                '-aggr.rds')
 
@@ -240,19 +246,21 @@ if(file.exists(AGGR)) {
   future::availableCores(logical = FALSE)
   plan(multisession, workers = min(60, availableCores(logical = FALSE) - 2))
   d_aggr <-
-    list.files(path = 'data/avhrr-viirs-ndvi/raster-files/',
+    list.files(path = 'data/avhrr-viirs-ndvi/raster-files',
                pattern = '.nc',
                full.names = TRUE) %>%
     future_map(\(fn) {
-      r <- rast(fn, lyr = 'NDVI') # to extract time below
-      r %>%
+      r <- rast(fn, lyr = c('NDVI', 'QA')) %>%
+        crop(., st_transform(arctic, crs(.)), mask = TRUE)
+      
+      r$NDVI <- ifel(is_flagged(r$QA, 1), NA, r$NDVI) # drop cloudy pixels
+      
+      r$NDVI %>%
         crop(., st_transform(arctic, crs(.))) %>%
-        #' *trying median() to see if it can help remove extreme values*
-        terra::aggregate(s_res, fun = median, na.rm = TRUE) %>%
-        mask(st_transform(arctic, crs(.))) %>% # mask after aggregating
+        terra::aggregate(s_res, na.rm = TRUE) %>%
         as.data.frame(xy = TRUE, na.rm = TRUE) %>%
         mutate(date = as.Date(unique(time(r))))
-    }, .progress = TRUE) %>%
+    }, .progress = TRUE, .options = furrr_options(seed = NULL)) %>%
     bind_rows() %>%
     as_tibble() %>%
     rename(ndvi = NDVI) %>%
@@ -263,58 +271,35 @@ if(file.exists(AGGR)) {
     summarize(doy = yday(central_date),
               year = year(central_date),
               ndvi = mean(ndvi, na.rm = TRUE)) %>%
-    ungroup()
-  plan(sequential)
+    ungroup() %>%
+    filter(! (doy < 150 & ndvi > 0.2),
+           ! (doy > 280 & ndvi > 0.2))
   
-  # plot the first few NDVI rasters
-  p_d_aggr <-
-    filter(d_aggr, central_date %in% unique(as.character(central_date))[1:21]) %>%
-    ggplot() +
-    facet_wrap(~ as.character(central_date), nrow = 3) +
-    geom_raster(aes(x, y, fill = ndvi)) +
-    geom_sf(data = arctic, fill = 'transparent') +
-    scale_x_continuous(NULL, breaks = c(8.5, 9.5)) +
-    ylab(NULL) +
-    scale_fill_gradientn('NDVI', colors = ndvi_pal, limits = c(-1, 1))
-  p_d_aggr
+  plan(sequential)
   
   # add altitude (get_elev_points results in a json error)
   elevs_aggr <- d %>%
-    filter(date == first(date)) %>%
+    slice(1, .by = c(x, y)) %>%
     select(x, y) %>%
     mutate(z = 1) %>%
     rast(crs = 'EPSG:4326') %>%
-    aggregate(4, na.rm = TRUE) %>%
-    get_elev_raster(z = 2) %>% # nearest finer res than 0.20x0.20
-    crop(st_buffer(arctic, 1e4))
+    get_elev_raster(z = 3) %>% # nearest finer res than 0.20x0.20
+    crop(st_buffer(arctic, 1e4)) %>%
+    rast()
   
   plot(elevs_aggr)
   plot(arctic, add = TRUE, col = 'transparent')
   
   d_aggr <- mutate(d_aggr,
-                   elev_m = extract(elevs_aggr, select(d_aggr, x, y)),
-                   year = year(central_date),
-                   doy = yday(central_date))
+                   elev_m = extract(elevs_aggr, select(d_aggr, x, y))[, 2])
   
   range(d_aggr$elev_m)
   quantile(d_aggr$elev_m, c(0.1, 0.01, 0.001))
   
+  d_aggr <- mutate(d_aggr, elev_m = if_else(elev_m < 0, 0, elev_m))
+  
   saveRDS(d_aggr, AGGR)
 }
-
-# ndvi still has high max values
-summary(d_aggr)
-
-quantile(filter(d_aggr, doy < 150)$ndvi, c(0.8, 0.9, 0.95, 0.99, 0.995, 0.999))
-
-layout(t(1:2))
-slice_sample(d_aggr, n = 1e5) %>%
-  bam(ndvi ~ s(doy, bs = 'cc', k = 10), data = .,
-      method = 'REML', knots = list(doy = c(0.5, 366.5))) %>%
-  plot(scheme = 1, xlim = c(0.5, 366.5), n = 400, resid = TRUE)
-
-d_aggr <-
-  filter(d_aggr, ! (doy < 150 & ndvi > 0.05), ! (doy > 280 & ndvi > 0.1))
 
 slice_sample(d_aggr, n = 1e5) %>%
   bam(ndvi ~ s(doy, bs = 'cc', k = 10), data = .,
@@ -397,7 +382,6 @@ d_aggr <-
          cell_id = cellFromXY(r_0_aggr, xy = as.matrix(tibble(x, y))) %>%
            factor(levels = names(nbs_aggr))) %>%
   filter(! is.na(cell_id))
-mean(is.na(d_aggr$cell_id)) # some cell centers fall outside of the polygon
 
 n_distinct(d_aggr$cell_id)
 length(names(nbs_aggr))
@@ -433,7 +417,7 @@ if(file.exists('models/arctic-test/gaussian-gam-ds.rds')) {
 
 # make a figure comparing ds gam, mrf gam, and mrf_aggr gam ----
 elevs <- d %>%
-  filter(date == first(date)) %>%
+  slice(1, .by = c(x, y)) %>%
   select(x, y) %>%
   mutate(z = 1) %>%
   rast(crs = 'EPSG:4326') %>%
@@ -441,11 +425,10 @@ elevs <- d %>%
   crop(st_buffer(arctic, 1e4)) # crop to area near arctic
 
 elevs_aggr <- d %>%
-  filter(date == first(date)) %>%
+  slice(1, .by = c(x, y)) %>%
   select(x, y) %>%
   mutate(z = 1) %>%
   rast(crs = 'EPSG:4326') %>%
-  aggregate(4, na.rm = TRUE) %>%
   get_elev_raster(z = 2) %>% # nearest finer res than 0.20x0.20
   crop(st_buffer(arctic, 1e4))
 
@@ -508,14 +491,14 @@ get_preds <- function(nd, space = TRUE) {
       }
       
       .d %>%
-        transmute(x, y, e2 = resid(.m)^2) %>%
+        transmute(x, y, e2 = (predict(.m, newdata = .) - ndvi)^2) %>%
         group_by(x, y) %>%
         summarise(s2 = mean(e2), .groups = 'drop') %>%
         rast() %>%
         `crs<-`('EPSG:4326') %>%
         project(elevs, res = res(elevs)) %>%
-        mask(arctic, touches = FALSE) %>%
-        extract(., select(as.data.frame(elevs, xy = TRUE), 1:2)) %>%
+        mask(st_transform(arctic, crs(elevs)), touches = FALSE) %>%
+        terra::extract(., select(as.data.frame(elevs, xy = TRUE), 1:2)) %>%
         select(! ID) %>%
         bind_cols(select(as.data.frame(elevs, xy = TRUE), 1:2), .) %>%
         mutate(model = .model) %>%
@@ -542,12 +525,12 @@ get_preds <- function(nd, space = TRUE) {
         tibble(
           doy = unique(d$doy),
           ds_s2 = d %>%
-            mutate(e2 = resid(m_gaus_ds)^2) %>%
+            mutate(e2 = (predict(m_gaus_ds, newdata = .) - ndvi)^2) %>%
             group_by(doy) %>%
             summarize(s2 = mean(e2, na.rm = TRUE)) %>%
             pull(s2),
           mrf_s2 = d %>%
-            mutate(e2 = resid(m_gaus_mrf)^2) %>%
+            mutate(e2 = (predict(m_gaus_mrf, newdata = .) - ndvi)^2) %>%
             group_by(doy) %>%
             summarize(s2 = mean(e2, na.rm = TRUE)) %>%
             pull(s2)),
@@ -556,7 +539,7 @@ get_preds <- function(nd, space = TRUE) {
         tibble(doy = unique(d_aggr$doy),
                mrfa_s2 = d_aggr %>%
                  na.omit() %>%
-                 mutate(e2 = resid(m_gaus_mrf_aggr)^2) %>%
+                 mutate(e2 = (predict(m_gaus_mrf_aggr, newdata = d_aggr) - ndvi)^2) %>%
                  group_by(doy) %>%
                  summarize(s2 = mean(e2, na.rm = TRUE)) %>%
                  pull(s2)),
@@ -674,6 +657,8 @@ p_comp <-
              filter(! is.na(value))) +
       facet_grid(. ~ model) +
       geom_point(aes(elev_m, value), alpha = 0.1) +
+      geom_smooth(aes(elev_m, value), formula = y ~ s(x, k = 5),
+                  method = 'gam') +
       geom_rug(aes(x = elev_m), alpha = 0.1) +
       labs(x = 'Elevation (m)', y = 'Mean NDVI'),
     ggplot(filter(preds_comp_s, param == 'mu', model == 'diff') %>%
