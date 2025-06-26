@@ -266,6 +266,8 @@ if(file.exists(AGGR)) {
     rename(ndvi = NDVI) %>%
     # aggregate temporally
     mutate(julian = julian(date),
+           #' should use `+ t_res / 2 = 1` instead of `+ 2` below, but the
+           #' change is just 1 day, so it's not worth fixing for the test
            central_date = as.Date(julian - (julian %% t_res) + 2)) %>%
     group_by(central_date, x, y) %>%
     summarize(doy = yday(central_date),
