@@ -1,4 +1,4 @@
-# last run on 2025-05-13
+# last run on 2025-07-02
 library('rvest') # for harvesting web pages; see https://rvest.tidyverse.org/
 library('ncdf4') # for nc rasters
 library('dplyr') # for data wrangling
@@ -52,7 +52,7 @@ table(grepl('Downloaded', output))
 
 #' There's a few days that have no raster associated with them, but it's
 #' generally rare. We have 8 2-day gaps, 3 3-day gaps, 2 4-day gaps, and
-#' one 16-day gap. The gaps range from 1982 to 2024, and the longest one
+#' 1 16-day gap. The gaps range from 1982 to 2024, and the longest one
 #' is in summer of 2022 (see `gaps` below).
 
 # check files
@@ -72,7 +72,7 @@ main_dates <-
 
 range(fn_dates)
 all(range(fn_dates) == range(main_dates)) # ensure date ranges are the same
-sum(! fn_dates %in% main_dates) # ensure all rasters downloaded (should be 0)
+all(fn_dates %in% main_dates) # ensure all available rasters downloaded
 
 # check that all files were downloaded
 gaps <-
@@ -82,8 +82,7 @@ gaps <-
          year = lubridate::year(date)) %>%
   relocate(before, .before = 1)
 table(gaps$gap)
-gaps %>%
-  filter(gap > 1)
+filter(gaps, gap > 1)
 
 as.numeric(diff(range(main_dates), units = 'days')) / 365 # number of years
 
