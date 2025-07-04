@@ -488,10 +488,9 @@ if(file.exists(AGGR)) {
                    year = year(central_date),
                    doy = yday(central_date))
   
+  # no elevations < 0
   range(d_aggr$elev_m)
   quantile(d_aggr$elev_m, c(0.1, 0.01, 0.001))
-  
-  d <- mutate(d, elev_m = if_else(elev_m < 0, 0, elev_m))
   
   saveRDS(d_aggr, AGGR)
 }
