@@ -13,7 +13,6 @@ library('mgcv')      # for GAMs
 library('ggplot2')   # for fancy plots
 library('cowplot')   # for fancy plots in grids
 library('gratia')    # for fancy plots of GAMs
-source('functions/scale-ndvi.R')
 source('functions/ndvi-palette.R')
 source('functions/decode_qa.R') # for cleaning rasters
 source('functions/bit_to_int.R') # for cleaning rasters
@@ -360,7 +359,7 @@ if(FALSE) {
     method = 'fREML',
     discrete = TRUE,
     nthreads = 10,
-    control = gam.control(nthreads = 10, trace = TRUE)))
+    control = gam.control(trace = TRUE)))
   
   # fits in < 25 seconds on the EME linux
   system.time(m_test_ds <- bam(
@@ -371,7 +370,7 @@ if(FALSE) {
     method = 'fREML',
     discrete = TRUE,
     nthreads = 10,
-    control = gam.control(nthreads = 10, trace = TRUE)))
+    control = gam.control(trace = TRUE)))
   
   # also fits in < 25 seconds on the EME linux
   system.time(m_test_sos <- bam(
@@ -382,7 +381,7 @@ if(FALSE) {
     method = 'fREML',
     discrete = TRUE,
     nthreads = 10,
-    control = gam.control(nthreads = 10, trace = TRUE)))
+    control = gam.control(trace = TRUE)))
 }
 
 # fit a spatially explicit test model with a gaussian family ----
@@ -402,7 +401,7 @@ if(file.exists('models/taiga-test/gaussian-gam-sos.rds')) {
     method = 'fREML',
     discrete = TRUE,
     nthreads = 10,
-    control = gam.control(nthreads = 10, trace = TRUE))
+    control = gam.control(trace = TRUE))
   
   saveRDS(m_gaus, 'models/taiga-test/gaussian-gam-sos.rds')
   p_sos <- draw(m_gaus, rug = FALSE, dist = 0.07)
@@ -538,7 +537,7 @@ if(file.exists('models/taiga-test/gaussian-gam-sos-aggr.rds')) {
     method = 'fREML',
     discrete = TRUE,
     nthreads = 10,
-    control = gam.control(nthreads = 10, trace = TRUE))
+    control = gam.control(trace = TRUE))
   
   saveRDS(m_gaus_aggr, 'models/taiga-test/gaussian-gam-sos-aggr.rds')
   p_sos_aggr <- draw(m_gaus_aggr, rug = FALSE, dist = 0.07)
