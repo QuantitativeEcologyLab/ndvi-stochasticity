@@ -6,6 +6,7 @@ library('purrr')     # for functional programming
 library('furrr')     # for parallelized functional programming
 library('lubridate') # for working with dates
 source('analysis/figures/000-default-ggplot-theme.R')
+source('functions/is_flagged.R')
 
 file_names <-
   list.files(path = 'data/avhrr-viirs-ndvi/raster-files/',
@@ -40,7 +41,6 @@ if(file.exists('data/avhrr-viirs-ndvi/ndvi-raster-metadata.rds')) {
 } else {
   plan(strategy = multisession,
        workers = availableCores(logical = FALSE) - 2)
-  plan()
   dates <-
     tibble(date = seq(as.Date('1981-06-24'), as.Date('2025-05-07'), by =1),
            file_name = future_map_chr(date, function(.date) {
@@ -60,9 +60,13 @@ if(file.exists('data/avhrr-viirs-ndvi/ndvi-raster-metadata.rds')) {
            }, .progress = TRUE),
            n_cells = future_map_int(file_name, \(.fn) {
              if(file.exists(.fn)) {
-               rast(.fn) %>%
-                 mask(ecoregions) %>%
-                 not.na() %>%
+               r <- rast(.fn)
+               
+               # drop probably/confidently cloudy pixels
+               # bits 1 and 0 are 10 or 11
+               r$NDVI <- ifel(is_flagged(r$QA, 1), NA, r$NDVI)
+               
+               not.na(r$NDVI) %>%
                  values() %>%
                  sum() %>%
                  as.integer() %>%
@@ -85,15 +89,15 @@ filter(dates, is.na(file_name))
 n_cells <- sum(dates$n_cells, na.rm = TRUE) # total cells across rasters
 max_rows <- 2^31 - 1 # max number of rows for a data frame in R
 
-# lasgest area is ~65 times over max data frame size
+# largest area is ~65 times over max data frame size
 data.frame(ecoregions) %>%
   summarize(area_prop = sum(area_km2), .by = group) %>%
   mutate(area_prop = area_prop / sum(area_prop),
          rel_dataset_size = area_prop * n_cells / max_rows) %>%
   as_tibble()
 
-s_res <- 4 # spatial resolution
-t_res <- 4 # temporal resolution
+s_res <- 2 # spatial resolution
+t_res <- 2 # temporal resolution
 
 # ensure temporal thinning covers all days in a 10 year-period:
 all(0:364 %in% ((1:3653 - 1:3653 %% t_res) %% 365))
@@ -123,9 +127,16 @@ df_sizes <-
          below_max = nrow_1e6 < max_rows / 1e6)
 df_sizes
 
-ggplot() +
-  geom_sf(data = ecoregions, aes(fill = group)) +
-  scale_fill_bright()
+# preview the groups
+if(FALSE) {
+  ggplot(ecoregions, aes(fill = group)) +
+    geom_sf(lwd = 0.05, col = 'black') +
+    scale_x_continuous(expand = c(0, 0)) +
+    scale_fill_bright(name = 'Group', labels = stringr::str_to_sentence) +
+    theme(legend.position = 'top')
+  ggsave('figures/input-data/polygon-groups.png',
+         width = 10, height = 4.6, units = 'in', dpi = 1200, bg = 'white')
+}
 
 #' ensure at most two groups (start and end) have < `floor(t_res)` days
 dates <-
@@ -158,39 +169,67 @@ dates %>%
                 # fill = n_rasters)) +
                 fill = factor(n_rasters))) +
   scale_x_continuous('Day of year', expand = c(0, 0)) +
-  scale_y_continuous('Year', expand = c(0, 0)) +
+  scale_y_continuous('Year') +
   scale_fill_manual(
     'Number of rasters',
-    values = c('#FAD3BE', '#7A9F9E', '#3572A3', '#21327F', '#190C65')) +
+    values = c('#FAD3BE', '#3572A3', '#190C65')) +
   theme(legend.position = 'top')
-  
+
 if(! file.exists('figures/input-data/n-rasters-time.png')) {
   ggsave('figures/input-data/n-rasters-time.png',
          width = 8.5, height = 5, units = 'in', dpi = 300, bg = 'white')
 }
 
-# need to aggregate temporally to reduce file size before saving ----
-# spatRast objects cannot be serialized (i.e., run in parallel):
+# create the aggregated datasets ----
+# spatRast objects cannot be run in parallel and moved across sessions:
 # https://stackoverflow.com/questions/67445883/terra-package-returns-error-when-try-to-run-parallel-operations/67449818#67449818
 
-# calculate aggregated mean NDVI for each realm ----
-# preview the groups
+#' *THINGS TO DO:*
+#' - create the canada dataset for Rekha's work
+
+# dropping points that are at the edge of boundaries to remove excessive
+# variance near coasts. this means we cannot expand the spatial extent
+# of each group slightly to reduce boundary issues with GAMs (since we
+# can't both expand and contract the extents).
 if(FALSE) {
-  ggplot(ecoregions, aes(fill = group)) +
-    geom_sf(lwd = 0.05, col = 'black') +
-    scale_x_continuous(expand = c(0, 0)) +
-    scale_fill_bright(name = 'Group', labels = stringr::str_to_sentence) +
-    theme(legend.position = 'top')
-  ggsave('figures/input-data/polygon-groups.png',
-         width = 10, height = 4.6, units = 'in', dpi = 1200, bg = 'white')
+  z <- rast(file_names[3], lyr = 'NDVI')
+  shp <- read_sf('data/ecoregions/ecoregions-polygons.shp') %>%
+    filter(WWF_REALM == 'NA') %>%
+    slice(18) %>%
+    st_cast('POLYGON', warn = FALSE) %>%
+    st_geometry() %>%
+    st_as_sf() %>%
+    slice(100)
+  plot(shp)
+  z <- crop(z, shp)
+  values(z) <- rnorm(ncell(z))
+  plot(z)
+  
+  layout(matrix(1:4, ncol = 2, byrow = TRUE))
+  # plot all cells that are in or touch the polygon
+  plot(crop(z, shp, mask = TRUE, touches = TRUE), main = 'touches = TRUE')
+  plot(shp, add = TRUE, border = 'red', lwd = 2)
+  
+  # plot all cells that are in polygon
+  plot(crop(z, shp, mask = TRUE, touches = FALSE), main = 'touches = FALSE')
+  plot(shp, add = TRUE, border = 'red', lwd = 2)
+  
+  # plot all cells that are 90% inside the shapefile
+  ifel(rasterize(shp, z, cover = TRUE, background = 0) > 0.9, z, NA) %>%
+    plot(main = 'Cells 90% inside')
+  plot(shp, add = TRUE, border = 'red', lwd = 2)
+  
+  # plot all cells that are 99.9% inside the shapefile
+  ifel(rasterize(shp, z, cover = TRUE, background = 0) >= 0.999, z, NA) %>%
+    plot(main = 'Cells 99.9% inside')
+  plot(shp, add = TRUE, border = 'red', lwd = 2)
 }
 
+# calculate aggregated mean NDVI for each realm ----
 GROUPS <- arrange(df_sizes, nrow_1e6)$group
 
-# cannot serialize rasters across cores, but can serialize realm names
-plan(multisession(workers = min(availableCores() - 2, length(GROUPS))))
-
-future_map_chr(GROUPS, function(.group) {
+# parallelizing across realm names requires too much RAM
+map_chr(GROUPS, function(.group) {
   shp <- filter(ecoregions, group == .group) %>%
     st_geometry() %>%
     st_as_sf()
@@ -204,7 +243,7 @@ future_map_chr(GROUPS, function(.group) {
         #' import `t_res` rasters for the cluster
         map2(.cl$file_name, .cl$date, \(.fn, .date) {
           .r <- rast(.fn, lyr = 'NDVI') %>%
-            mask(shp)
+            mask(shp, touches = FALSE)
           .month <- month(.date)
           
           # remove unrealistically high NDVI values at high latitudes
@@ -215,30 +254,32 @@ future_map_chr(GROUPS, function(.group) {
             .r <- ifel(.r > 0.2 & .lats, NA, .r)
           }
           
+          # aggregating spatially
+          .r <- terra::aggregate(.r, s_res, na.rm = TRUE)
+          
+          
           return(.r)
         }) %>%
-        rast() %>% # convert list to stack of rasters
-        # mask(shp) %>% # masked in map() call above
-        mean(na.rm = TRUE) %>% # aggregate temporally
-        return()
-      }, .progress = 'Calculating mean raster across time'),
-  # aggregating spatially
-  ndvi_rast = map(ndvi_rast, \(x) {
-    as.data.frame(terra::aggregate(x, s_res, na.rm = TRUE), xy = TRUE)
-  }, .progress = 'Aggregating spatially and converting to data frame')) %>%
-  select(date_group, central_date, ndvi_rast) %>%
-  unnest(ndvi_rast) %>%
-  rename(ndvi_aggr = mean) %>%
-  saveRDS(paste0('data/avhrr-viirs-ndvi/aggregated-', .group,
-                 '-t-', t_res, '-s-', s_res, '-ndvi-data.rds'))
-
-return(paste('Group', .group, 'saved.'))
+          rast() %>% # convert list to stack of rasters
+          mean(na.rm = TRUE) %>% # aggregate temporally
+          return()
+      }, .progress = 'Calculating mean raster across time and space'),
+      ndvi_rast = map(ndvi_rast, \(x) {
+        as.data.frame(x, xy = TRUE)
+      }, .progress = 'Converting to data frame')) %>%
+    select(date_group, central_date, ndvi_rast) %>%
+    unnest(ndvi_rast) %>%
+    rename(ndvi_aggr = mean) %>%
+    saveRDS(paste0('data/avhrr-viirs-ndvi/aggregated-', .group,
+                   '-t-', t_res, '-s-', s_res, '-ndvi-data.rds'))
+  
+  return(paste('Group', .group, 'saved.'))
 })
 
 plan(sequential)
 
 if(FALSE) { # for testing
-  readRDS('data/avhrr-viirs-ndvi/aggregated-islands-t-4-s-4-ndvi-data.rds') %>%
+  readRDS('data/avhrr-viirs-ndvi/aggregated-islands-t-2-s-2-ndvi-data.rds') %>%
     filter(central_date <= central_date[1] + t_res * 2) %>%
     ggplot(aes(x, y, fill = ndvi_aggr)) +
     coord_sf(crs = 'EPSG:4326') +
