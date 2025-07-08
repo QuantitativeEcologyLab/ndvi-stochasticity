@@ -235,8 +235,9 @@ if(FALSE) {
       geom_abline(intercept = 0, slope = 1, color = 'red') +
       labs(x = 'Fitted', y = 'Observed'),
     
-    draw(m_ds_0, dist = 0.02),
+    draw(m_ds_0, dist = 0.02) & coord_sf(crs = 'EPSG:4326'),
     draw(m_ds_0, dist = 0.02, fun = \(x) x + coef(m_ds_0)['(Intercept)']) &
+      coord_sf(crs = 'EPSG:4326') &
       # to specify limits manually
       scale_fill_viridis_c('NDVI', limits = range(fitted(m_mrf_0))),
     d_0 %>%
@@ -247,10 +248,10 @@ if(FALSE) {
       geom_smooth(method = 'gam', formula = y ~ s(x)) +
       geom_abline(intercept = 0, slope = 1, color = 'red') +
       labs(x = 'Fitted', y = 'Observed'),
-    nrow = 2)
+    nrow = 2, rel_widths = c(1, 1, 1.5))
   ggsave(paste0('figures/sardinia-test/duchon-vs-cell-mrf-',
                 unique(d_0$date), '-predictions.png'),
-         width = 15, height = 10, units = 'in', dpi = 300, bg = 'white')
+         width = 12.5, height = 10, units = 'in', dpi = 300, bg = 'white')
 }
 
 # fit a spatially explicit test model with a gaussian family ----
@@ -298,7 +299,13 @@ if(all(file.exists(c('models/sardinia-test/gaussian-gam-ds.rds',
   summary(m_gaus_ds)
   summary(m_gaus_mrf)
   
-  draw(m_gaus_ds, rug = FALSE, dist = 0.02)
+  plot_grid(
+    draw(m_gaus_ds, select = 1, rug = FALSE, dist = 0.07) &
+      geom_sf(data = sardinia, inherit.aes = FALSE, fill = 'transparent',
+              linewidth = 1),
+    draw(m_gaus_ds, select = 2, rug = FALSE, dist = 0.07),
+    draw(m_gaus_ds, select = 3, rug = FALSE, dist = 0.07),
+    draw(m_gaus_ds, select = 4, rug = FALSE, dist = 0.07))
   ggsave('figures/sardinia-test/sardinia-ndvi-gaussian-ds-terms.png',
          width = 9, height = 6, units = 'in', dpi = 300, bg = 'white')
   
@@ -470,7 +477,7 @@ if(file.exists('models/sardinia-test/gaus-gam-ti-mrf-gam.rds')) {
 
 summary(m_gaus_ti_mrf)
 
-# # testing data aggregation ----
+# testing data aggregation ----
 s_res <- 2 # spatial resolution
 t_res <- 2 # temporal resolution
 

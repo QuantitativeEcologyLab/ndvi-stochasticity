@@ -136,7 +136,7 @@ if(FALSE) {
     mutate(prop = prop / sum(prop))
   
   #' `cloud_shadow` and `snow_ice` are not helpful
-  cowplot::plot_grid(
+  plot_grid(
     ggplot(z, aes(x, y, fill = NDVI)) +
       coord_sf(crs = 'EPSG:4326') +
       geom_raster() +
@@ -404,7 +404,14 @@ if(file.exists('models/taiga-test/gaussian-gam-sos.rds')) {
     control = gam.control(trace = TRUE))
   
   saveRDS(m_gaus, 'models/taiga-test/gaussian-gam-sos.rds')
-  p_sos <- draw(m_gaus, rug = FALSE, dist = 0.07)
+  p_sos <-
+    plot_grid(
+      draw(m_gaus, select = 1, rug = FALSE, dist = 0.07) &
+        geom_sf(data = taiga, inherit.aes = FALSE, fill = 'transparent',
+                linewidth = 1),
+      draw(m_gaus, select = 2, rug = FALSE, dist = 0.07),
+      draw(m_gaus, select = 3, rug = FALSE, dist = 0.07),
+      draw(m_gaus, select = 4, rug = FALSE, dist = 0.07))
   ggsave('figures/taiga-test/taiga-ndvi-gaussian-sos-terms.png', p_sos,
          width = 9, height = 6, units = 'in', dpi = 300, bg = 'white')
 }
@@ -540,7 +547,14 @@ if(file.exists('models/taiga-test/gaussian-gam-sos-aggr.rds')) {
     control = gam.control(trace = TRUE))
   
   saveRDS(m_gaus_aggr, 'models/taiga-test/gaussian-gam-sos-aggr.rds')
-  p_sos_aggr <- draw(m_gaus_aggr, rug = FALSE, dist = 0.07)
+  p_sos_aggr <-
+    plot_grid(
+    draw(m_gaus_aggr, select = 1, rug = FALSE, dist = 0.07) &
+      geom_sf(data = taiga, inherit.aes = FALSE, fill = 'transparent',
+              linewidth = 1),
+    draw(m_gaus_aggr, select = 2, rug = FALSE, dist = 0.07),
+    draw(m_gaus_aggr, select = 3, rug = FALSE, dist = 0.07),
+    draw(m_gaus_aggr, select = 4, rug = FALSE, dist = 0.07))
   ggsave('figures/taiga-test/taiga-ndvi-gaussian-sos-aggr-terms.png',
          p_sos_aggr, width = 9, height = 6, units = 'in', dpi = 300,
          bg = 'white')

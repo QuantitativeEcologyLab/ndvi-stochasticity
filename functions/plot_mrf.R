@@ -25,7 +25,7 @@ plot_mrf <- function(.model, .terms = NULL, .newdata, .type = 'link',
     
     p <-
       ggplot(.newdata, aes(x, y)) +
-      coord_equal() +
+      coord_sf(crs = 'EPSG:4326') +
       geom_raster(aes(fill = mu_hat)) +
       geom_contour(aes(z = mu_hat), color = 'black') +
       labs(title = 's(cell_id)', caption = 'Basis: MRF') +
@@ -69,7 +69,7 @@ plot_mrf <- function(.model, .terms = NULL, .newdata, .type = 'link',
           p_ti <-
             ggplot(d_ti, aes(x, y)) +
             facet_wrap(~ facets) +
-            coord_equal() +
+            coord_sf(crs = 'EPSG:4326') +
             geom_raster(aes(fill = mu_hat), na.rm = TRUE) +
             geom_contour(aes(z = mu_hat), color = 'black', na.rm = TRUE) +
             labs(x = NULL, y = NULL, title = .ti,
@@ -119,7 +119,7 @@ plot_mrf <- function(.model, .terms = NULL, .newdata, .type = 'link',
     
     p <-
       ggplot(.newdata, aes(x, y)) +
-      coord_equal() +
+      coord_sf(crs = 'EPSG:4326') +
       geom_raster(aes(fill = mu_hat)) +
       geom_contour(aes(z = mu_hat), color = 'black') +
       labs(x = NULL, y = NULL, title = 's(cell_id)', caption = 'Basis: MRF') +

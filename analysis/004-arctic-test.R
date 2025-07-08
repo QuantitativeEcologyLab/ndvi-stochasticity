@@ -219,7 +219,13 @@ if(all(file.exists(c('models/arctic-test/gaussian-gam-ds.rds',
   summary(m_gaus_ds)
   summary(m_gaus_mrf)
   
-  draw(m_gaus_ds, rug = FALSE, dist = 0.07, n = 150)
+  plot_grid(
+    draw(m_gaus_ds, select = 1, rug = FALSE, dist = 0.07, n = 150) &
+      geom_sf(data = arctic, inherit.aes = FALSE, fill = 'transparent',
+              linewidth = 1),
+    draw(m_gaus_ds, select = 2, rug = FALSE, dist = 0.07, n = 150),
+    draw(m_gaus_ds, select = 3, rug = FALSE, dist = 0.07, n = 150),
+    draw(m_gaus_ds, select = 4, rug = FALSE, dist = 0.07, n = 150))
   ggsave('figures/arctic-test/arctic-ndvi-gaussian-ds-terms.png',
          width = 13.5, height = 9, units = 'in', dpi = 300, bg = 'white')
   
