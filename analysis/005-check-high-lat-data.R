@@ -397,34 +397,6 @@ ggsave('10th-percentile-of-90th-percentiles-across-latitude-raster.png',
        width = 10, height = 10, dpi = 300, bg = 'white')
 
 # find cutoffs for data cleaning ----
-# it seems reasonable to drop all values > 0.2 in winter for lat > 60
-# the raster below is for 2024-04-01
-r_2024_04_01 <- rast('data/avhrr-viirs-ndvi/raster-files/VIIRS-Land_v001_JP113C1_NOAA-20_20240401_c20240412192725.nc',
-                     lyr = 'NDVI') %>%
-  as.data.frame(xy = TRUE)
-
-filter(r_2024_04_01, y > 60) %>%
-  summarize(dropped = round(mean(NDVI > 0.2) * 100, 2)) %>%
-  pull(dropped) %>%
-  paste('%') %>%
-  cat()
-
-ggplot() +
-  geom_hex(aes(NDVI, y, fill = after_stat(map_int(count, \(.c) min(.c, 1e4)))),
-           r_2024_04_01, bins = 50) +
-  geom_rect(aes(xmin = 0.2, xmax = Inf, ymin = 60, ymax = Inf),
-            fill = '#FF000020', color = 'red', lwd = 1) +
-  geom_hline(yintercept = 60, lty = 'dashed', color = 'red') +
-  geom_vline(xintercept = 0.2, lty = 'dashed', color = 'red') +
-  scale_x_continuous(expand = c(0, 0.02)) +
-  scale_y_continuous(expand = c(0, 2.5)) +
-  scale_fill_lapaz(name = 'Count') +
-  labs(title = 'NDVI values for 2024-04-01', x = 'NDVI', y = 'Latitude')
-
-ggsave('ndvi-across-latitude-hexplot-for-2024-04-01.png',
-       path = 'figures/global-diagnostics',
-       width = 10, height = 7.5, dpi = 300, bg = 'white')
-
 # actually, it is best to use time-varying cutoffs of latitude since
 # october can still be quite green
 p_diag_rast +
