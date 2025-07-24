@@ -33,7 +33,7 @@ tibble(
   long = 0,
   lat_deg_to_km = 110,
   long_deg_to_km = 111 * cospi(lat / 180),
-  pixel_area_km2 = lat_deg_to_km * long_deg_to_km * 0.05)
+  pixel_area_km2 = lat_deg_to_km * long_deg_to_km * 0.05^2)
 
 # create a data frame of all dates
 if(file.exists('data/avhrr-viirs-ndvi/ndvi-raster-metadata.rds')) {
@@ -166,13 +166,12 @@ dates %>%
   coord_equal(ratio = 4) +
   geom_rect(aes(xmin = doy - 2.5, xmax = doy + 2.5,
                 ymin = year - 0.5, ymax = year + 0.5,
-                # fill = n_rasters)) +
                 fill = factor(n_rasters))) +
   scale_x_continuous('Day of year', expand = c(0, 0)) +
   scale_y_continuous('Year') +
   scale_fill_manual(
     'Number of rasters',
-    values = c('#FAD3BE', '#3572A3', '#190C65')) +
+    values = c('#FFE599', '#5F7D13', '#003F4C')) +
   theme(legend.position = 'top')
 
 if(! file.exists('figures/input-data/n-rasters-time.png')) {
@@ -183,9 +182,6 @@ if(! file.exists('figures/input-data/n-rasters-time.png')) {
 # create the aggregated datasets ----
 # spatRast objects cannot be run in parallel and moved across sessions:
 # https://stackoverflow.com/questions/67445883/terra-package-returns-error-when-try-to-run-parallel-operations/67449818#67449818
-
-#' *THINGS TO DO:*
-#' - create the canada dataset for Rekha's work
 
 # dropping points that are at the edge of boundaries to remove excessive
 # variance near coasts. this means we cannot expand the spatial extent

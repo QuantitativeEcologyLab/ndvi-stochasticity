@@ -3,9 +3,8 @@ library('tidyr')   # for data wrangling
 library('purrr')   # for data wrangling
 library('sf')      # for spatial data
 library('terra')   # for rasters
-library('spdep')   # for finding neighbors
 library('ggplot2') # for fancy plots
-sf_use_s2(FALSE)
+sf_use_s2(FALSE) # to avoid issues with russian polygons
 
 # get shapefile of each continent
 ecoregions <- st_read('data/world-ecosystems/data/commondata/data0/tnc_terr_ecoregions.shp') %>%
@@ -15,14 +14,13 @@ ecoregions <- st_read('data/world-ecosystems/data/commondata/data0/tnc_terr_ecor
                            WWF_REALM %in% c('AA', 'IM', 'OC') ~ 'islands',
                            WWF_REALM == 'AN' ~ 'antarctica',
                            .default = 'unassigned')) %>%
-  select(group, ECO_NAME, ECO_NUM, WWF_REALM, WWF_MHTNAM) %>%
+  select(group, ECO_NAME, ECO_NUM, WWF_REALM2, WWF_MHTNAM) %>%
   st_make_valid() %>% # to drop duplicate vertices
   mutate(area_km2 = as.numeric(st_area(.)) / 1e6) %>%
   # remove 17 inland water polygons
   # great lakes are not among them, but there's no NDVI data for them
   filter(WWF_MHTNAM != 'Inland Water') %>%
   # not modeling Antarctica
-  filter(group != 'antarctica') %>%
   st_transform(crs = crs(rast('data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v005_AVH13C1_NOAA-07_19810624_c20170610041337.nc',
                               lyr = 'NDVI')))
 
@@ -49,15 +47,21 @@ if(FALSE) { # some exploratory plots and checks
   # find total area by WWF_REALM
   ecoregions %>%
     st_drop_geometry() %>%
-    group_by(WWF_REALM) %>%
+    group_by(WWF_REALM2) %>%
     summarize(total = sum(area_km2)) %>%
     mutate(total = total / sum(total))
   
   ggplot(ecoregions) +
-    facet_wrap(~ WWF_REALM) +
+    facet_wrap(~ WWF_REALM2) +
     geom_sf(fill = 'red3', color = 'black') +
     theme_classic()
 }
+
+# realms result in some excessively small areas; using groups instead
+ecoregions <-
+  ecoregions %>%
+    mutate(group = paste(unique(WWF_REALM2), collapse = ', '),
+           .by = group)
 
 # save the final files ----
 if(! dir.exists('data/ecoregions')) dir.create('data/ecoregions')

@@ -13,7 +13,7 @@ if(.PLOT_PALETTES) plot_scheme(ndvi_pal)
 ndvi_pal <- ndvi_pal[c(seq(1, 13, by = 2), 30, 23, 21:16)]
 if(.PLOT_PALETTES) plot_scheme(ndvi_pal)
 create_ndvi_pal <- colorRampPalette(ndvi_pal)
-ndvi_pal <- create_ndvi_pal(100)
+ndvi_pal <- create_ndvi_pal(1e3)
 if(.PLOT_PALETTES) plot_scheme_colorblind(ndvi_pal)
 if(.PLOT_PALETTES) {
   expand.grid(x = 1:10,
