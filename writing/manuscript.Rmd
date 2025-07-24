@@ -78,6 +78,9 @@ if(FALSE) {
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, out.width = '100%', fig.align = 'center', message = FALSE, warning = FALSE, comment = '#')
+
+# set to TRUE if you want to test figures for color-deficient vision
+TEST_CDV <- FALSE
 ```
 
 \linenumbers
@@ -88,35 +91,39 @@ knitr::opts_chunk$set(echo = FALSE, out.width = '100%', fig.align = 'center', me
 
 \newpage
 
+useful refs:
+
+* https://www.sciencedirect.com/science/article/abs/pii/S0034425711001957?fr=RR-2&ref=pdf_download&rr=962beb22bcb58443
+* https://www.nature.com/articles/s41467-025-61585-5
+* see `to-read` folder
+
+\newpage
+
 # Introduction
 
-<!-- remote sensing allows us to study landscapes in detail and over large spatiotemporal scales -->
+<!-- remote sensing allows us to study landscapes in detail and over large spatiotemporal scales. Advantages and limitations of remote sensing (no field work, "free"; polluted signal, irregular res) -->
 
-\noindent Since its early uses in the 1970s, the Normalized Difference Vegetation Index (NDVI) has greatly expanded our ability to quantify and monitor landscapes using remotely sensed imagery [@pettorelli_using_2005; @pettorelli_normalized_2011; @anyamba_historical_2012]. NDVI is an estimate of a landscape's greenness, and it often a good proxy of primary productivity, forage availability, and vegetative cover [@pettorelli_normalized_2011; @merkle_large_2016]. However, as NDVI a proxy, it is not a direct measurement of such variables, and it should be interpreted carefully. NDVI is prone to loss of sensitivity in highly saturated (i.e., very green) environments [@matsushita_sensitivity_2007], and estimates can vary substantially across sensors [@huang_commentary_2021]. Still, NDVI is often used because it is free, well-established, and available at a wide variety of spatiotemporal scales [@ref].
+\noindent The Normalized Difference Vegetation Index (NDVI), an estimate of plant greenness and productivity, was first introduced by @rouse_monitoring_1974 and @rouse_monitoring_1974-1 using spectral data from the Landsat 1 satellite. NDVI allowed researchers to evaluate plant productivity and phenology using satellite data [@tucker_red_1979] or hand-held devices [@tucker_monitoring_1979] via a proxy of primary productivity, forage availability, and vegetative cover. Satellite measurements of NDVI thus allowed analysts to remotely monitor not only vegetation but also animals' responses to changes in forage availability [@rouse_monitoring_1974-1; @pettorelli_using_2005; @pettorelli_normalized_2011].
 
-<!-- successes of NDVI: pettorelli, Aikens -->
+Since NDVI is not a direct measurement primary productivity but a proxy, it should be interpreted carefully [@pettorelli_normalized_2011]. NDVI is prone to loss of sensitivity in very green (i.e., highly saturated) environments [@matsushita_sensitivity_2007; @son_comparative_2014], and estimates vary across sensors [@beck_global_2011; @huang_commentary_2021; @huang_commentary_2021]. Results can depend on the sensor used to measure NDVI [@fan_global_2016], and the coarse scale of satellite-derived NDVI can be a substantial barrier when when assessing fine-scale changes, heterogeneity, or responses [@goodchild_scale_2023; @reid_its_2018; @nathan_big-data_2022]. Still, NDVI is often used because it is free, well-established, and available at a wide variety of spatiotemporal scales [@tarnavsky_multiscale_2008] while also requiring minimal work to acquire.
 
-NDVI has been particularly useful when studying the movement behavior of herbivorous mammals, such as when testing the relationship between resource availability and range size [@ref] 
+<!-- Uses and history of ndvi [successes of NDVI: pettorelli, Aikens]. -->
 
-NDVI has also been used to test the "green wave hypothesis", which was first developed by @ref in relation to migratory birds and states that animals will time their migration with the early green-up phases of forage growth to maximize forage nutrient content. 
+NDVI has proven particularly useful in a multitude of fields, including animal movement behavior [@merkle_large_2016; @geremia_migrating_2019], landscape fragmentation [@mallegowda_assessing_2015], phenology [@hmimina_evaluation_2013], habitat classification [@clerici_exploring_2012], and forest recovery after fires [@joao_indicator-based_2018]. Historically, analysts focused on changes in mean NDVI, but recent work has included other metrics of NDVI, including rates of change [@aikens_greenscape_2017] and changes in variance [i.e., variation around the mean, stochasticity$;$ @zhang_ndvi_2009; @mutti_ndvi_2020; @mezzini_how_2025]. However, estimating trends in NDVI variance presents some additional challenges, particularly when environments are dynamic and (spatio)temporally heterogeneous.
 
-many people focus on changes in the mean
+<!-- requirements for good estimates of variance: comments on scale and smoothness -->
 
-<!-- what counts as a change? predictable vs stochastic changes -->
+Fig. \@ref(fig:fig-smooth-wiggly)) illustrates some of the difficulties that arise in modeling trends in variance in NDVI. Disentangling signal from noise is a central aspect of estimating trends in NDVI variance, but what constitutes as signal is dependent on the observer's scale of perception [@levin_problem_1992; @steixner-kumar_strategies_2020]. A forest fire may be extremely disruptive to a small animal with limited motility and a small range size, while a bird or a large mammal may not struggle to survive after relocating or altering its movement behavior [@nathan_movement_2008; @riotte-lambert_environmental_2020]. Similarly, what may be a severe drought to an annual plant may be no more than an unusually dry year for a plant with a longer generation timescale [@frankham_importance_2004]. Thus, disentangling trends in mean NDVI from changes in NDVI variance requires a conscious decision about the scale at which to consider the data.
 
-ability to predict and respond to changes in mean conditions (forage availability, phenology, etc.) depends on the scale of changes relative to the perception scale [@levin_problem_1992; @frankham_importance_2004; @riotte-lambert_environmental_2020; @steixner-kumar_strategies_2020] and memory [@abrahms_memory_2019]. Consequently, environmental stochasticity is also an important driver, besides changes in the mean [@mezzini_how_2025]
+<!-- Introduce the study -->
 
-scale in remote sensing and GIS: @goodchild_scale_2023
+In this article, we present the Dynamic Estimate of NDVI Variance (DENVar). We estimate DENVar using 44 years of NDVI data from the AVHRR and VIIRS collection of sensors and Generalized Additive Models (GAMs). Although satellites with AVHRR and VIIRS sensors provide data at a coarser resolution (0.05$^\circ$) than other satellites (e.g., 250m for MODIS), they are the only sensors to provide data at a daily frequency and and for more than 40 years. Generalized Additive Models provide a flexible yet interpretable approach for estimating trends in mean and variance in NDVI without the rigidity of other more traditional methods (e.g., ARIMA) or the opaqueness of machine learning models such as neural networks [@simpson_modelling_2018; @wood_generalized_2017]. We illustrate the relationships between DENVar and relevant ecological metrics, and we provide analysts with three options for incorporating DENVar in their own analyses without requiring any knowledge of `R`: (1) rasters of long-term averages from 1981 to 2025, rasters of yearly averages from 1982 to 2024, and a simple Shiny app that provides estimates for specific locations and dates.
 
-<!-- difficulties in estimating variance -->
-
-* variance is hard to calculate, as it depends on a the estimated mean
-* paper on estimating the asymptote of environmental variance globally, but variance for a closed system must converge towards a finite value [@bachmaier_variogram_2011; @fleming_fine-scale_2014]
-
-```{r fig-smooth-wiggly, cache=TRUE, fig.cap="Examples of smooth and wiggly estimated trends in simulated NDVI data (points). Smooth estimates of the mean (top left) result in wiggly and large variance estimates (bottom left), as short-term trends in the data are assumed to be extreme events. In contrast, wiggly (i.e., flexible) estimates of the mean (top right) result in smooth and small variance estimates (bottom right), since short-term trends in the data are assumed to be trends in the mean. The data is the same in both columns.", fig.width=9, fig.height=4.5}
+```{r fig-smooth-wiggly, cache=TRUE, fig.cap="\\textbf{Estimates of variance in NDVI depend on the estimated trends in mean NDVI.} Black lines indicate the estimated mean and variance in simulated NDVI (points). Grey ribbons correspond to 95% credible intervals, while the colored segments highlight significant increases (red) and decreases (blue).\\\\ Smoother estimates of the mean (top left) result in wigglier and larger variance estimates (bottom left), since short-term trends in the data are considered to be stochastic events. In contrast, wigglier estimates of the mean (top right) result in smoother and smaller variance estimates (bottom right), since short-term trends in the data are attributed to changes in the mean. The data in the top row is the same in both columns. It was generated as the sum of a sinusoidal function and a mean-reverting, correlated, stochastic process with mean zero.", fig.width=9, fig.height=6}
 library('dplyr')   # for data wrangling
 library('tidyr')   # for data wrangling
 library('mgcv')    # for modeling
+library('gratia')  # for working with GAMs
 library('ggplot2') # for plotting
 source('../analysis/figures/000-default-ggplot-theme.R')
 
@@ -134,8 +141,8 @@ ou <- function(t, theta, sigma){
 }
 
 set.seed(3)
-d <- tibble(t = seq(0, 1, length.out = 400),
-            mu = (sinpi(sqrt(t + 0.5) * 10 - 0.5) + 1 * sqrt(t)) / 50 + 0.3,
+d <- tibble(t = seq(0, 1, length.out = 500),
+            mu = (sinpi(sqrt(t + 0.5) * 10 - 0.5) * 3 + 1 * sqrt(t)) / 50 + 0.3,
             s2 = cospi(sqrt(t) - 0.5) * 0.001^2,
             noise = ou(t = t, theta = 0.2, sigma = sqrt(s2)),
             y = mu + noise)
@@ -151,42 +158,80 @@ m_wiggly <- gam(list(y ~ s(t, k = 30, bs = 'ad'), ~ s(t)),
 m_smooth <- gam(list(y ~ s(t, k = 10), ~ s(t)),
                 family = gaulss(), data = d, method = 'REML')
 
-get_preds <- function(mod, prefix = 'mod_') {
-  predict(mod, newdata = tibble(t = seq(0, 1, by = 1e-3)),
-          type = 'response', se.fit = FALSE) %>%
-    as.data.frame() %>%
-    transmute(Mean_est = V1, Variance_est = 1 / V2^2) %>%
-    rename_with(.fn = \(.x) paste0(prefix, .x), .cols = 1:2)
+get_preds <- function(model, model_name) {
+  d0 <- tibble(t = seq(0, 1, by = 1e-3))
+  
+  inv_link_l <- inv_link(model, parameter = 'location')
+  inv_link_s <- inv_link(model, parameter = 'scale')
+  
+  bind_cols(
+    d0,
+    predict(model, newdata = d0, type = 'link', se.fit = TRUE) %>%
+      as.data.frame() %>%
+      transmute(Mean_est = inv_link_l(fit.1),
+                Mean_lwr = inv_link_l(fit.1 - 1.96 * se.fit.1),
+                Mean_upr = inv_link_l(fit.1 + 1.96 * se.fit.1),
+                Variance_est = 1 / inv_link_s(fit.2)^2, # (SD)^2
+                Variance_lwr = 1 / inv_link_s(fit.2 - 1.96 * se.fit.2)^2,
+                Variance_upr = 1 / inv_link_s(fit.2 + 1.96 * se.fit.2)^2,
+                model = model_name)) %>%
+    pivot_longer(-c(t, model), names_sep = '_',
+                 names_to = c('parameter', 'measure')) %>%
+    mutate(parameter = if_else(parameter == 'Mean', 'Mean NDVI',
+                               'Variance in NDVI')) %>%
+    pivot_wider(names_from = 'measure', values_from = 'value') %>%
+    arrange(parameter, t) %>% # so mean and var match with s(t) and s.1(t)
+    bind_cols(.,
+              derivatives(model, select = c('s(t)', 's.1(t)'), data = d0) %>%
+                transmute(smooth = .smooth,
+                          deriv = .derivative,
+                          deriv_lwr = .lower_ci,
+                          deriv_upr = .upper_ci,
+                          trend = case_when(deriv_lwr > 0 ~ 'increase',
+                                            deriv_upr < 0 ~ 'decrease')))
 }
 
-bind_cols(tibble(t = seq(0, 1, by = 1e-3)),
-          get_preds(m_wiggly, 'Wiggly_'), get_preds(m_smooth, 'Smooth_')) %>%
-  pivot_longer(-t, names_sep = '_',
-               names_to = c('model', 'lab', 'measure')) %>%
-  pivot_wider(names_from = measure, values_from = value) %>%
-  mutate(model = paste(model, 'estimate')) %>%
-  ggplot() +
-  geom_point(aes(t, y), tibble(t = 0, y = 0, lab = 'Variance'),
-             color = 'transparent') +
-  facet_grid(lab ~ model, scales = 'free', switch = 'y', ) +
-  geom_point(aes(t, y), mutate(d, lab = 'Mean'), alpha = 0.1) +
+preds <-
+  bind_rows(get_preds(m_wiggly, 'Wiggly'), get_preds(m_smooth, 'Smooth')) %>%
+  mutate(model = paste(model, 'mean'),
+         # to keep highlights distinct between changes in direction
+         g = c(0, cumsum(trend[1:(n()-1)] != trend[2:n()])))
+
+resids <- bind_rows(
+  mutate(d,
+         model = 'Smooth mean',
+         e = residuals(m_smooth, type = 'response')),
+  mutate(d,
+         model = 'Wiggly mean',
+         e = residuals(m_wiggly, type = 'response'))) %>%
+  mutate(parameter = 'Variance in NDVI')
+
+fig_1 <-
+  ggplot(preds) +
+  facet_grid(parameter ~ model, scales = 'free', switch = 'y', ) +
+  # data and squared residuals
+  geom_point(aes(t, y), mutate(d, parameter = 'Mean NDVI'), alpha = 0.2) +
+  geom_point(aes(t, e^2), resids, alpha = 0.2) +
+  # estimated trends
+  geom_ribbon(aes(t, ymin = lwr, ymax = upr), alpha = 0.2) +
+  geom_line(aes(t, est, color = trend, group = g), linewidth = 2.5,
+            alpha = 0.8, show.legend = FALSE, na.rm = TRUE) +
   geom_line(aes(t, est), linewidth = 0.75) +
   ylab(NULL) +
-  scale_x_continuous('Time', breaks = NULL) +
+  scale_x_continuous('Time', labels = NULL) +
+  scale_color_manual(values = c('#CA0020', '#2166AC'), na.value = NA,
+                     breaks = c('increase', 'decrease')) +
   theme(strip.placement = 'outside', strip.background.y = element_blank(),
-        strip.text = element_text(size = 10),
-        axis.title.x = element_text(size = 10))
+        strip.text = element_text(size = 12),
+        axis.ticks.x = element_blank(),
+        axis.title = element_text(size = 12))
+
+if(TEST_CDV) {
+  colorblindr::cvd_grid(fig_1) # test for color-vision deficiency
+} else {
+  fig_1
+}
 ```
-
-<!-- we present a new measure that is estimated in an understandable way -->
-
-* we present DENVar
-* HGAMs are higly flexible models that allow us to estimate trends in the data without imposing preconceived expectations
-* more transparent than black-box machine learning methods like neural networks, etc.
-* https://www.sciencedirect.com/science/article/abs/pii/S0034425718305625
-* https://silvis.forest.wisc.edu/data/dhis/
-* we provide global rasters of the mean and variance in NDVI, averaged across 1981-2025
-* we provide a shiny app for people to calculate mean and variance without any knowledge of `R`
 
 # Methods
 
@@ -238,8 +283,6 @@ m_mean <- bam(
 \doublespacing
 
 Biome-specific fixed-effect intercepts allowed to account for the differences in mean NDVI throught biomes without coefficient shrinkage (i.e., reversion towards the global mean). A Markov Random Field of the ecoregions [`bs = mrf`, see page ***240?*** of @wood_generalized_2017] estimated smoothed, ecoregion-specific deviations from the biome-level spatial means. Two factor-smooth interaction terms (`bs = 'fs'`) accounted for biome-specific seasonal and yearly trends. Seasonal terms were made cyclical by using cyclical cubic splines (`xt = list(bs = 'cc')`), which are continuous up to and including second derivative at the edge knots (0.5 and 366.5, which correspond to 00:00 of January 1^st^ and 24:00 of December 31^st^, respectively). A tensor product interaction smooth for each biome estimated the change in seasonal trends over the years. Finally, a smooth of elevation above sea level accounted for the effect of altitude. See @pedersen_hierarchical_2019 for more information on hierarchical modeling and the use and interpretation of factor smooth interaction terms.
-
-***will we subtract the average residual from each pixel?***
 
 A second HGAM estimated the variance in NDVI around the mean estimated by the model above. The model had an identical structure to the model for the mean, with the exception that (1) the response variable was the squared residual from the first model, such that the model estimated the mean squared residual (i.e., the variance) for a given point in time and space, and (2) a smooth term of the estimated mean NDVI. The model is available below:
 
@@ -327,6 +370,9 @@ Ideally, a model should estimate or explore the relationships among variables su
 
 ## Interpreting DENVar: the importance of scale
 
+<!-- difficulties in estimating variance -->
+<!-- what counts as a change? predictable vs stochastic changes -->
+
 * smoothness of mean impacts smoothness and size of variance: depends on scale of interest (e.g., animals' ability to respond to, learn, and predict changes in the mean). Changes not attributed to trends in the mean are stochastic
 * DENVar is a good metric as long as the spatiotemporal scale of interest is similar or larger to that of DENVar. May not work well for small-scale processes such as the movement dynamics of a small rodent, the phenology of a small orchard when spatiotemporal heterogeneity is finer than DENVar's resolution
 
@@ -372,6 +418,7 @@ read @lande_risks_1993
 
 # Useful references
 
+* @bro-jorgensen_using_2008: in the dry season preceding the rut topi antelope (*Damaliscus lunatus*) respond to forage availability at the large scale but not the fine scale
 * @keith_predicting_2008
 * @chevin_adaptation_2010
 * @rickbeil_plasticity_2019
@@ -387,6 +434,7 @@ read @lande_risks_1993
 * @pease_ecological_2024
 * @xu_plasticity_2021
 * @mezzini_how_2025
+* calibrating across sensors: https://ieeexplore.ieee.org/abstract/document/6809983
 
 TO READ:
 * Site fidelity as a maladaptive behavior in the Anthropocene: https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/fee.2456
