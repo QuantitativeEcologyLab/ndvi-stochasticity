@@ -26,7 +26,7 @@ ecoregions <- read_sf('data/ecoregions/ecoregions-polygons.shp')
 
 # some very large NDVI values at the edge of the preliminary cleaning ----
 plot(st_geometry(ecoregions))
-plot(st_geometry(filter(ecoregions, WWF_REALM == 'NA')[72, ]),
+plot(st_geometry(filter(ecoregions, WWF_REALM2 == 'Nearctic')[72, ]),
      add = TRUE, col = 'red')
 
 list.files('data/avhrr-viirs-ndvi/raster-files',
@@ -34,7 +34,7 @@ list.files('data/avhrr-viirs-ndvi/raster-files',
            full.names = TRUE) %>%
   map(\(x) rast(x, lyr = 'NDVI')) %>%
   rast() %>%
-  crop(filter(ecoregions, WWF_REALM == 'NA')[72, ], mask = TRUE) %>%
+  crop(filter(ecoregions, WWF_REALM2 == 'Nearctic')[72, ], mask = TRUE) %>%
   plot()
 
 # import raster for 2024-01-10

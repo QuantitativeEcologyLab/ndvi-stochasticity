@@ -172,7 +172,7 @@ ggsave('figures/taiga-test/taiga-ndvi-gaussian-sos-aggr-terms-prop-water.png',
 
 # make maps of mean and var ----
 taiga <- read_sf('data/ecoregions/ecoregions-polygons.shp') %>%
-  filter(WWF_REALM == 'NA') %>%
+  filter(WWF_REALM2 == 'Nearctic') %>%
   st_transform(crs(rast('data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v005_AVH13C1_NOAA-07_19810624_c20170610041337.nc'))) %>%
   slice(72) %>%
   st_cast('POLYGON', warn = FALSE) %>%

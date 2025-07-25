@@ -30,8 +30,7 @@ if(FALSE) { # some exploratory plots and checks
   plot(st_geometry(ecoregions), col = factor(ecoregions$ECO_NAME),
        axes = TRUE)
   
-  # by group ----
-  # find total area by group
+  # find total area by group ----
   ecoregions %>%
     st_drop_geometry() %>%
     group_by(group) %>%
@@ -43,8 +42,7 @@ if(FALSE) { # some exploratory plots and checks
     geom_sf(fill = 'red3', color = 'black') +
     theme_classic()
   
-  # by WWF realm ----
-  # find total area by WWF_REALM
+  # find total area by WWF_REALM2 ----
   ecoregions %>%
     st_drop_geometry() %>%
     group_by(WWF_REALM2) %>%

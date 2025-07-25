@@ -478,8 +478,8 @@ if(file.exists('models/sardinia-test/gaus-gam-ti-mrf-gam.rds')) {
 summary(m_gaus_ti_mrf)
 
 # testing data aggregation ----
-s_res <- 2 # spatial resolution
-t_res <- 2 # temporal resolution
+s_res <- 2 # factor for aggregating spatial resolution
+t_res <- 2 # factor for aggregating temporal resolution
 
 # import and aggregate the data ----
 if(file.exists(paste0('data/sardinia-test/sardinia-ndvi-t-', t_res,

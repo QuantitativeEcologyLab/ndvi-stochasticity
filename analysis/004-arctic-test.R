@@ -19,7 +19,7 @@ source('functions/is_flagged.R') # to find bad data
 
 # pick a northern polygon
 eco <- read_sf('data/ecoregions/ecoregions-polygons.shp') %>%
-  filter(WWF_REALM == 'NA') %>%
+  filter(WWF_REALM2 == 'Nearctic') %>%
   st_transform(crs(rast('data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v005_AVH13C1_NOAA-07_19810624_c20170610041337.nc')))
 
 if(FALSE) {
@@ -238,8 +238,8 @@ if(all(file.exists(c('models/arctic-test/gaussian-gam-ds.rds',
 }
 
 # testing data aggregation ----
-s_res <- 2 # spatial resolution
-t_res <- 2 # temporal resolution
+s_res <- 2 # factor for aggregating spatial resolution
+t_res <- 2 # factor for aggregating temporal resolution
 AGGR <- paste0('data/arctic-test/arctic-ndvi-t-', t_res, '-s-', s_res,
                '-aggr.rds')
 
