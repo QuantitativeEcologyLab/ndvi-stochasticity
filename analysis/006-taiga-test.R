@@ -24,7 +24,7 @@ source('functions/nbs_from_rast.R') # gives a list of neighboring cells
 
 # pick a northern polygon
 na <- read_sf('data/ecoregions/ecoregions-polygons.shp') %>%
-  filter(WWF_REALM == 'NA') %>%
+  filter(WWF_REALM2 == 'Nearctic') %>%
   st_transform(crs(rast('data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v005_AVH13C1_NOAA-07_19810624_c20170610041337.nc')))
 
 if(FALSE) {
@@ -113,7 +113,7 @@ if(FALSE) {
   }
   
   plot(ndvi ~ doy, pred_ndvi(m_z_0), type = 'l', ylim = c(-0.1, 1))
-  # removing cloudy pixels increases NDVI buy dramatically reduces dataset
+  # removing cloudy pixels increases NDVI but dramatically reduces dataset
   lines(ndvi ~ doy, pred_ndvi(m_z_1), col = 2)
   # removing cloud shadows barely has an effect
   lines(ndvi ~ doy, pred_ndvi(m_z_2), col = 3)
@@ -230,6 +230,7 @@ summary(slice_sample(d, n = 1e7))
 mean(is.na(slice_sample(d, n = 1e5)$ndvi))
 mean(is.na(slice_sample(d, n = 1e5)$ndvi_clean))
 
+# use cleaned NDVI data and drop NAs
 d <- d %>%
   mutate(ndvi = ndvi_clean) %>%
   select(! ndvi_clean) %>%
@@ -420,8 +421,8 @@ if(file.exists('models/taiga-test/gaussian-gam-sos.rds')) {
 summary(m_gaus)
 
 # testing data aggregation ----
-s_res <- 2 # spatial resolution
-t_res <- 2 # temporal resolution
+s_res <- 2 # factor for aggregating spatial resolution
+t_res <- 2 # factor for aggregating temporal resolution
 AGGR <- paste0('data/taiga-test/taiga-ndvi-t-', t_res, '-s-', s_res,
                '-aggr.rds')
 
@@ -482,8 +483,7 @@ if(file.exists(AGGR)) {
     select(x, y) %>%
     mutate(z = 1) %>%
     rast(crs = 'EPSG:4326') %>%
-    aggregate(4, na.rm = TRUE) %>%
-    get_elev_raster(z = 2) %>% # nearest finer res than 0.20x0.20
+    get_elev_raster(z = 3) %>% # nearest finer res than 0.10x0.10
     crop(st_buffer(taiga, 1e4))
   
   plot(elevs_aggr)
@@ -494,9 +494,10 @@ if(file.exists(AGGR)) {
                    year = year(central_date),
                    doy = yday(central_date))
   
-  # no elevations < 0
+  # very few elevations < 0
   range(d_aggr$elev_m)
   quantile(d_aggr$elev_m, c(0.1, 0.01, 0.001))
+  mean(d_aggr$elev_m < 0)
   
   saveRDS(d_aggr, AGGR)
 }
