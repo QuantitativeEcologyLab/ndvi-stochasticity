@@ -75,7 +75,8 @@ data/other-rasters/*
 data/hbam-ndvi-data*
 data/hbam-var-ndvi-data*
 data/ndvi-global-*
-models/*
+models/*.rds
+models/*/*.rds
 data/cell-id.tif.aux.xml
 data/taiga-test/taiga-ndvi.rds
 data/taiga-test/taiga-ndvi-t-2-s-2-aggr.rds
