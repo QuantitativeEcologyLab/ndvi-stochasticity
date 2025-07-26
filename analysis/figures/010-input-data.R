@@ -53,7 +53,7 @@ if(FALSE) {
     filter(type == 'sequential') %>%
     pull(palette)
   
-  plot_scheme(color('devon')(10))
+  plot_scheme(color('devon')(10)) # for prop_water
   plot_scheme(color('lajolla')(10)) # for elevation
   plot_scheme(color('bamako')(10)) # for n rasters
   plot_scheme(color('davos')(10)) # for DENVar
@@ -83,7 +83,7 @@ if(FALSE) {
 }
 
 # biomes ----
-n_distinct(shp$WWF_MHTNAM)
+n_biomes <- n_distinct(shp$WWF_MHTNAM)
 
 p_biome <-
   ggplot(shp) +
@@ -96,7 +96,7 @@ p_biome <-
   theme(legend.position = 'top', legend.text = element_text(size = 4.5),
         panel.grid = element_blank(), text = element_text(face = 'bold'))
 
-ggsave('figures/input-data/biomes.png', p_biome,
+ggsave('figures/input-data/biomes.pdf', p_biome,
        width = 10, height = 6.5, units = 'in', dpi = 1e3, bg = 'white')
 
 # data groups ----
@@ -113,7 +113,7 @@ p_group <-
   theme(legend.position = 'top', legend.text = element_text(size = 8),
         panel.grid = element_blank(), text = element_text(face = 'bold'))
 
-ggsave('figures/input-data/data-groups.png', p_group,
+ggsave('figures/input-data/data-groups.pdf', p_group,
        width = 10, height = 6, units = 'in', dpi = 1e3, bg = 'white')
 
 # elevation ----
@@ -138,10 +138,12 @@ mean(values(r_elev < -432), na.rm = TRUE)
 # change coastlines to 0 for the plot
 values(r_elev) <- if_else(values(r_elev) < -432, -432, values(r_elev))
 
+r_elev <- rename(as.data.frame(r_elev, xy = TRUE), elev_m = 3)
+
 p_elev <-
   ggplot() +
   geom_sf(data = bounds, fill = 'white', color = 'black') +
-  geom_spatraster(data = r_elev) +
+  geom_raster(aes(x, y, fill = elev_m), r_elev) +
   geom_sf(data = shp, color = 'black', fill = 'transparent', lwd = 0.05) +
   scale_fill_lajolla(name = 'Elevation above sea level (m)') +
   scale_x_continuous(expand = c(0, 0)) +
@@ -149,7 +151,27 @@ p_elev <-
   theme(legend.position = 'top', legend.text = element_text(size = 4.5),
         panel.grid = element_blank(), text = element_text(face = 'bold'))
 
-ggsave('figures/input-data/elev-m.png', p_elev,
+ggsave('figures/input-data/elev-m.pdf', p_elev,
+       width = 10, height = 6, units = 'in', dpi = 1e3, bg = 'white')
+
+# proportion water
+r_prop_water <- rast('data/water-body-raster.tif') %>%
+  project(robinson_crs) %>%
+  as.data.frame(xy = TRUE)
+
+p_prop_water <-
+  ggplot() +
+  geom_sf(data = bounds, fill = 'white', color = 'black') +
+  geom_raster(aes(x, y, fill = layer), r_prop_water) +
+  geom_sf(data = shp, color = 'black', fill = 'transparent', lwd = 0.05) +
+  scale_fill_devon(name = 'Proportion water', reverse = TRUE,
+                   range = c(0, 0.9)) +
+  scale_x_continuous(expand = c(0, 0)) +
+  theme_void() +
+  theme(legend.position = 'top', legend.text = element_text(size = 4.5),
+        panel.grid = element_blank(), text = element_text(face = 'bold'))
+
+ggsave('figures/input-data/proportion-water.pdf', p_prop_water,
        width = 10, height = 6, units = 'in', dpi = 1e3, bg = 'white')
 
 #' function similar to `khroma::plot_scheme_colorblind()`
@@ -171,19 +193,29 @@ plot_pal <- function(pal) {
 
 plot_pal(pal_groups)
 
-p_palettes <- plot_grid(
-  NULL, NULL, NULL,
-  plot_pal(ndvi_pal),
-  plot_pal(rev(color('davos')(1e3))),
-  plot_pal(rev(color('bamako')(3))), # A2
-  NULL, NULL, NULL,
-  plot_pal(pal_groups), # A3
-  plot_pal(color('discreterainbow')(n_distinct(shp$WWF_MHTNAM))), # A4
-  plot_pal(color('lajolla')(1e3)), # A5
-  label_x = 0.5, hjust = 0.5, nrow = 4, rel_heights = c(0.03, 1),
-  labels = c('NDVI', 'DENVar', 'Fig. A2', '', '', '', 
-             paste0('Fig. A', 3:5), '', '', ''))
+p_palettes <-
+  plot_grid(
+    plot_grid(
+      NULL, NULL,
+      plot_pal(ndvi_pal),
+      plot_pal(rev(color('davos')(1e3))),
+      labels = c('NDVI', 'DENVar'), label_x = 0.5, hjust = 0.5, nrow = 2,
+      rel_heights = c(0.075, 1), label_size = 18),
+    plot_grid(
+      NULL, NULL, NULL,
+      plot_pal(rev(color('bamako')(3))), # A2
+      plot_pal(pal_groups), # A3
+      plot_pal(color('discreterainbow')(n_biomes)), # A4
+      labels = paste0('Fig. A', 2:4), label_x = 0.5, hjust = 0.5, nrow = 2,
+      rel_heights = c(0.075, 1), label_size = 18),
+    plot_grid(
+      NULL, NULL,
+      plot_pal(color('lajolla')(1e3)), # A5
+      plot_pal(rev(color('devon')(1e3))), # A6
+      labels = paste0('Fig. A', 5:6), label_x = 0.5, hjust = 0.5, nrow = 2,
+      rel_heights = c(0.075, 1), label_size = 18),
+    ncol = 1)
 
-ggsave('figures/input-data/color-palettes.png', p_palettes,
-       width = 8, height = 6, scale = 2, units = 'in', dpi = 300,
+ggsave('figures/input-data/color-palettes.pdf', p_palettes,
+       width = 10, height = 5, scale = 2, units = 'in', dpi = 300,
        bg = 'white')

@@ -163,7 +163,7 @@ dates %>%
 # make a figure showing the data density (drops 12 groups with no rasters)
 dates %>%
   ggplot() +
-  coord_equal(ratio = 4) +
+  coord_equal(ratio = 3) +
   geom_rect(aes(xmin = doy - 2.5, xmax = doy + 2.5,
                 ymin = year - 0.5, ymax = year + 0.5,
                 fill = factor(n_rasters))) +
@@ -174,8 +174,6 @@ dates %>%
     values = c('#FFE599', '#5F7D13', '#003F4C')) +
   theme(legend.position = 'top')
 
-if(! file.exists('figures/input-data/n-rasters-time.png')) {
-  ggsave('figures/input-data/n-rasters-time.png',
          width = 8.5, height = 5, units = 'in', dpi = 300, bg = 'white')
 }
 

@@ -16,12 +16,14 @@ institute:
   - au: Department of Animal & Veterinary Sciences, Aarhus University, Denmark.
   - cmps: Department of Computer Science, Math, Physics, and Statistics, The University of British Columbia Okanagan, Kelowna, British Columbia, Canada.
 bibliography: 'ndvi-stochasticity.bib'
-csl: 'freshwater-biology.csl'
+csl: 'journal-of-remote-sensing.csl'
+suppress-bibliography: true
 urlcolor: cyan
 fontsize: 12pt
 indent: true
 header-includes:
     - \renewcommand{\figurename}{Figure A\!\!} # for "Figure Ax."
+    - \usepackage{float} # for fig.pos = '!H'
     - \usepackage{setspace}\doublespacing # for double-spaced text
     - \usepackage{indentfirst} # for indenting first line of each paragraph
     - \usepackage[small]{titlesec} # for smaller font for headings
@@ -46,35 +48,43 @@ editor_options:
 \clearpage
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, out.width = '100%', fig.align = 'center')
+knitr::opts_chunk$set(echo = FALSE, out.width = '100%', fig.align = 'center', fig.pos = '!h')
 ```
 
 ```{r packages, warning=FALSE}
 library('knitr')
 ```
 
-\noindent Figure A1 below illustrates the color palettes used in the main manuscript and this appendix, for each type of vision (trichromatic, deuteranope, protanope, tritanope, and achomatic). The NDVI palette is a modified version of the Bukavu palette by Fabio Crameri [@crameri_geodynamic_2018; @crameri_scientific_2018]. Palette A3 is a modified version of a pallette by Masataka Okabe and Kei Ito [@okabe_color_2008]. All other palettes were created by Fabio Crameri [@crameri_geodynamic_2018; @crameri_scientific_2018]. All original palettes are available via the `khroma` package [@frerebeau_khroma_2024] for `R` [@r_core_team_r_2024]. Figures A2-A5 show some of the data used for fitting the models for estimating mean NDVI and the variance around the mean. The code for generating the figures is available on GitHub at [https://github.com/QuantitativeEcologyLab/ndvi-stochasticity/blob/main/analysis/figures/input-data.R](https://github.com/QuantitativeEcologyLab/ndvi-stochasticity/blob/main/analysis/figures/input-data.R).
+\noindent Figure A1 below illustrates the color palettes used in the main manuscript and this appendix, for each type of vision (trichromatic, deuteranope, protanope, tritanope, and achomatic). The NDVI palette is a modified version of the Bukavu palette by Fabio Crameri [@crameri_geodynamic_2018; @crameri_scientific_2018]. Palette A3 is a modified version of a pallette by Masataka Okabe and Kei Ito [@okabe_color_2008]. All other palettes were created by Fabio Crameri [@crameri_geodynamic_2018; @crameri_scientific_2018]. All original palettes are available via the `khroma` package [@frerebeau_khroma_2024] for `R` [@r_core_team_r_2024]. Figures A2-A5 show some of the data used for fitting the models for estimating mean NDVI and the variance around the mean. See the Code Availability statement in the main text for the code used to produce the figures. The shapefile of WWF ecozones and biomes was obtained from the work of @olson_terrestrial_2001.
+
+\singlespacing
+
+\clearpage <!-- for cleaner pagination and to keep groups and biomes on the same page-->
 
 ```{r color-palettes, fig.cap="Color palettes used in the main manuscript and the figures below."}
-include_graphics('../figures/input-data/color-palettes.png')
+include_graphics('../figures/input-data/color-palettes.pdf')
 ```
 
 ```{r n-rasters, fig.cap="Number of days with a raster within each 2-day period. used for temporal aggregation of the data."}
-include_graphics('../figures/input-data/n-rasters-time.png')
-```
-
-```{r data-groups, fig.cap="To avoid data size limitations in $\\texttt{R}$, data were split into groups of WFF realms. Also see Fig. A4 below."}
-include_graphics('../figures/input-data/data-groups.png')
-```
-
-```{r biomes, fig.cap="Map of WWF biomes. Also see Fig. A3 above."}
-include_graphics('../figures/input-data/biomes.png')
-```
-
-```{r elevation, fig.cap="Map of elevation above sea level. All elevations below the lowest altitude in the Dead Sea (-432 m) were set to -432 m to remove excessively negative altitudes near coast lines. The $\\texttt{elevatr}$ package for $\\texttt{R}$ did not provide elevations for the southernmost region of Antarctica."}
-include_graphics('../figures/input-data/elev-m.png')
+include_graphics('../figures/input-data/n-rasters-time.pdf')
 ```
 
 \clearpage
 
-# References
+```{r data-groups, fig.cap="Robinson projection of the groups used to avoid data size limitations in $\\texttt{R}$. Black lines indicate WWF ecozones."}
+include_graphics('../figures/input-data/data-groups.pdf')
+```
+
+```{r biomes, fig.cap="Robinson projection of WWF biomes. Black lines indicate WWF ecozones."}
+include_graphics('../figures/input-data/biomes.pdf')
+```
+
+\clearpage
+
+```{r elevation, fig.cap="Robinson projection of elevation above sea level. All elevations below the lowest altitude in the Dead Sea (-432 m) were set to -432 m to remove excessively negative altitudes near coast lines. The $\\texttt{elevatr}$ package for $\\texttt{R}$ did not provide elevations for the southernmost region of Antarctica. Black lines indicate WWF ecozones."}
+include_graphics('../figures/input-data/elev-m.pdf')
+```
+
+```{r prop-water, fig.cap="Robinson projection of the proportion of water in each pixel. Black lines indicate WWF ecozones."}
+include_graphics('../figures/input-data/proportion-water.pdf')
+```
