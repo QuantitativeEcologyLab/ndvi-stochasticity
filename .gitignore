@@ -57,12 +57,8 @@ data/avhrr-viirs-ndvi/raster-files/*
 *.db
 
 # ignore world ecosystems dataset, but upload some relevant files
-data/world-ecosystems/*
-data/ecoregions/*
-!data/world-ecosystems/download-link.md
-!data/world-ecosystems/TERMS OF USE.txt
-!data/world-ecosystems/CONTENTS.txt
-!data/ecoregions/polygon-neighbors-list.rds
+data/wwf-ecoregions/*
+!data/wwf-ecoregions/README.md
 
 # ignore old files
 analysis/old-files/*
@@ -86,3 +82,5 @@ data/water-shapefiles/World_Linear_Water.lpk
 data/water-shapefiles/World_Water_Bodies.lpk
 data/water-shapefiles/water-shapefiles.qgz
 /writing/to-read
+/data/wwf-ecoregions
+/writing/submission-materials

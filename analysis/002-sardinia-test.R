@@ -28,9 +28,9 @@ assignInNamespace(x = 'qr.default',   # replace `base::qr.default()`
                   value = qr.default, # with the local version sourced above
                   ns = 'base')        # specify the base package
 
-# shapefile of the world's terrestrial ecoregions
-sardinia <- read_sf('data/world-ecosystems/data/commondata/data0/tnc_terr_ecoregions.shp') %>%
-  st_make_valid() %>%
+# shapefile of WWF terrestrial ecoregions
+sardinia <- read_sf('data/wwf-ecoregions/wwf_terr_ecos.shp') %>%
+  st_make_valid() %>% #' necessary for `st_intersection()`
   st_intersection(
     # the bounding box for sardinia (large enough to include all coast)
     tibble(x = c(7.6, 10.4), y = c(38.8, 41.3)) %>%
