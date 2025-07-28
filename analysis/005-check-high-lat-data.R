@@ -23,18 +23,18 @@ source('functions/get_legend.R') # get_legend() from cowplot v. 1.1.3 fails
 source('functions/nbs_from_rast.R') # gives a list of neighboring cells
 
 ecoregions <- read_sf('data/ecoregions/ecoregions-polygons.shp')
+taiga <- filter(ecoregions, ecoregion == 'Northwest Territories taiga')
 
 # some very large NDVI values at the edge of the preliminary cleaning ----
 plot(st_geometry(ecoregions))
-plot(st_geometry(filter(ecoregions, WWF_REALM2 == 'Nearctic')[72, ]),
-     add = TRUE, col = 'red')
+plot(st_geometry(taiga), add = TRUE, col = 'red')
 
 list.files('data/avhrr-viirs-ndvi/raster-files',
            'AVHRR-Land_v005_AVH13C1_NOAA-07_1982011',
            full.names = TRUE) %>%
   map(\(x) rast(x, lyr = 'NDVI')) %>%
   rast() %>%
-  crop(filter(ecoregions, WWF_REALM2 == 'Nearctic')[72, ], mask = TRUE) %>%
+  crop(taiga, mask = TRUE) %>%
   plot()
 
 # import raster for 2024-01-10

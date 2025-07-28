@@ -23,7 +23,7 @@ file_names[c(1, length(file_names),
   unique()
 
 #' `ecoregions` uses same projection as first raster, `file_names[1]`
-ecoregions <- st_read('data/ecoregions/ecoregions-polygons.shp')
+ecoregions <- read_sf('data/ecoregions/ecoregions-polygons.shp')
 
 # find number of cells per complete raster (i.e., assuming no NAs) ----
 # lat: 1 deg = ~110 km
@@ -66,6 +66,8 @@ if(file.exists('data/avhrr-viirs-ndvi/ndvi-raster-metadata.rds')) {
                # bits 1 and 0 are 10 or 11
                r$NDVI <- ifel(is_flagged(r$QA, 1), NA, r$NDVI)
                
+               #' *DROP PIXELS WITH PROP_WATER > 0.4*
+               
                not.na(r$NDVI) %>%
                  values() %>%
                  sum() %>%
@@ -89,7 +91,7 @@ filter(dates, is.na(file_name))
 n_cells <- sum(dates$n_cells, na.rm = TRUE) # total cells across rasters
 max_rows <- 2^31 - 1 # max number of rows for a data frame in R
 
-# largest area is ~65 times over max data frame size
+# largest area is ~5 times over max data frame size
 data.frame(ecoregions) %>%
   summarize(area_prop = sum(area_km2), .by = group) %>%
   mutate(area_prop = area_prop / sum(area_prop),
@@ -127,18 +129,7 @@ df_sizes <-
          below_max = nrow_1e6 < max_rows / 1e6)
 df_sizes
 
-# preview the groups
-if(FALSE) {
-  ggplot(ecoregions, aes(fill = group)) +
-    geom_sf(lwd = 0.05, col = 'black') +
-    scale_x_continuous(expand = c(0, 0)) +
-    scale_fill_bright(name = 'Group', labels = stringr::str_to_sentence) +
-    theme(legend.position = 'top')
-  ggsave('figures/input-data/polygon-groups.png',
-         width = 10, height = 4.6, units = 'in', dpi = 1200, bg = 'white')
-}
-
-#' ensure at most two groups (start and end) have < `floor(t_res)` days
+# check number of 2-days windows with less than 2 days
 dates <-
   mutate(dates,
          julian = julian(date),
@@ -174,7 +165,9 @@ dates %>%
     values = c('#FFE599', '#5F7D13', '#003F4C')) +
   theme(legend.position = 'top')
 
-         width = 8.5, height = 5, units = 'in', dpi = 300, bg = 'white')
+if(! file.exists('figures/input-data/n-rasters-time.pdf')) {
+  ggsave('figures/input-data/n-rasters-time.pdf',
+         width = 10, height = 5, units = 'in', dpi = 300, bg = 'white')
 }
 
 # create the aggregated datasets ----
@@ -188,7 +181,7 @@ dates %>%
 if(FALSE) {
   z <- rast(file_names[3], lyr = 'NDVI')
   shp <- read_sf('data/ecoregions/ecoregions-polygons.shp') %>%
-    filter(WWF_REALM == 'NA') %>%
+    filter(realm == 'Nearctic') %>%
     slice(18) %>%
     st_cast('POLYGON', warn = FALSE) %>%
     st_geometry() %>%

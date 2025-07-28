@@ -147,8 +147,8 @@ plot_grid(
 ggsave('figures/taiga-test/prop-water-distr.png', width = 6, height = 8,
        dpi = 600, bg = 'white')
 
-# using 0.5 because pixels are not useful if mostly water
-d <- filter(d, prop_water < 0.5)
+# using 0.4 because 0.5 results in excessive bias, and data loss is minimal
+d <- filter(d, prop_water < 0.4)
 
 # fits in ~ 6 minutes
 m <- bam(
@@ -172,13 +172,13 @@ ggsave('figures/taiga-test/taiga-ndvi-gaussian-sos-aggr-terms-prop-water.png',
 
 # make maps of mean and var ----
 taiga <- read_sf('data/ecoregions/ecoregions-polygons.shp') %>%
-  filter(WWF_REALM2 == 'Nearctic') %>%
-  st_transform(crs(rast('data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v005_AVH13C1_NOAA-07_19810624_c20170610041337.nc'))) %>%
-  slice(72) %>%
-  st_cast('POLYGON', warn = FALSE) %>%
+  filter(ecoregion == 'Northwest Territories taiga' |
+           ecoregion == 'Muskwa-Slave Lake forests') %>%
+  st_union() %>%
   st_geometry() %>%
-  st_as_sf()
-plot(taiga)
+  st_as_sf() %>%
+  st_transform(crs(rast('data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v005_AVH13C1_NOAA-07_19810624_c20170610041337.nc')))
+plot(taiga, col = 'forestgreen')
 
 elevs <- d %>%
   filter(central_date == first(central_date)) %>%
@@ -198,7 +198,7 @@ mu <-
   mutate(elev_m = if_else(elev_m < 0, 0, elev_m),
          year = 0, doy = 0, prop_water = 0) %>%
   mutate(mu = predict(object = m, newdata = ., type = 'response',
-                      se.fit = FALSE,
+                      se.fit = FALSE, discrete = FALSE, # T gives low res
                       terms = c('(Intercept)', 's(y,x)', 's(elev_m)')))
 
 s2 <- d %>%
@@ -217,6 +217,11 @@ plot_grid(
     labs(x = NULL, y = NULL),
   s2 %>%
     mutate(s2 = if_else(s2 > 0.04, 0.04, s2)) %>%
+    filter(., st_as_sf(., coords = c('x', 'y')) %>%
+             st_set_crs('EPSG:4326') %>%
+             st_intersects(st_transform(taiga, 'EPSG:4326'),
+                           sparse = TRUE) %>%
+             map_lgl(\(x) length(x) > 0)) %>%
     ggplot() +
     geom_raster(aes(x, y, fill = s2)) +
     geom_sf(data = taiga, fill = 'transparent', color = 'black') +

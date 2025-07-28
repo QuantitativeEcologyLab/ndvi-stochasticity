@@ -24,27 +24,24 @@ source('functions/nbs_from_rast.R') # gives a list of neighboring cells
 
 # pick a northern polygon
 na <- read_sf('data/ecoregions/ecoregions-polygons.shp') %>%
-  filter(WWF_REALM2 == 'Nearctic') %>%
-  st_transform(crs(rast('data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v005_AVH13C1_NOAA-07_19810624_c20170610041337.nc')))
+  filter(realm == 'Nearctic') %>%
+  # drop islands that have long >> 0
+  st_transform(crs(rast('data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v005_AVH13C1_NOAA-07_19810624_c20170610041337.nc'))) %>%
+  filter(st_coordinates(.) %>%
+           data.frame() %>%
+           group_by(L2) %>%
+           summarize(max_x = max(X)) %>%
+           pull(max_x) %>%
+           `<`(60))
 
-if(FALSE) {
-  # searching for a specific polygon
-  # second digit is a 2
-  ggplot(st_geometry(na), aes(fill = factor(1:nrow(na) %% 10))) +
-    geom_sf() +
-    scale_fill_discreterainbow()
-  
-  # first digit is 7
-  ggplot(st_geometry(na), aes(fill = factor(floor(1:nrow(na) / 10)))) +
-    geom_sf() +
-    scale_fill_discreterainbow()
-}
-
-taiga <- na %>%
-  slice(72) %>%
-  st_cast('POLYGON', warn = FALSE) %>%
-  st_geometry() %>%
+taiga <- filter(na, ecoregion == 'Northwest Territories taiga' |
+                  ecoregion == 'Muskwa-Slave Lake forests') %>%
+  st_union() %>%
   st_as_sf()
+
+# some very large NDVI values at the edge of the preliminary cleaning ----
+plot(st_geometry(na))
+plot(st_geometry(taiga), add = TRUE, col = 'red')
 
 ggplot() +
   geom_sf(data = st_geometry(na)) +
@@ -171,6 +168,10 @@ if(file.exists('data/taiga-test/taiga-ndvi.rds')) {
     stop('AVHRR/VIIRS rasters are on the H: Drive, and you may want to use multiple cores.')
   future::availableCores(logical = FALSE)
   plan(multisession, workers = min(60, availableCores(logical = FALSE) - 2))
+  
+  #' stefano created the dataset using an old shapefile created by the
+  #' Nature conservancy that included both WWF ecoregions as a single
+  #' shapefile and did not inlcude holes for the lakes
   d <-
     list.files(path = 'data/avhrr-viirs-ndvi/raster-files',
                pattern = '.nc',
@@ -436,6 +437,9 @@ if(file.exists(AGGR)) {
   plan(multisession, workers = min(60, availableCores(logical = FALSE) - 2))
   
   # takes ~ 2 hours
+  #' stefano created the dataset using an old shapefile created by the
+  #' Nature conservancy that included both WWF ecoregions as a single
+  #' shapefile and did not inlcude holes for the lakes
   d_aggr <-
     tibble(filename = 
              list.files(path = 'data/avhrr-viirs-ndvi/raster-files/',
@@ -568,7 +572,7 @@ elevs <- d %>%
   mutate(z = 1) %>%
   rast(crs = 'EPSG:4326') %>%
   get_elev_raster(z = 4) %>% # nearest finer res than 0.05x0.05
-  crop(st_buffer(taiga, 1e4)) # crop to area near taiga
+  crop(taiga) # crop to area near taiga
 
 gratia::smooths(m_gaus)
 gratia::smooths(m_gaus_aggr)

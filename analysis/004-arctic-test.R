@@ -19,28 +19,31 @@ source('functions/is_flagged.R') # to find bad data
 
 # pick a northern polygon
 eco <- read_sf('data/ecoregions/ecoregions-polygons.shp') %>%
-  filter(WWF_REALM2 == 'Nearctic') %>%
+  filter(realm == 'Nearctic') %>%
   st_transform(crs(rast('data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v005_AVH13C1_NOAA-07_19810624_c20170610041337.nc')))
 
-if(FALSE) {
-  plot(st_geometry(eco), col = 'grey')
-  plot(st_geometry(eco)[18, ], col = 'red', add = TRUE)
-}
-
 arctic <- eco %>%
-  slice(18) %>%
+  slice(c(671)) %>%
   st_cast('POLYGON', warn = FALSE) %>%
   st_geometry() %>%
-  st_as_sf() %>%
-  slice(100)
+  st_as_sf()
 
-ggplot() +
-  geom_sf(data = st_geometry(eco)) +
+eco %>%
+  st_geometry() %>%
+  st_as_sf() %>%
+  filter(st_coordinates(.) %>%
+           data.frame() %>%
+           group_by(L2) %>%
+           summarize(max_x = max(X)) %>%
+           pull(max_x) %>%
+           `<`(60)) %>%
+  ggplot() +
+  geom_sf() +
   geom_sf(data = arctic, fill = 'red3')
 
 if(! file.exists('figures/arctic-test/arctic-map.png')) {
-ggsave('figures/arctic-test/arctic-map.png', width = 10, height = 6.4,
-       units = 'in', dpi = 300, bg = 'white')
+  ggsave('figures/arctic-test/arctic-map.png', width = 10, height = 6.4,
+         units = 'in', dpi = 300, bg = 'white')
 }
 
 # there are some oddly large NDVI values in winter
