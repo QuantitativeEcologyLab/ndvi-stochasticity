@@ -25,6 +25,10 @@ file_names[c(1, length(file_names),
 #' `ecoregions` uses same projection as first raster, `file_names[1]`
 ecoregions <- read_sf('data/ecoregions/ecoregions-polygons.shp')
 
+# raster of proportion water
+prop_water_below_0.4 <- rast('data/water-body-raster.tif') < 0.4
+plot(prop_water_below_0.4)
+
 # find number of cells per complete raster (i.e., assuming no NAs) ----
 # lat: 1 deg = ~110 km
 # long: 1 deg = 111.320*cos(lat) km
@@ -65,8 +69,6 @@ if(file.exists('data/avhrr-viirs-ndvi/ndvi-raster-metadata.rds')) {
                # drop probably/confidently cloudy pixels
                # bits 1 and 0 are 10 or 11
                r$NDVI <- ifel(is_flagged(r$QA, 1), NA, r$NDVI)
-               
-               #' *DROP PIXELS WITH PROP_WATER > 0.4*
                
                not.na(r$NDVI) %>%
                  values() %>%
@@ -174,52 +176,24 @@ if(! file.exists('figures/input-data/n-rasters-time.pdf')) {
 # spatRast objects cannot be run in parallel and moved across sessions:
 # https://stackoverflow.com/questions/67445883/terra-package-returns-error-when-try-to-run-parallel-operations/67449818#67449818
 
-# dropping points that are at the edge of boundaries to remove excessive
-# variance near coasts. this means we cannot expand the spatial extent
-# of each group slightly to reduce boundary issues with GAMs (since we
-# can't both expand and contract the extents).
-if(FALSE) {
-  z <- rast(file_names[3], lyr = 'NDVI')
-  shp <- read_sf('data/ecoregions/ecoregions-polygons.shp') %>%
-    filter(realm == 'Nearctic') %>%
-    slice(18) %>%
-    st_cast('POLYGON', warn = FALSE) %>%
-    st_geometry() %>%
-    st_as_sf() %>%
-    slice(100)
-  plot(shp)
-  z <- crop(z, shp)
-  values(z) <- rnorm(ncell(z))
-  plot(z)
-  
-  layout(matrix(1:4, ncol = 2, byrow = TRUE))
-  # plot all cells that are in or touch the polygon
-  plot(crop(z, shp, mask = TRUE, touches = TRUE), main = 'touches = TRUE')
-  plot(shp, add = TRUE, border = 'red', lwd = 2)
-  
-  # plot all cells that are in polygon
-  plot(crop(z, shp, mask = TRUE, touches = FALSE), main = 'touches = FALSE')
-  plot(shp, add = TRUE, border = 'red', lwd = 2)
-  
-  # plot all cells that are 90% inside the shapefile
-  ifel(rasterize(shp, z, cover = TRUE, background = 0) > 0.9, z, NA) %>%
-    plot(main = 'Cells 90% inside')
-  plot(shp, add = TRUE, border = 'red', lwd = 2)
-  
-  # plot all cells that are 99.9% inside the shapefile
-  ifel(rasterize(shp, z, cover = TRUE, background = 0) >= 0.999, z, NA) %>%
-    plot(main = 'Cells 99.9% inside')
-  plot(shp, add = TRUE, border = 'red', lwd = 2)
-}
-
 # calculate aggregated mean NDVI for each realm ----
 GROUPS <- arrange(df_sizes, nrow_1e6)$group
 
-# parallelizing across realm names requires too much RAM
+# for more info on cutoffs, see https://github.com/QuantitativeEcologyLab/stochasticity_parks/blob/main/Scripts/005-create-dataset.R
+doy_cutoffs <- tibble(
+  date = as.Date(c('2025-01-15', '2025-02-15', '2025-03-15', '2025-04-15',
+                   '2025-05-15', '2025-06-15', '2025-07-15', '2025-08-15',
+                   '2025-09-15', '2025-10-15', '2025-11-15', '2025-12-15')),
+  doy = yday(date),
+  month = month(date),
+  y = c(60, 65, 70, rep(NA, 5), 80, 69, 62, 59))
+
+# parallellizing across realm names requires too much RAM
 map_chr(GROUPS, function(.group) {
   shp <- filter(ecoregions, group == .group) %>%
     st_geometry() %>%
-    st_as_sf()
+    st_as_sf() %>%
+    st_transform(crs(prop_water_below_0.4))
   
   dates %>%
     filter(! is.na(file_name)) %>% # drop missing rasters
@@ -228,24 +202,30 @@ map_chr(GROUPS, function(.group) {
       # import and aggregate temporally
       ndvi_rast = map(cluster, function(.cl) {
         #' import `t_res` rasters for the cluster
+        #' but clean each raster individually before averaging
         map2(.cl$file_name, .cl$date, \(.fn, .date) {
-          .r <- rast(.fn, lyr = 'NDVI') %>%
-            mask(shp, touches = FALSE)
-          .month <- month(.date)
+          .r <- rast(.fn)
+          
+          # drop cloudy pixels
+          .r$NDVI <- ifel(is_flagged(.r$QA, 1), NA, .r$NDVI)
+          
+          # drop pixels with prop_water > 0.4
+          .r$NDVI <- ifel(prop_water_below_0.4, .r$NDVI, NA)
           
           # remove unrealistically high NDVI values at high latitudes
-          if(.month %in% c(1:4, 9:12)) {
-            .lats <- # create a raster with TRUE if above max latitude 
-              init(.r, 'y') >= case_when(.month %in% c(1:4, 11, 12) ~ 60,
-                                         .month %in% 9:10 ~ 70)
-            .r <- ifel(.r > 0.2 & .lats, NA, .r)
+          cutoff <- doy_cutoffs$y[which(doy_cutoffs$month == month(.date))]
+          
+          if(! is.na(cutoff)) {
+            .r$NDVI <- ifel(.r$NDVI > 0 & init(.r, 'y') >= cutoff, NA, .r$NDVI)
           }
           
           # aggregating spatially
-          .r <- terra::aggregate(.r, s_res, na.rm = TRUE)
+          .r <- terra::aggregate(.r$NDVI, s_res, na.rm = TRUE)
           
+          # crop based on the area of the group
+          .r <- crop(.r, shp, mask = TRUE)
           
-          return(.r)
+          return(.r$NDVI)
         }) %>%
           rast() %>% # convert list to stack of rasters
           mean(na.rm = TRUE) %>% # aggregate temporally
@@ -257,7 +237,7 @@ map_chr(GROUPS, function(.group) {
     select(date_group, central_date, ndvi_rast) %>%
     unnest(ndvi_rast) %>%
     rename(ndvi_aggr = mean) %>%
-    saveRDS(paste0('data/avhrr-viirs-ndvi/aggregated-', .group,
+    saveRDS(paste0('data/avhrr-viirs-ndvi/group-level-datasets/aggregated-', .group,
                    '-t-', t_res, '-s-', s_res, '-ndvi-data.rds'))
   
   return(paste('Group', .group, 'saved.'))
