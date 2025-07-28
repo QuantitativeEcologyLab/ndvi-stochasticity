@@ -13,14 +13,14 @@ plot_scheme_colorblind(pal_groups[c(1, 2, 4, 3, 5)]) # achromatic view ok
 robinson_crs <- '+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs'
 
 shp <- read_sf('data/ecoregions/ecoregions-polygons.shp') %>%
-  mutate(WWF_MHTNAM = factor(WWF_MHTNAM, levels = c(
+  mutate(biome = factor(biome, levels = c(
     'Rock and Ice',
     'Tundra',
     'Boreal Forests/Taiga',
     'Montane Grasslands and Shrublands',
     'Temperate Grasslands, Savannas and Shrublands',
     'Temperate Broadleaf and Mixed Forests',
-    'Temperate Conifer Forests',
+    'Temperate Coniferous Forests',
     'Mediterranean Forests, Woodlands and Scrub',
     'Mangroves',
     'Tropical and Subtropical Moist Broadleaf Forests',
@@ -83,12 +83,12 @@ if(FALSE) {
 }
 
 # biomes ----
-n_biomes <- n_distinct(shp$WWF_MHTNAM)
+n_biomes <- n_distinct(shp$biome)
 
 p_biome <-
   ggplot(shp) +
   geom_sf(data = bounds, fill = 'white', color = 'black') +
-  geom_sf(aes(fill = WWF_MHTNAM), color = 'black', lwd = .05) +
+  geom_sf(aes(fill = biome), color = 'black', lwd = .05) +
   geom_hline(yintercept = 0, color = 'black', lwd = 0.1, lty = 'dashed') +
   scale_fill_discreterainbow(name = 'Biome') +
   scale_x_continuous(expand = c(0, 0)) +
