@@ -26,7 +26,8 @@ file_names[c(1, length(file_names),
 ecoregions <- read_sf('data/ecoregions/ecoregions-polygons.shp')
 
 # raster of proportion water
-prop_water_below_0.4 <- rast('data/water-body-raster.tif') < 0.4
+prop_water <- rast('data/water-body-raster.tif')
+prop_water_below_0.4 <- prop_water < 0.4
 plot(prop_water_below_0.4)
 
 # find number of cells per complete raster (i.e., assuming no NAs) ----
@@ -237,11 +238,16 @@ map_chr(GROUPS, function(.group) {
     select(date_group, central_date, ndvi_rast) %>%
     unnest(ndvi_rast) %>%
     rename(ndvi_aggr = mean) %>%
-    saveRDS(paste0('data/avhrr-viirs-ndvi/group-level-datasets/aggregated-', .group,
-                   '-t-', t_res, '-s-', s_res, '-ndvi-data.rds'))
+    mutate(doy = yday(central_date),
+           year = year(central_date),
+           prop_water = extract(tibble(x, y), prop_water)[, 2]) %>%
+    saveRDS(paste0('data/avhrr-viirs-ndvi/group-level-datasets/aggregated-',
+                   .group, '-t-', t_res, '-s-', s_res, '-ndvi-data.rds'))
   
-  return(paste('Group', .group, 'saved.'))
+  return(paste(.group, 'saved.'))
 })
+
+#' *COPY ALL FINAL FILES TO A DRIVE THAT IS NOT THE H DRIVE*
 
 plan(sequential)
 
@@ -255,4 +261,3 @@ if(FALSE) { # for testing
     labs(x = NULL, y = NULL) +
     scale_fill_gradientn('NDVI', colours = ndvi_pal, limits = c(-1, 1))
 }
-
