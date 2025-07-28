@@ -67,6 +67,10 @@ analysis/old-files/*
 data/other-rasters/*
 !data/other-rasters/README.md
 
+# temporary stuff in ./writing/
+/writing/to-read
+/writing/submission-materials
+
 # ignore excessively large files (> 100 MB)
 data/hbam-ndvi-data*
 data/hbam-var-ndvi-data*
@@ -81,6 +85,5 @@ data/water-shapefiles/water-polygons.*
 data/water-shapefiles/World_Linear_Water.lpk
 data/water-shapefiles/World_Water_Bodies.lpk
 data/water-shapefiles/water-shapefiles.qgz
-/writing/to-read
 /data/wwf-ecoregions
-/writing/submission-materials
+/data/avhrr-viirs-ndvi/group-level-datasets
