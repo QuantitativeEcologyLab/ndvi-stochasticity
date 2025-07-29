@@ -94,6 +94,13 @@ unassigned <- ecoregions %>%
                              .default = 'unassigned'))
 filter(unassigned, group_2 == 'unassigned') # no polygons left unassigned
 
+# make a shapefile of dissolved borders
+shp_g <- ecoregions %>%
+  summarize(geometry = st_union(geometry), .by = group) %>%
+  mutate(area_km2 = st_area(.) / 1e6) %>%
+  arrange(desc(area_km2)) %>%
+  mutate(group = factor(group, levels = unique(group)))
+
 # plot unassigned polygons by the new realm
 ggplot() +
   geom_sf(data = shp_g, color = 'black', fill = 'grey') +
@@ -148,7 +155,7 @@ ecoregions <- mutate(ecoregions,
                      .by = group)
 unique(ecoregions$group)
 
-# make a shapefile of dissolved borders
+# update the shapefile of dissolved borders
 shp_g <- ecoregions %>%
   summarize(geometry = st_union(geometry), .by = group) %>%
   mutate(area_km2 = st_area(.) / 1e6) %>%
