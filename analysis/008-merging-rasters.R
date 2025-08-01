@@ -8,6 +8,9 @@ library('lubridate') # for working with dates
 source('analysis/figures/000-default-ggplot-theme.R')
 source('functions/is_flagged.R')
 
+s_res <- 2 # factor for spatial aggregation
+t_res <- 2 # factor for temporal aggregation
+
 file_names <-
   list.files(path = 'data/avhrr-viirs-ndvi/raster-files/',
              pattern = '.nc', full.names = TRUE, recursive = FALSE)
@@ -29,6 +32,14 @@ ecoregions <- read_sf('data/ecoregions/ecoregions-polygons.shp')
 prop_water <- rast('data/water-body-raster.tif')
 prop_water_below_0.4 <- prop_water < 0.4
 plot(prop_water_below_0.4)
+prop_water_aggr <- ifel(prop_water_below_0.4, prop_water, NA) %>%
+  terra::aggregate(s_res, na.rm = TRUE)
+plot(prop_water_aggr)
+elev_m <- rast('data/elev-raster.tif') %>%
+  project(prop_water_aggr, res = res(prop_water_aggr)) %>%
+  ifel(is.na(prop_water_aggr), NA, .)
+plot(elev_m)
+all(res(prop_water_aggr) == res(elev_m))
 
 # find number of cells per complete raster (i.e., assuming no NAs) ----
 # lat: 1 deg = ~110 km
@@ -100,9 +111,6 @@ data.frame(ecoregions) %>%
   mutate(area_prop = area_prop / sum(area_prop),
          rel_dataset_size = area_prop * n_cells / max_rows) %>%
   as_tibble()
-
-s_res <- 2 # spatial resolution
-t_res <- 2 # temporal resolution
 
 # ensure temporal thinning covers all days in a 10 year-period:
 all(0:364 %in% ((1:3653 - 1:3653 %% t_res) %% 365))
@@ -189,7 +197,16 @@ doy_cutoffs <- tibble(
   month = month(date),
   y = c(60, 65, 70, rep(NA, 5), 80, 69, 62, 59))
 
+if(FALSE) { # for testing
+  dates <- dates[1:100, ]
+  .group <- GROUPS[4]
+  .fn <- dates$file_name[100]
+  
+  rm(.group, shp)
+}
+
 # parallellizing across realm names requires too much RAM
+# parallellizing across date groups causes error when taking mean raster
 map_chr(GROUPS, function(.group) {
   shp <- filter(ecoregions, group == .group) %>%
     st_geometry() %>%
@@ -197,17 +214,22 @@ map_chr(GROUPS, function(.group) {
     st_transform(crs(prop_water_below_0.4))
   
   dates %>%
+    slice(100) %>% #' *DELETE*
     filter(! is.na(file_name)) %>% # drop missing rasters
     nest(cluster = ! c(date_group, central_date)) %>%
     mutate(
-      # import and aggregate temporally
-      ndvi_rast = map(cluster, function(.cl) {
+      # import, aggregate temporally, and convert to data frame
+      ndvi_df = map(cluster, function(.cl) {
         #' import `t_res` rasters for the cluster
         #' but clean each raster individually before averaging
         map2(.cl$file_name, .cl$date, \(.fn, .date) {
           .r <- rast(.fn)
           
           # drop cloudy pixels
+          # not dropping pixels with cloud shadow because it reduces the
+          # sample size too much with little change in NDVI: see taiga test
+          # could skip dropping cloudy pixels for areas classified as
+          # "rock and ice"
           .r$NDVI <- ifel(is_flagged(.r$QA, 1), NA, .r$NDVI)
           
           # drop pixels with prop_water > 0.4
@@ -221,42 +243,37 @@ map_chr(GROUPS, function(.group) {
           }
           
           # aggregating spatially
-          .r <- terra::aggregate(.r$NDVI, s_res, na.rm = TRUE)
+          .r <- terra::aggregate(.r, s_res, na.rm = TRUE)
           
-          # crop based on the area of the group
+          # crop and mask based on the shapefile of the group
           .r <- crop(.r, shp, mask = TRUE)
           
           return(.r$NDVI)
         }) %>%
           rast() %>% # convert list to stack of rasters
           mean(na.rm = TRUE) %>% # aggregate temporally
+          as.data.frame(x, xy = TRUE) %>%
           return()
-      }, .progress = 'Calculating mean raster across time and space'),
-      ndvi_rast = map(ndvi_rast, \(x) {
-        as.data.frame(x, xy = TRUE)
-      }, .progress = 'Converting to data frame')) %>%
-    select(date_group, central_date, ndvi_rast) %>%
-    unnest(ndvi_rast) %>%
+      }, .progress = TRUE)) %>%
+    select(date_group, central_date, ndvi_df) %>%
+    unnest(ndvi_df) %>%
     rename(ndvi_aggr = mean) %>%
-    mutate(doy = yday(central_date),
-           year = year(central_date),
-           prop_water = extract(tibble(x, y), prop_water)[, 2]) %>%
+    mutate(prop_water = extract(prop_water_aggr, tibble(x, y))[, 2],
+           elev_m = extract(elev_m, tibble(x, y))[, 2],
+           doy = yday(central_date), year = year(central_date)) %>%
     saveRDS(paste0('data/avhrr-viirs-ndvi/group-level-datasets/aggregated-',
-                   .group, '-t-', t_res, '-s-', s_res, '-ndvi-data.rds'))
+                   gsub(', ', '-', tolower(.group)),
+                   '-t-', t_res, '-s-', s_res, '-ndvi-data.rds'))
   
   return(paste(.group, 'saved.'))
 })
 
-#' *COPY ALL FINAL FILES TO A DRIVE THAT IS NOT THE H DRIVE*
-
-plan(sequential)
-
 if(FALSE) { # for testing
-  readRDS('data/avhrr-viirs-ndvi/aggregated-islands-t-2-s-2-ndvi-data.rds') %>%
-    filter(central_date <= central_date[1] + t_res * 2) %>%
+  readRDS('data/avhrr-viirs-ndvi/group-level-datasets/aggregated-Neotropic, Nearctic-t-2-s-2-ndvi-data-first-100-days.rds') %>%
+    filter(central_date <= central_date[1] + t_res * 3) %>%
     ggplot(aes(x, y, fill = ndvi_aggr)) +
     coord_sf(crs = 'EPSG:4326') +
-    facet_wrap(~ central_date, ncol = 1) +
+    facet_wrap(~ central_date, ncol = 2) +
     geom_raster() +
     labs(x = NULL, y = NULL) +
     scale_fill_gradientn('NDVI', colours = ndvi_pal, limits = c(-1, 1))

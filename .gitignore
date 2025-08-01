@@ -85,5 +85,7 @@ data/water-shapefiles/water-polygons.*
 data/water-shapefiles/World_Linear_Water.lpk
 data/water-shapefiles/World_Water_Bodies.lpk
 data/water-shapefiles/water-shapefiles.qgz
-/data/wwf-ecoregions
-/data/avhrr-viirs-ndvi/group-level-datasets
+data/wwf-ecoregions
+data/avhrr-viirs-ndvi/group-level-datasets/*
+!data/avhrr-viirs-ndvi/group-level-datasets/*-100-*
+data/avhrr-viirs-ndvi/group-level-datasets/aggregated-Palearctic-t-2-s-2-ndvi-data-first-100-days.rds
