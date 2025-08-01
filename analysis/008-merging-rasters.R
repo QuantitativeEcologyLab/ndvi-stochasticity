@@ -228,8 +228,6 @@ map_chr(GROUPS, function(.group) {
           # drop cloudy pixels
           # not dropping pixels with cloud shadow because it reduces the
           # sample size too much with little change in NDVI: see taiga test
-          # could skip dropping cloudy pixels for areas classified as
-          # "rock and ice"
           .r$NDVI <- ifel(is_flagged(.r$QA, 1), NA, .r$NDVI)
           
           # drop pixels with prop_water > 0.4

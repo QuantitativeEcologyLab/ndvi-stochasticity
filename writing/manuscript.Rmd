@@ -95,6 +95,9 @@ useful refs:
 
 * https://www.sciencedirect.com/science/article/abs/pii/S0034425711001957?fr=RR-2&ref=pdf_download&rr=962beb22bcb58443
 * https://www.nature.com/articles/s41467-025-61585-5
+* AVHRR cloud detection using MODIS data:
+  * franch_30_2017
+  * villaescusa-nadal_modis-based_2022
 * see `to-read` folder
 
 \newpage
