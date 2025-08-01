@@ -172,3 +172,9 @@ ggplot() +
 if(! dir.exists('data/ecoregions')) dir.create('data/ecoregions')
 st_write(ecoregions, 'data/ecoregions/ecoregions-polygons.shp')
 st_write(shp_g, 'data/ecoregions/groups-polygons.shp')
+
+# save a raster of the biomes
+rasterize(ecoregions, rast('data/water-body-raster.tif'), field = 'biome') %>%
+  aggregate(2, fun = 'modal') %>%
+  writeRaster('data/ecoregions/ecoregions-0.1-degrees.tif')
+plot(rast('data/ecoregions/ecoregions-0.1-degrees.tif'))
