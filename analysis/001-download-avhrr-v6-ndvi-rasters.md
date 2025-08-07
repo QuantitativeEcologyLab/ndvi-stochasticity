@@ -6,7 +6,7 @@ then run the code similar to the lines below to download all NDVI data from each
 
 `wget -e robots=off -m -np -R .html,.tmp -nH --cut-dirs=3 "https://ladsweb.modaps.eosdis.nasa.gov/archive/allData/PATH_TO_DATA_DIRECTORY" --header "Authorization: Bearer $MY_TOKEN" -P TARGET_DIRECTORY_ON_YOUR_FILE_SYSTEM`
 
-code used:
+code used to download all AVHRR data up to the end of 2013 (VIIRS data started in early 2014):
 
 wget -e robots=off -m -np -A .nc -R .html,.tmp -nH -nd -q "https://ladsweb.modaps.eosdis.nasa.gov/archive/allData/466/N07_AVH13C1/" --header "Authorization: Bearer $MY_TOKEN" -P H/GitHub/ndvi-stochasticity/data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v006/N07_AVH13C1
 wget -e robots=off -m -np -A .nc -R .html,.tmp -nH -nd -q "https://ladsweb.modaps.eosdis.nasa.gov/archive/allData/466/N09_AVH13C1/" --header "Authorization: Bearer $MY_TOKEN" -P H/GitHub/ndvi-stochasticity/data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v006/N09_AVH13C1
@@ -14,7 +14,11 @@ wget -e robots=off -m -np -A .nc -R .html,.tmp -nH -nd -q "https://ladsweb.modap
 wget -e robots=off -m -np -A .nc -R .html,.tmp -nH -nd -q "https://ladsweb.modaps.eosdis.nasa.gov/archive/allData/466/N14_AVH13C1/" --header "Authorization: Bearer $MY_TOKEN" -P H/GitHub/ndvi-stochasticity/data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v006/N14_AVH13C1
 wget -e robots=off -m -np -A .nc -R .html,.tmp -nH -nd -q "https://ladsweb.modaps.eosdis.nasa.gov/archive/allData/466/N16_AVH13C1/" --header "Authorization: Bearer $MY_TOKEN" -P H/GitHub/ndvi-stochasticity/data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v006/N16_AVH13C1
 wget -e robots=off -m -np -A .nc -R .html,.tmp -nH -nd -q "https://ladsweb.modaps.eosdis.nasa.gov/archive/allData/466/N18_AVH13C1/" --header "Authorization: Bearer $MY_TOKEN" -P H/GitHub/ndvi-stochasticity/data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v006/N18_AVH13C1
-wget -e robots=off -m -np -A .nc -R .html,.tmp -nH -nd -q "https://ladsweb.modaps.eosdis.nasa.gov/archive/allData/466/N19_AVH13C1/" --header "Authorization: Bearer $MY_TOKEN" -P H/GitHub/ndvi-stochasticity/data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v006/N19_AVH13C1
+wget -e robots=off -m -np -A .nc -R .html,.tmp -nH -nd -q "https://ladsweb.modaps.eosdis.nasa.gov/archive/allData/466/N19_AVH13C1/2009/" --header "Authorization: Bearer $MY_TOKEN" -P H/GitHub/ndvi-stochasticity/data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v006/N19_AVH13C1
+wget -e robots=off -m -np -A .nc -R .html,.tmp -nH -nd -q "https://ladsweb.modaps.eosdis.nasa.gov/archive/allData/466/N19_AVH13C1/2010/" --header "Authorization: Bearer $MY_TOKEN" -P H/GitHub/ndvi-stochasticity/data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v006/N19_AVH13C1
+wget -e robots=off -m -np -A .nc -R .html,.tmp -nH -nd -q "https://ladsweb.modaps.eosdis.nasa.gov/archive/allData/466/N19_AVH13C1/2011/" --header "Authorization: Bearer $MY_TOKEN" -P H/GitHub/ndvi-stochasticity/data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v006/N19_AVH13C1
+wget -e robots=off -m -np -A .nc -R .html,.tmp -nH -nd -q "https://ladsweb.modaps.eosdis.nasa.gov/archive/allData/466/N19_AVH13C1/2012/" --header "Authorization: Bearer $MY_TOKEN" -P H/GitHub/ndvi-stochasticity/data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v006/N19_AVH13C1
+wget -e robots=off -m -np -A .nc -R .html,.tmp -nH -nd -q "https://ladsweb.modaps.eosdis.nasa.gov/archive/allData/466/N19_AVH13C1/2013/" --header "Authorization: Bearer $MY_TOKEN" -P H/GitHub/ndvi-stochasticity/data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v006/N19_AVH13C1
 
 *NOTE:* initially, it may seem that nothing is downloading because `wget` is downloading the index.html file from each directory and deleting it
 

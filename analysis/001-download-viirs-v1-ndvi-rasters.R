@@ -1,5 +1,5 @@
 #' *the R code below downloads VIIRS data only; see the AVHRR md script*
-#' the first VIIRS raster is on 2014-01-02, from the Suomi National Polar-orbiting Partnership satellite
+#' the first VIIRS raster is on 2014-01-01, from the Suomi National Polar-orbiting Partnership satellite
 #' the first VIIRS raster from the Joint Polar Satellite System-1 is on 2023-01-01
 
 # last run on 2025-07-02
