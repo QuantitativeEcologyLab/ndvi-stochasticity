@@ -332,21 +332,24 @@ map_chr(GROUPS, function(.group) {
 })
 
 if(FALSE) { # for testing
-  readRDS('data/avhrr-viirs-ndvi/group-level-datasets/aggregated-Neotropic, Nearctic-t-2-s-2-ndvi-data-first-10-days.rds') %>%
+  readRDS('data/avhrr-viirs-ndvi/group-level-datasets/aggregated-neotropic-nearctic-t-2-s-2-ndvi-data-10-days.rds') %>%
     filter(central_date <= central_date[1] + t_res * 3) %>%
-    ggplot(aes(x, y, fill = ndvi_aggr)) +
-    coord_sf(crs = 'EPSG:4326') +
+    ggplot() +
     facet_wrap(~ central_date, ncol = 2) +
-    geom_raster() +
+    geom_sf(data = read_sf('data/ecoregions/groups-polygons.shp') %>%
+              filter(group == 'Neotropic, Nearctic')) +
+    geom_raster(aes(x, y, fill = ndvi_aggr)) +
     labs(x = NULL, y = NULL) +
     scale_fill_gradientn('NDVI', colours = ndvi_pal, limits = c(-1, 1))
   
-  readRDS('data/avhrr-viirs-ndvi/group-level-datasets/aggregated-antarctic-t-2-s-2-ndvi-data-first-10-days.rds') %>%
+  # Antarctica barely gets any data
+  readRDS('data/avhrr-viirs-ndvi/group-level-datasets/aggregated-antarctic-t-2-s-2-ndvi-data-10-days.rds') %>%
     filter(central_date <= central_date[1] + t_res * 3) %>%
-    ggplot(aes(x, y, fill = ndvi_aggr)) +
-    coord_sf(crs = 'EPSG:4326') +
+    ggplot() +
     facet_wrap(~ central_date, ncol = 2) +
-    geom_raster() +
+    geom_sf(data = read_sf('data/ecoregions/groups-polygons.shp') %>%
+              filter(group == 'Antarctic')) +
+    geom_point(aes(x, y), alpha = 0.3, color = 'red') +
     labs(x = NULL, y = NULL) +
     scale_fill_gradientn('NDVI', colours = ndvi_pal, limits = c(-1, 1))
 }
