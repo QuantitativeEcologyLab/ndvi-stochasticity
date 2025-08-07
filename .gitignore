@@ -71,6 +71,9 @@ data/other-rasters/*
 /writing/to-read
 /writing/submission-materials
 
+# ignore file with EarthData token
+analysis/MY-TOKEN.md
+
 # ignore excessively large files (> 100 MB)
 data/hbam-ndvi-data*
 data/hbam-var-ndvi-data*
