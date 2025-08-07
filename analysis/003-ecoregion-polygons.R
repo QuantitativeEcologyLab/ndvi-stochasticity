@@ -4,7 +4,12 @@ library('purrr')   # for data wrangling
 library('sf')      # for spatial data
 library('terra')   # for rasters
 library('ggplot2') # for fancy plots
+library('khroma')  # for colorblind-friendly color palettes
 sf_use_s2(FALSE) # to avoid issues with russian polygons
+
+# reference raster
+r_0 <- rast('data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v006/N07_AVH13C1/N07_AVH13C1.A1981175.006.2022270161458.nc',
+            lyr = 'NDVI')
 
 # get shapefile of each continent
 ecoregions <- read_sf('data/wwf-ecoregions/wwf_terr_ecos.shp') %>%
@@ -62,8 +67,7 @@ ecoregions <- read_sf('data/wwf-ecoregions/wwf_terr_ecos.shp') %>%
   select(group, realm, biome, ecoregion, REALM) %>%
   st_make_valid() %>% # to drop duplicate vertices
   mutate(area_km2 = as.numeric(st_area(.)) / 1e6) %>%
-  st_transform(crs = crs(rast('data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v005_AVH13C1_NOAA-07_19810624_c20170610041337.nc',
-                              lyr = 'NDVI')))
+  st_transform(crs = crs(r_0))
 
 # add missing realms and groups by longitude
 unassigned <- ecoregions %>%
@@ -110,7 +114,8 @@ ggplot() +
 # ensure all polygons near the palearctic border are in the palearctic
 ggplot() +
   geom_sf(data = shp_g, color = 'black', fill = 'grey') +
-  geom_sf(aes(fill = realm), unassigned, color = NA) +
+  geom_sf(data = unassigned, fill = 'red', color = NA) +
+  geom_sf(data = shp_g, color = 'black', fill = NA) +
   coord_sf(xlim = c(65, 105), ylim = c(25, 45)) +
   scale_fill_highcontrast()
 
@@ -174,7 +179,7 @@ st_write(ecoregions, 'data/ecoregions/ecoregions-polygons.shp')
 st_write(shp_g, 'data/ecoregions/groups-polygons.shp')
 
 # save a raster of the biomes
-rasterize(ecoregions, rast('data/water-body-raster.tif'), field = 'biome') %>%
-  aggregate(2, fun = 'modal') %>%
+rasterize(ecoregions, r_0, field = 'biome') %>%
+  aggregate(2, fun = 'modal', na.rm = TRUE) %>%
   writeRaster('data/ecoregions/biomes-0.1-degrees.tif')
 plot(rast('data/ecoregions/biomes-0.1-degrees.tif'))
