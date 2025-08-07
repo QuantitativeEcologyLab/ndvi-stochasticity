@@ -1,3 +1,7 @@
+#' *the R code below downloads VIIRS data only; see the AVHRR md script*
+#' the first VIIRS raster is on 2014-01-02, from the Suomi National Polar-orbiting Partnership satellite
+#' the first VIIRS raster from the Joint Polar Satellite System-1 is on 2023-01-01
+
 # last run on 2025-07-02
 library('rvest') # for harvesting web pages; see https://rvest.tidyverse.org/
 library('ncdf4') # for nc rasters
@@ -9,7 +13,7 @@ plan(multisession, workers = ncores)
 
 # main url and years to find all folders in the parent directory
 url_main <- 'https://www.ncei.noaa.gov/data/land-normalized-difference-vegetation-index/access/'
-years <- 1981:2025 #' years to download; *downloading up to 2025-05-07*
+years <- 2014:2025 #' years to download; *downloading up to 2025-06-29*
 
 # find file names for each raster
 fn_tib <- tibble(
