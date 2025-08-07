@@ -11,29 +11,41 @@ source('functions/is_flagged.R')
 s_res <- 2 # factor for spatial aggregation
 t_res <- 2 # factor for temporal aggregation
 
-file_names <-
-  list.files(path = 'data/avhrr-viirs-ndvi/raster-files/',
-             pattern = '.nc', full.names = TRUE, recursive = FALSE)
-length(file_names) / 365 # approximate number of years of data
+FIRST_10_ONLY <- FALSE
+
+if(FIRST_10_ONLY) {
+  file_names <-
+    list.files('data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v006/N07_AVH13C1',
+               pattern = '.nc', full.names = TRUE)[1:10]
+  length(file_names) # approximate number of years of data
+} else {
+  file_names <-
+    c(list.files(path = 'data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v006',
+                 pattern = '.nc', full.names = TRUE, recursive = TRUE),
+      list.files(path = 'data/avhrr-viirs-ndvi/raster-files/VIIRS',
+                 pattern = '.nc', full.names = TRUE, recursive = TRUE))
+  length(file_names) / 365 # approximate number of years of data
+}
 
 # all rasters have the same CRS ----
 # check crs for first, last, and a random sample of rasters
-file_names[c(1, length(file_names),
-             sample(length(file_names), size = 100))] %>%
+file_names %>%
+  `[`(if(FIRST_10_ONLY) {
+    1:10
+  } else {
+    c(1, length(file_names), sample(length(file_names), size = 100))
+  }) %>%
   map_chr(function(.fn) { # fast enough that it is not worth parallelizing
     crs(rast(.fn))
   }) %>%
-  unique()
+  unique() %>%
+  cat()
 
 #' `ecoregions` uses same projection as first raster, `file_names[1]`
 ecoregions <- read_sf('data/ecoregions/ecoregions-polygons.shp')
 
 # raster of proportion water
 prop_water <- rast('data/water-body-raster.tif')
-prop_water_below_0.4 <- prop_water < 0.4
-plot(prop_water_below_0.4)
-prop_water_aggr <- ifel(prop_water_below_0.4, prop_water, NA) %>%
-  terra::aggregate(s_res, na.rm = TRUE)
 plot(prop_water_aggr)
 elev_m <- rast('data/elev-raster.tif') %>%
   project(prop_water_aggr, res = res(prop_water_aggr)) %>%
@@ -55,12 +67,24 @@ tibble(
 if(file.exists('data/avhrr-viirs-ndvi/ndvi-raster-metadata.rds')) {
   dates <- readRDS('data/avhrr-viirs-ndvi/ndvi-raster-metadata.rds')
 } else {
-  plan(strategy = multisession,
-       workers = availableCores(logical = FALSE) - 2)
+  if(FIRST_10_ONLY) {
+    DATES <- as.Date('1981-06-24') + 0:9
+  } else {
+    DATES <- seq(as.Date('1981-06-24'), as.Date('2025-06-29'), by = 1)
+    plan(strategy = multisession,
+         workers = availableCores(logical = FALSE) - 2)
+  }
+  
   dates <-
-    tibble(date = seq(as.Date('1981-06-24'), as.Date('2025-05-07'), by =1),
+    tibble(date = DATES,
            file_name = future_map_chr(date, function(.date) {
-             .fn <- file_names[grepl(format(.date, '_%Y%m%d_'),file_names)]
+             i <- which(
+               # AVHRR
+               grepl(format(.date, 'AVH13C1\\.A%Y%j\\.'),file_names)|
+                 # VIIRS
+                 grepl(format(.date, '_%Y%m%d_'), file_names))
+             
+             .fn <- file_names[i]
              
              if(length(.fn) == 1) {
                return(.fn)
@@ -72,8 +96,7 @@ if(file.exists('data/avhrr-viirs-ndvi/ndvi-raster-metadata.rds')) {
                warning(.msg)
                return(.msg)
              }
-             return()
-           }, .progress = TRUE),
+           }),
            n_cells = future_map_int(file_name, \(.fn) {
              if(file.exists(.fn)) {
                r <- rast(.fn)
@@ -199,22 +222,66 @@ doy_cutoffs <- tibble(
 
 if(FALSE) { # for testing
   dates <- dates[1:100, ]
-  .group <- GROUPS[4]
-  .fn <- dates$file_name[100]
-  
-  rm(.group, shp)
+  dates <- tail(dates, 100)
 }
 
 # parallellizing across realm names requires too much RAM
 # parallellizing across date groups causes error when taking mean raster
 map_chr(GROUPS, function(.group) {
-  shp <- filter(ecoregions, group == .group) %>%
+  # get the shapefile for the area
+  .shp <- filter(ecoregions, group == .group) %>%
     st_geometry() %>%
     st_as_sf() %>%
-    st_transform(crs(prop_water_below_0.4))
+    st_transform(crs(rast(file_names[1])))
+  
+  if(! FIRST_10_ONLY) {
+    # create the standard name for a complete dataset
+    .filename <-
+      paste0('data/avhrr-viirs-ndvi/group-level-datasets/aggregated-',
+             gsub(', ', '-', tolower(.group)),
+             '-t-', t_res, '-s-', s_res, '-ndvi-data.rds')
+  } else {
+    # specify that it's only 10 days of data in the file name
+    .filename <-
+      paste0('data/avhrr-viirs-ndvi/group-level-datasets/aggregated-',
+             gsub(', ', '-', tolower(.group)),
+             '-t-', t_res, '-s-', s_res, '-ndvi-data-10-days.rds')
+    
+    if(.group == 'Antarctic') {
+      # there's no data in Antarctica in june of 1981
+      file_names <- list.files('data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v006/N07_AVH13C1',
+                               full.names = TRUE)[1:200]
+      
+      dates <-
+        tibble(date = as.Date('1981-12-20') + 0:9,
+               file_name = map_chr(date, function(.date) {
+                 .fn <- file_names[which(grepl(format(.date, 'AVH13C1\\.A%Y%j\\.'),
+                                        file_names))]
+                 if(length(.fn) == 1) {
+                   return(.fn)
+                 } else if(length(.fn) == 0) {
+                   return(NA_character_)
+                 } else {
+                   .msg <- paste0('Found ', length(.fn), ' files for ',
+                                  as.character(.date), '!')
+                   warning(.msg)
+                   return(.msg)
+                 }
+               })) %>%
+        mutate(julian = julian(date),
+               date_group = julian - (julian %% t_res)) %>%
+        # dates and number of rasters for each date_group
+        mutate(n_rasters = sum(! is.na(file_name)),
+               start_date = min(date),
+               central_date = mean(date),
+               end_date = max(date),
+               doy = yday(central_date),
+               year = year(central_date),
+               .by = date_group)
+    } # if(.group == 'Antarctic')
+  }
   
   dates %>%
-    slice(100) %>% #' *DELETE*
     filter(! is.na(file_name)) %>% # drop missing rasters
     nest(cluster = ! c(date_group, central_date)) %>%
     mutate(
@@ -231,7 +298,7 @@ map_chr(GROUPS, function(.group) {
           .r$NDVI <- ifel(is_flagged(.r$QA, 1), NA, .r$NDVI)
           
           # drop pixels with prop_water > 0.4
-          .r$NDVI <- ifel(prop_water_below_0.4, .r$NDVI, NA)
+          .r$NDVI <- ifel(project(prop_water, .r$NDVI) < 0.4, .r$NDVI, NA)
           
           # remove unrealistically high NDVI values at high latitudes
           cutoff <- doy_cutoffs$y[which(doy_cutoffs$month == month(.date))]
@@ -244,7 +311,7 @@ map_chr(GROUPS, function(.group) {
           .r <- terra::aggregate(.r, s_res, na.rm = TRUE)
           
           # crop and mask based on the shapefile of the group
-          .r <- crop(.r, shp, mask = TRUE)
+          .r <- crop(.r, .shp, mask = TRUE)
           
           return(.r$NDVI)
         }) %>%
@@ -259,15 +326,22 @@ map_chr(GROUPS, function(.group) {
     mutate(prop_water = extract(prop_water_aggr, tibble(x, y))[, 2],
            elev_m = extract(elev_m, tibble(x, y))[, 2],
            doy = yday(central_date), year = year(central_date)) %>%
-    saveRDS(paste0('data/avhrr-viirs-ndvi/group-level-datasets/aggregated-',
-                   gsub(', ', '-', tolower(.group)),
-                   '-t-', t_res, '-s-', s_res, '-ndvi-data.rds'))
+    saveRDS(.filename)
   
   return(paste(.group, 'saved.'))
 })
 
 if(FALSE) { # for testing
-  readRDS('data/avhrr-viirs-ndvi/group-level-datasets/aggregated-Neotropic, Nearctic-t-2-s-2-ndvi-data-first-100-days.rds') %>%
+  readRDS('data/avhrr-viirs-ndvi/group-level-datasets/aggregated-Neotropic, Nearctic-t-2-s-2-ndvi-data-first-10-days.rds') %>%
+    filter(central_date <= central_date[1] + t_res * 3) %>%
+    ggplot(aes(x, y, fill = ndvi_aggr)) +
+    coord_sf(crs = 'EPSG:4326') +
+    facet_wrap(~ central_date, ncol = 2) +
+    geom_raster() +
+    labs(x = NULL, y = NULL) +
+    scale_fill_gradientn('NDVI', colours = ndvi_pal, limits = c(-1, 1))
+  
+  readRDS('data/avhrr-viirs-ndvi/group-level-datasets/aggregated-antarctic-t-2-s-2-ndvi-data-first-10-days.rds') %>%
     filter(central_date <= central_date[1] + t_res * 3) %>%
     ggplot(aes(x, y, fill = ndvi_aggr)) +
     coord_sf(crs = 'EPSG:4326') +
