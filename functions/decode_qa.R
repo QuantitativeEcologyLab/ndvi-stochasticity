@@ -5,7 +5,7 @@
 #'  - `https://github.com/rspatial/luna/blob/f7bc1cb47dde54a75992b1c74ca6e7f7ddd2a9fc/man/modis_mask.Rd`
 library('dplyr')
 
-decode_qa <- function(qa_values, return_bit = FALSE, warn = FALSE) {
+decode_qa <- function(qa_values, return_bit = FALSE, warn = FALSE, sensor) {
   all_qa_values <- qa_values
   qa_values <- unique(all_qa_values)
   
@@ -47,7 +47,47 @@ decode_qa <- function(qa_values, return_bit = FALSE, warn = FALSE) {
         
         #' extract meaning from `k`: bits start at 0, but indices start at 1
         #' note: there are `4*2*5*2*2*2*2*2 = 1280` possible numbers
+        if(sensor == 'AVHRR') {
+          data.frame(
+            sensor = sensor,
+            qa = .qa,
+            bit = paste(as.numeric(k), collapse = ''),
+            # 0 is unused
+            # 1 Cloudy
+            cloudy = if_else(k[2], true = 'Yes', false = 'No'),
+            # 2 Cloud shadow
+            cloud_shadow = if_else(k[3], true = 'Yes', false = 'No'),
+            # 3 Pixel is over water
+            over_water = if_else(k[4], true = 'Yes', false = 'No'),
+            # 4 Pixel is over sunglint
+            sunglint = if_else(k[5], true = 'Yes', false = 'No'),
+            # Pixel is over dense dark vegetation
+            dense_veg = if_else(k[6], true = 'Yes', false = 'No'),
+            # Pixel is at night (high solar zenith)
+            night = if_else(k[7], true = 'Yes', false = 'No'),
+            # Channels 1 – 5 are valid
+            channels_1_5_valid = if_else(k[8], true = 'Yes', false = 'No'),
+            # Channel 1 value is invalid
+            channel_1_invalid = if_else(k[9], true = 'Yes', false = 'No'),
+            # Channel 2 value is invalid
+            channel_2_invalid = if_else(k[10], true = 'Yes', false = 'No'),
+            # Channel 3 value is invalid
+            channel_3_invalid = if_else(k[11], true = 'Yes', false = 'No'),
+            # Channel 4 value is invalid
+            channel_4_invalid = if_else(k[12], true = 'Yes', false = 'No'),
+            # Channel 5 value is invalid
+            channel_5_invalid = if_else(k[13], true = 'Yes', false = 'No'),
+            # RHO3 value is invalid
+            RHO3_value_invalid = if_else(k[14], true = 'Yes', false = 'No'),
+            # BRDF corrected
+            BRDF_corrected = if_else(k[15], true = 'Yes', false = 'No'),
+            # Polar flag (latitude over/under +/-60 degrees (land) or
+            #                                 +/-50 degrees (ocean))
+            polar_flag = if_else(k[16], true = 'Yes', false = 'No')) %>%
+            return()
+        } else if(sensor == 'VIIRS') {
         data.frame(
+          sensor = sensor,
           qa = .qa,
           bit = paste(as.numeric(k), collapse = ''),
           #' 0-1 Cloud State
@@ -105,6 +145,7 @@ decode_qa <- function(qa_values, return_bit = FALSE, warn = FALSE) {
           #'    0 No snow/Ice
           snow_ice = if_else(k[16], true = 'Snow/Ice', false = 'No snow/Ice')) %>%
           return()
+        } else stop('Please select a sensor between "VIIRS" or "AVHRR".')
       }) %>%
       bind_rows()
     
