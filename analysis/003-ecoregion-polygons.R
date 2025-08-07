@@ -176,5 +176,5 @@ st_write(shp_g, 'data/ecoregions/groups-polygons.shp')
 # save a raster of the biomes
 rasterize(ecoregions, rast('data/water-body-raster.tif'), field = 'biome') %>%
   aggregate(2, fun = 'modal') %>%
-  writeRaster('data/ecoregions/ecoregions-0.1-degrees.tif')
-plot(rast('data/ecoregions/ecoregions-0.1-degrees.tif'))
+  writeRaster('data/ecoregions/biomes-0.1-degrees.tif')
+plot(rast('data/ecoregions/biomes-0.1-degrees.tif'))
