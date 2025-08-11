@@ -19,8 +19,7 @@ source('functions/is_flagged.R') # to find bad data
 
 # pick a northern polygon
 eco <- read_sf('data/ecoregions/ecoregions-polygons.shp') %>%
-  filter(realm == 'Nearctic') %>%
-  st_transform(crs(rast('data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v005_AVH13C1_NOAA-07_19810624_c20170610041337.nc')))
+  filter(realm == 'Nearctic')
 
 arctic <- eco %>%
   slice(c(671)) %>%
@@ -47,29 +46,45 @@ if(! file.exists('figures/arctic-test/arctic-map.png')) {
 }
 
 # there are some oddly large NDVI values in winter
-list.files(path = 'data/avhrr-viirs-ndvi/raster-files',
-           pattern = '.nc', full.names = TRUE)[seq(1, 365, by = 10)] %>%
-  future_map(\(fn) {
-    r <- rast(fn, lyr = 'NDVI')
-    r %>%
-      crop(st_transform(arctic, crs(.)), mask = TRUE) %>%
-      as.data.frame(xy = TRUE, na.rm = TRUE) %>%
-      mutate(date = as.Date(unique(time(r))))
-  }, .progress = TRUE) %>%
-  bind_rows() %>%
-  mutate(doy = yday(date)) %>%
-  ggplot(aes(doy, NDVI)) +
-  geom_point(alpha = 0.1) +
-  annotate(xmin = -Inf, xmax = 100, ymin = 0.2, ymax = Inf, color = 'red',
-           fill = '#FF000030', lty = 'dashed', geom = 'rect') +
-  annotate(xmin = 260, xmax = Inf, ymin = 0.2, ymax = Inf, color = 'red',
-           fill = '#FF000030', lty = 'dashed', geom = 'rect') +
-  geom_smooth(formula = y ~ s(x, k = 5, bs = 'cc'), method = 'gam',
-              method.args = list(knots = list(doy = c(0.5, 366.5))),
-              fullrange = TRUE) +
-  xlim(c(0, 366))
+if(FALSE) {
+  list.files(path = 'data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v006/N07_AVH13C1',
+             pattern = '.nc', full.names = TRUE)[seq(1, 365, by = 10)] %>%
+    future_map(\(fn) {
+      r <- rast(fn, lyr = 'NDVI')
+      
+      # AVHRR v6 rasters don't have dates, so we need to add them manually
+      if(grepl('AVHRR', fn)) {
+        .date <- gsub('.*\\N.._AVH13C1.A', '', fn) %>%
+          gsub('\\..*', '', .) %>%
+          as.Date(format = '%Y%j')
+      } else {
+        .date <- as.Date(unique(time(r)))
+      }
+      
+      r %>%
+        crop(st_transform(arctic, crs(.)), mask = TRUE) %>%
+        as.data.frame(xy = TRUE, na.rm = TRUE) %>%
+        mutate(date = .date)
+    }, .progress = TRUE) %>%
+    bind_rows() %>%
+    mutate(doy = yday(date)) %>%
+    ggplot(aes(doy, NDVI)) +
+    geom_point(alpha = 0.1) +
+    annotate(xmin = -Inf, xmax = 150, ymin = 0.2, ymax = Inf, color = 'red',
+             fill = '#FF000030', lty = 'dashed', geom = 'rect') +
+    annotate(xmin = 280, xmax = Inf, ymin = 0.2, ymax = Inf, color = 'red',
+             fill = '#FF000030', lty = 'dashed', geom = 'rect') +
+    geom_smooth(formula = y ~ s(x, k = 5, bs = 'cc'), method = 'gam',
+                method.args = list(knots = list(doy = c(0.5, 366.5))),
+                fullrange = TRUE) +
+    xlim(c(0, 366))
+}
 
 # import ndvi data ----
+file_names <- list.files(path = 'data/avhrr-viirs-ndvi/raster-files',
+                         pattern = '.nc', full.names = TRUE,
+                         recursive = TRUE)
+
 if(file.exists('data/arctic-test/arctic-ndvi.rds')) {
   d <- readRDS('data/arctic-test/arctic-ndvi.rds')
 } else {
@@ -78,20 +93,26 @@ if(file.exists('data/arctic-test/arctic-ndvi.rds')) {
   future::availableCores(logical = FALSE)
   plan(multisession, workers = min(60, availableCores(logical = FALSE) - 2))
   d <-
-    list.files(path = 'data/avhrr-viirs-ndvi/raster-files',
-               pattern = '.nc',
-               full.names = TRUE) %>%
-    future_map(\(fn) {
+    future_map(file_names, \(fn) {
       r <- rast(fn, lyr = c('NDVI', 'QA')) %>%
         crop(., st_transform(arctic, crs(.)), mask = TRUE)
       
       r$NDVI <- ifel(is_flagged(r$QA, 1), NA, r$NDVI) # drop cloudy pixels
       
+      # AVHRR v6 rasters don't have dates, so we need to add them manually
+      if(grepl('AVHRR', fn)) {
+        .date <- gsub('.*\\N.._AVH13C1.A', '', fn) %>%
+          gsub('\\..*', '', .) %>%
+          as.Date(format = '%Y%j')
+      } else {
+        .date <- as.Date(unique(time(r)))
+      }
+      
       r$NDVI %>%
         crop(., st_transform(arctic, crs(.))) %>%
         mask(st_transform(arctic, crs(.))) %>%
         as.data.frame(xy = TRUE, na.rm = TRUE) %>%
-        mutate(date = as.Date(unique(time(r))))
+        mutate(date = .date)
     }, .progress = TRUE, .options = furrr_options(seed = NULL)) %>%
     bind_rows() %>%
     as_tibble() %>%
@@ -124,8 +145,6 @@ if(file.exists('data/arctic-test/arctic-ndvi.rds')) {
   d <- mutate(d, elev_m = extract(elevs, select(d, x, y))[, 2])
   range(d$elev_m)
   quantile(d$elev_m, c(0.1, 0.01, 0.001))
-  
-  d <- mutate(d, elev_m = if_else(elev_m < 0, 0, elev_m))
   
   saveRDS(d, 'data/arctic-test/arctic-ndvi.rds')
 }
@@ -255,32 +274,36 @@ if(file.exists(AGGR)) {
   future::availableCores(logical = FALSE)
   plan(multisession, workers = min(60, availableCores(logical = FALSE) - 2))
   d_aggr <-
-    list.files(path = 'data/avhrr-viirs-ndvi/raster-files',
-               pattern = '.nc',
-               full.names = TRUE) %>%
-    future_map(\(fn) {
+    future_map(file_names, \(fn) {
       r <- rast(fn, lyr = c('NDVI', 'QA')) %>%
         crop(., st_transform(arctic, crs(.)), mask = TRUE)
       
       r$NDVI <- ifel(is_flagged(r$QA, 1), NA, r$NDVI) # drop cloudy pixels
       
+      # AVHRR v6 rasters don't have dates, so we need to add them manually
+      if(grepl('AVHRR', fn)) {
+        .date <- gsub('.*\\N.._AVH13C1.A', '', fn) %>%
+          gsub('\\..*', '', .) %>%
+          as.Date(format = '%Y%j')
+      } else {
+        .date <- as.Date(unique(time(r)))
+      }
+      
       r$NDVI %>%
         crop(., st_transform(arctic, crs(.))) %>%
         terra::aggregate(s_res, na.rm = TRUE) %>%
         as.data.frame(xy = TRUE, na.rm = TRUE) %>%
-        mutate(date = as.Date(unique(time(r))))
+        mutate(date = .date)
     }, .progress = TRUE, .options = furrr_options(seed = NULL)) %>%
     bind_rows() %>%
     as_tibble() %>%
     rename(ndvi = NDVI) %>%
     # aggregate temporally
     mutate(julian = julian(date),
-           #' should use `+ t_res / 2 = 1` instead of `+ 2` below, but the
-           #' change is just 1 day, so it's not worth fixing for the test
-           central_date = as.Date(julian - (julian %% t_res) + 2)) %>%
+           central_date = as.Date(julian - (julian %% t_res) + t_res / 2)) %>%
     group_by(central_date, x, y) %>%
-    summarize(doy = yday(central_date),
-              year = year(central_date),
+    summarize(doy = unique(yday(central_date)), # sometimes returnes 2 values
+              year = unique(year(central_date)), # sometimes returnes 2 values
               ndvi = mean(ndvi, na.rm = TRUE)) %>%
     ungroup() %>%
     filter(! (doy < 150 & ndvi > 0.2),
@@ -306,8 +329,6 @@ if(file.exists(AGGR)) {
   
   range(d_aggr$elev_m)
   quantile(d_aggr$elev_m, c(0.1, 0.01, 0.001))
-  
-  d_aggr <- mutate(d_aggr, elev_m = if_else(elev_m < 0, 0, elev_m))
   
   saveRDS(d_aggr, AGGR)
 }
@@ -406,7 +427,7 @@ all.equal(sort(as.character(cells(r_0_aggr))), sort(names(nbs_aggr)))
 all.equal(sort(levels(d_aggr$cell_id)),
           sort(as.character(unique(unlist(nbs_aggr)))))
 
-if(file.exists('models/arctic-test/gaussian-gam-ds.rds')) {
+if(file.exists('models/arctic-test/gaussian-gam-mrf-aggr.rds')) {
   m_gaus_mrf_aggr <- readRDS('models/arctic-test/gaussian-gam-mrf-aggr.rds')
 } else {
   m_gaus_mrf_aggr <- bam(
@@ -422,7 +443,8 @@ if(file.exists('models/arctic-test/gaussian-gam-ds.rds')) {
     discrete = TRUE)
   plot_mrf(.model = m_gaus_mrf_aggr, .newdata = d_aggr, .full_model = TRUE)
   ggsave('figures/arctic-test/arctic-ndvi-gaussian-mrf-aggr-terms.png',
-         width = 9, height = 6, units = 'in', dpi = 300, bg = 'white')
+         width = 13.5, height = 9, units = 'in', dpi = 300, bg = 'white')
+
   saveRDS(m_gaus_mrf_aggr, 'models/arctic-test/gaussian-gam-mrf-aggr.rds')
 }
 
@@ -696,12 +718,14 @@ pred_vs_pred <- tibble(
   filter(! is.na(mrf))
 
 ggplot(pred_vs_pred, aes(mrf, mrf_aggr)) +
-  geom_point(alpha = 0.01) +
+  geom_hex(bins = 75) +
   geom_smooth(method = 'gam', formula = y ~ s(x, k = 5),
               color = 'cornflowerblue') +
   geom_abline(intercept = 0, slope = 1, color = 'red') +
   labs(x = 'MRF model with full dataset',
-       y = 'MRF model with aggregated dataset')
+       y = 'MRF model with aggregated dataset') +
+  scale_fill_lapaz(name = 'Count', reverse = TRUE) +
+  theme(legend.position = 'inside', legend.position.inside = c(0.1, 0.85))
 
 ggsave('figures/arctic-test/pred-vs-pred.png', width = 8, height = 6,
        units = 'in', dpi = 300, bg = 'white')
