@@ -55,9 +55,11 @@ output <-
 table(grepl('Downloaded', output))
 
 #' There's a few days that have no raster associated with them, but it's
-#' generally rare. We have 8 2-day gaps, 3 3-day gaps, 2 4-day gaps, and
-#' 1 16-day gap. The gaps range from 1982 to 2024, and the longest one
-#' is in summer of 2022 (see `gaps` below).
+#' generally rare. See `gaps` below.
+
+# remove raster file with all coordinates as (0, 0)
+plot(rast('data/avhrr-viirs-ndvi/raster-files/VIIRS-Land-v001/VIIRS-Land_v001_JP113C1_NOAA-20_20250515_c20250517143017.nc'))
+file.remove('data/avhrr-viirs-ndvi/raster-files/VIIRS-Land-v001/VIIRS-Land_v001_JP113C1_NOAA-20_20250515_c20250517143017.nc')
 
 # check files
 fn_dates <- fn_tib %>%
@@ -97,4 +99,3 @@ file_names <- list.files(path = DIR, pattern = '.nc', full.names = TRUE,
                          recursive = FALSE)
 unique(future_map_chr(file_names, function(.fn) class(rast(.fn)),
                       .progress = TRUE))
-
