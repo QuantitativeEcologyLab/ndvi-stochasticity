@@ -5,7 +5,6 @@ library('sf')      # for spatial data
 library('terra')   # for rasters
 library('ggplot2') # for fancy plots
 library('khroma')  # for colorblind-friendly color palettes
-sf_use_s2(FALSE) # to avoid issues with russian polygons
 
 # reference raster
 r_0 <- rast('data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v006/N07_AVH13C1/N07_AVH13C1.A1981175.006.2022270161458.nc',
