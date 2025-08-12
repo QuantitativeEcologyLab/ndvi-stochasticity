@@ -26,7 +26,7 @@ source('functions/nbs_from_rast.R') # gives a list of neighboring cells
 na <- read_sf('data/ecoregions/ecoregions-polygons.shp') %>%
   filter(realm == 'Nearctic') %>%
   # drop islands that have long >> 0
-  st_transform(crs(rast('data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v005_AVH13C1_NOAA-07_19810624_c20170610041337.nc'))) %>%
+  st_transform(crs(rast('data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v006/N07_AVH13C1/N07_AVH13C1.A1981175.006.2022270161458.nc'))) %>%
   filter(st_coordinates(.) %>%
            data.frame() %>%
            group_by(L2) %>%
@@ -40,9 +40,6 @@ taiga <- filter(na, ecoregion == 'Northwest Territories taiga' |
   st_as_sf()
 
 # some very large NDVI values at the edge of the preliminary cleaning ----
-plot(st_geometry(na))
-plot(st_geometry(taiga), add = TRUE, col = 'red')
-
 ggplot() +
   geom_sf(data = st_geometry(na)) +
   geom_sf(data = taiga, fill = 'red3')
@@ -53,37 +50,53 @@ if(! file.exists('figures/taiga-test/taiga-map.png')) {
 }
 
 #' `geom_smooth` of a subset of the first year of data
-#' there are too many values > 0.2 in winter
-decode_qa(bit_to_int('0000000000000000'))$cloud_state
-decode_qa(bit_to_int('1000000000000000'))$cloud_state
-decode_qa(bit_to_int('0100000000000000'))$cloud_state
-decode_qa(bit_to_int('1100000000000000'))$cloud_state
-decode_qa(bit_to_int('0000000000000000'))$cloud_shadow
+#' there are too many NDVI values > 0 in winter
+decode_qa(bit_to_int('0000000000000000'), sensor = 'AVHRR')$cloudy
+decode_qa(bit_to_int('0100000000000000'), sensor = 'AVHRR')$cloudy
+decode_qa(bit_to_int('0000000000000000'), sensor = 'AVHRR')$cloud_shadow
+decode_qa(bit_to_int('0010000000000000'), sensor = 'AVHRR')$cloud_shadow
+
+decode_qa(bit_to_int('0000000000000000'), sensor = 'VIIRS')$cloud_state
+decode_qa(bit_to_int('1000000000000000'), sensor = 'VIIRS')$cloud_state
+decode_qa(bit_to_int('0100000000000000'), sensor = 'VIIRS')$cloud_state
+decode_qa(bit_to_int('1100000000000000'), sensor = 'VIIRS')$cloud_state
+decode_qa(bit_to_int('0000000000000000'), sensor = 'VIIRS')$cloud_shadow
+decode_qa(bit_to_int('0010000000000000'), sensor = 'VIIRS')$cloud_shadow
 
 # some quick tests for why it is worth dropping cloudy pixels
 if(FALSE) {
-  map(list.files(path = 'data/avhrr-viirs-ndvi/raster-files',
-                 pattern = '_1982080._', full.names = TRUE),
-      \(x) {
-        .r <- rast(x, lyr = c('NDVI', 'QA')) %>%
-          crop(taiga, mask = TRUE)
-        .r$QA <- is_flagged(.r$QA, 1) # check for cloud cover (bits 0 & 1)
-        return(.r)
-      }) %>%
+  list.files('data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v006/N07_AVH13C1',
+             pattern = 'A198221.', full.names = TRUE) %>%
+    map(\(x) {
+      .r <- rast(x, lyr = c('NDVI', 'QA')) %>%
+        crop(taiga, mask = TRUE)
+      .r$QA <- is_flagged(.r$QA, 1) # check for cloud cover (bits 0 & 1)
+      return(.r)
+    }) %>%
     rast() %>%
     plot()
   
   z <-
-    list.files(path = 'data/avhrr-viirs-ndvi/raster-files',
+    list.files('data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v006/N07_AVH13C1/',
                pattern = '.nc', full.names = TRUE)[seq(1, 365, by = 10)] %>%
     future_map(\(fn) {
       r <- rast(fn, lyr = c('NDVI', 'QA'))
+      # AVHRR v6 rasters don't have dates, so we need to add them manually
+      if(grepl('AVHRR', fn)) {
+        .date <- gsub('.*\\N.._AVH13C1.A', '', fn) %>%
+          gsub('\\..*', '', .) %>%
+          as.Date(format = '%Y%j')
+      } else {
+        .date <- as.Date(unique(time(r)))
+      }
+      
       r %>%
         crop(., st_transform(taiga, crs(.))) %>%
         mask(st_transform(taiga, crs(.))) %>%
         as.data.frame(xy = TRUE, na.rm = TRUE) %>%
-        mutate(date = as.Date(unique(time(r))))
-    }, .progress = TRUE) %>%
+        mutate(date = .date) %>%
+        return()
+    }, .progress = TRUE, .options = furrr_options(seed = NULL)) %>%
     bind_rows() %>%
     slice_sample(n = 1e5) %>%
     mutate(doy = yday(date),
@@ -118,18 +131,18 @@ if(FALSE) {
   rm(z, m_z_0, m_z_1, m_z_2, pred_ndvi)
   
   # showing a few more examples
-  z <- list.files(path = 'data/avhrr-viirs-ndvi/raster-files',
-                  pattern = '_19820805_', full.names = TRUE) %>%
+  z <- list.files(path = 'data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v006/N07_AVH13C1/',
+                  pattern = 'A1982217', full.names = TRUE) %>%
     rast(lyr = c('NDVI', 'QA')) %>%
     crop(taiga, mask = TRUE) %>%
     as.data.frame(xy = TRUE) %>%
     filter(! is.na(NDVI)) %>%
-    bind_cols(., decode_qa(.$QA)) %>%
+    bind_cols(., decode_qa(.$QA, sensor = 'AVHRR')) %>%
     as_tibble() %>%
-    mutate(across(cloud_state:snow_ice, factor))
+    mutate(across(cloudy:polar_flag, factor))
   
   summary(z)
-  summarize(z, prop = n(), .by = cloud_state) %>%
+  summarize(z, prop = n(), .by = cloudy) %>%
     mutate(prop = prop / sum(prop))
   
   #' `cloud_shadow` and `snow_ice` are not helpful
@@ -139,7 +152,7 @@ if(FALSE) {
       geom_raster() +
       scale_fill_viridis_c(),
     # scale_fill_gradientn(colours = ndvi_pal, limits = c(-1, 1)),
-    ggplot(z, aes(x, y, fill = cloud_state)) +
+    ggplot(z, aes(x, y, fill = cloudy)) +
       coord_sf(crs = 'EPSG:4326') +
       geom_raster() +
       scale_fill_bright(),
@@ -147,20 +160,24 @@ if(FALSE) {
       coord_sf(crs = 'EPSG:4326') +
       geom_raster() +
       scale_fill_bright(),
-    ggplot(z, aes(x, y, fill = snow_ice)) +
+    ggplot(z, aes(x, y, fill = polar_flag)) +
       coord_sf(crs = 'EPSG:4326') +
       geom_raster() +
       scale_fill_bright())
   
   # dropping cloudy pixels drops some good values but mostly bad ones
   ggplot(z, aes(NDVI)) +
-    facet_wrap(~ cloud_state) +
+    facet_wrap(~ cloudy) +
     geom_histogram()
   
   rm(z)
 }
 
 # import ndvi data ----
+file_names <- list.files(path = 'data/avhrr-viirs-ndvi/raster-files',
+                         pattern = '.nc', full.names = TRUE,
+                         recursive = TRUE)
+
 if(file.exists('data/taiga-test/taiga-ndvi.rds')) {
   d <- readRDS('data/taiga-test/taiga-ndvi.rds')
 } else {
@@ -169,40 +186,52 @@ if(file.exists('data/taiga-test/taiga-ndvi.rds')) {
   future::availableCores(logical = FALSE)
   plan(multisession, workers = min(60, availableCores(logical = FALSE) - 2))
   
-  #' stefano created the dataset using an old shapefile created by the
-  #' Nature conservancy that included both WWF ecoregions as a single
-  #' shapefile and did not inlcude holes for the lakes
+  # takes < 30 minutes on EME linux
   d <-
-    list.files(path = 'data/avhrr-viirs-ndvi/raster-files',
-               pattern = '.nc',
-               full.names = TRUE) %>%
-    future_map(\(fn) {
+    future_map(file_names, \(fn) {
       r <- rast(fn, lyr = c('NDVI', 'QA')) %>%
         crop(., st_transform(taiga, crs(.)), mask = TRUE)
       
       r$NDVI <- ifel(is_flagged(r$QA, 1), NA, r$NDVI) # drop cloudy pixels
       
+      # AVHRR v6 rasters don't have dates, so we need to add them manually
+      if(grepl('AVHRR', fn)) {
+        .date <- gsub('.*\\N.._AVH13C1.A', '', fn) %>%
+          gsub('\\..*', '', .) %>%
+          as.Date(format = '%Y%j')
+      } else {
+        .date <- as.Date(unique(time(r)))
+      }
+      
       as.data.frame(r$NDVI, xy = TRUE, na.rm = TRUE) %>%
-        mutate(date = as.Date(unique(time(r)))) %>%
+        mutate(date = .date) %>%
         return()
     }, .progress = TRUE, .options = furrr_options(seed = NULL)) %>%
     bind_rows() %>%
     as_tibble() %>%
     rename(ndvi = NDVI) %>%
     mutate(month_int = month(date),
+           # drop unrealistically high NDVI values in cold periods
+           #' see `analysis/005-check-high-lat-data.R` for more info
            ndvi = case_when(
-             # if ndvi < 0.2, there's no reason for concern
-             ndvi <= 0.2 ~ ndvi,
-             # if ndvi is > 0.2 and too far north, set it to NA
-             month_int %in% c(1:4, 11, 12) & y > 60 ~ NA_real_,
-             month_int %in% 9:10 & y > 70 ~ NA_real_,
-             # if ndvi is > 0.2 but not too far north, keep unchanged
+             # if ndvi <= 0, there's no reason for concern
+             ndvi <= 0 ~ ndvi,
+             # if ndvi is > 0:
+             #    and too far north, set it to NA
+             month_int == 1 & y > 60 ~ NA_real_,
+             month_int == 2 & y > 65 ~ NA_real_,
+             month_int == 3 & y > 70 ~ NA_real_,
+             month_int == 9 & y > 80 ~ NA_real_,
+             month_int == 10 & y > 69 ~ NA_real_,
+             month_int == 11 & y > 62 ~ NA_real_,
+             month_int == 12 & y > 59 ~ NA_real_,
+             #    and not too far north, keep unchanged
              .default = ndvi))
   plan(sequential)
   
   # add altitude (get_elev_points results in a json error)
   elevs <- d %>%
-    filter(date == first(date)) %>%
+    slice(1:1e4) %>%
     select(x, y) %>%
     mutate(z = 1) %>%
     rast(crs = 'EPSG:4326') %>%
@@ -220,22 +249,16 @@ if(file.exists('data/taiga-test/taiga-ndvi.rds')) {
   range(d$elev_m)
   quantile(d$elev_m, c(0.1, 0.01, 0.001))
   
-  d <- mutate(d, elev_m = if_else(elev_m < 0, 0, elev_m))
-  
   saveRDS(d, 'data/taiga-test/taiga-ndvi.rds')
 }
 
 summary(slice_sample(d, n = 1e7))
 
-# filtering by lat and NDVI dropped some extreme NDVI values, but not much
-mean(is.na(slice_sample(d, n = 1e5)$ndvi))
-mean(is.na(slice_sample(d, n = 1e5)$ndvi_clean))
+# filtering by lat and NDVI dropped some extreme NDVI values (~2%)
+mean(is.na(d$ndvi))
 
 # use cleaned NDVI data and drop NAs
-d <- d %>%
-  mutate(ndvi = ndvi_clean) %>%
-  select(! ndvi_clean) %>%
-  filter(! is.na(ndvi))
+d <- filter(d, ! is.na(ndvi))
 
 # plot the first few NDVI rasters (reducing dataset size to speed plot up)
 p_d <- filter(slice(d, 1:(nrow(d) / 44 / 4)), date <= date[1] + 20) %>%
@@ -251,19 +274,10 @@ p_d
 
 # plot a sample of the data to check the seasonal trend
 if(FALSE) {
-  layout(t(1:2))
-  # with original ndvi data
   bam(ndvi ~ s(doy, bs = 'cc'), data = slice_sample(d, n = 1e5),
       method = 'fREML', discrete = TRUE, 
       knots = list(doy = c(0.5, 366.5))) %>%
     plot(scheme = 2, xlim = c(0, 366), n = 400, resid = TRUE)
-  
-  # using the cleaned ndvi data
-  bam(ndvi ~ s(doy, bs = 'cc'), data = slice_sample(d, n = 1e5),
-      method = 'fREML', discrete = TRUE, 
-      knots = list(doy = c(0.5, 366.5))) %>%
-    plot(scheme = 2, xlim = c(0, 366), n = 400, resid = TRUE)
-  layout(1)
 }
 
 #' the markov random field is excruciatingly slow for the region. the model
@@ -390,7 +404,7 @@ if(FALSE) {
 if(file.exists('models/taiga-test/gaussian-gam-sos.rds')) {
   m_gaus <- readRDS('models/taiga-test/gaussian-gam-sos.rds')
 } else {
-  # fits in ~17 minutes
+  # fits in < 15 minutes
   m_gaus <- bam(
     ndvi ~
       s(y, x, bs = 'sos', k = 200) +
@@ -410,16 +424,13 @@ if(file.exists('models/taiga-test/gaussian-gam-sos.rds')) {
     plot_grid(
       draw(m_gaus, select = 1, rug = FALSE, dist = 0.07) &
         geom_sf(data = taiga, inherit.aes = FALSE, fill = 'transparent',
-                linewidth = 1),
+                linewidth = 0.5),
       draw(m_gaus, select = 2, rug = FALSE, dist = 0.07),
       draw(m_gaus, select = 3, rug = FALSE, dist = 0.07),
       draw(m_gaus, select = 4, rug = FALSE, dist = 0.07))
   ggsave('figures/taiga-test/taiga-ndvi-gaussian-sos-terms.png', p_sos,
-         width = 9, height = 6, units = 'in', dpi = 300, bg = 'white')
+         width = 9, height = 8, units = 'in', dpi = 300, bg = 'white')
 }
-
-# deviance explained and complexity of the spatial terms are similar
-summary(m_gaus)
 
 # testing data aggregation ----
 s_res <- 2 # factor for aggregating spatial resolution
@@ -436,67 +447,75 @@ if(file.exists(AGGR)) {
   future::availableCores(logical = FALSE)
   plan(multisession, workers = min(60, availableCores(logical = FALSE) - 2))
   
-  # takes ~ 2 hours
-  #' stefano created the dataset using an old shapefile created by the
-  #' Nature conservancy that included both WWF ecoregions as a single
-  #' shapefile and did not inlcude holes for the lakes
+  # takes ~ 2 hours on EME linux
   d_aggr <-
-    tibble(filename = 
-             list.files(path = 'data/avhrr-viirs-ndvi/raster-files/',
-                        pattern = '.nc', full.names = TRUE),
-           date = substr(
-             filename,
-             nchar(filename) - nchar('yyyymmdd_cyyyymmddhhmmss.nc') + 1,
-             nchar(filename) - nchar('_cyyyymmddhhmmss.nc')) %>%
-             as.Date(format = '%Y%m%d'),
-           ndvi_data = future_map2(filename, date, \(fn, .date) {
-             .r <- rast(fn, lyr = c('NDVI', 'QA')) 
-             .month <- month(.date)
-             
-             # drop cloudy pixels
-             .r$NDVI <- ifel(is_flagged(.r$QA, 1), NA, .r$NDVI)
-             
-             # remove unrealistically high NDVI values at high latitudes
-             # (are no cells above 70 N, so not filtering in sept or oct)
-             if(.month %in% c(1:4, 11:12)) {
-               # create a raster with TRUE if above max latitude 
-               .lats <- init(.r, 'y') >= 60
-               .r <- ifel(.r > 0.2 & .lats, NA, .r)
-             }
-             
-             crop(.r, st_transform(taiga, crs(.r)), mask = TRUE) %>%
-               terra::aggregate(s_res, na.rm = TRUE) %>%
-               as.data.frame(xy = TRUE, na.rm = TRUE)
-           }, .progress = TRUE)) %>%
-    unnest(ndvi_data) %>%
-    rename(ndvi = NDVI)  %>%
-    # aggregate temporally
-    mutate(julian = julian(date),
+    future_map(file_names, \(fn) {
+      .r <- rast(fn, lyr = c('NDVI', 'QA')) %>%
+        crop(., st_transform(taiga, crs(.)), mask = TRUE)
+      
+      # drop cloudy pixels
+      .r$NDVI <- ifel(is_flagged(.r$QA, 1), NA, .r$NDVI)
+      
+      # AVHRR v6 rasters don't have dates, so we need to add them manually
+      if(grepl('AVHRR', fn)) {
+        .date <- gsub('.*\\N.._AVH13C1.A', '', fn) %>%
+          gsub('\\..*', '', .) %>%
+          as.Date(format = '%Y%j')
+      } else {
+        .date <- as.Date(unique(time(.r)))
+      }
+      
+      terra::aggregate(.r$NDVI, s_res, na.rm = TRUE) %>%
+        as.data.frame(xy = TRUE, na.rm = TRUE) %>%
+        mutate(date = .date)
+    }, .progress = TRUE, .options = furrr_options(seed = NULL)) %>%
+    bind_rows() %>%
+    as_tibble() %>%
+    rename(ndvi = NDVI) %>%
+    mutate(month_int = month(date),
+           # drop unrealistically high NDVI values in cold periods
+           #' see `analysis/005-check-high-lat-data.R` for more info
+           ndvi = case_when(
+             # if ndvi <= 0, there's no reason for concern
+             ndvi <= 0 ~ ndvi,
+             # if ndvi is > 0:
+             #    and too far north, set it to NA
+             month_int == 1 & y > 60 ~ NA_real_,
+             month_int == 2 & y > 65 ~ NA_real_,
+             month_int == 3 & y > 70 ~ NA_real_,
+             month_int == 9 & y > 80 ~ NA_real_,
+             month_int == 10 & y > 69 ~ NA_real_,
+             month_int == 11 & y > 62 ~ NA_real_,
+             month_int == 12 & y > 59 ~ NA_real_,
+             #    and not too far north, keep unchanged
+             .default = ndvi),
+           julian = julian(date),
            group = julian - (julian %% t_res)) %>%
+    # aggregate temporally
     group_by(group, x, y) %>%
     summarize(central_date = as.Date(group + t_res / 2),
               doy = yday(central_date),
               year = year(central_date),
               ndvi = mean(ndvi, na.rm = TRUE)) %>%
-    ungroup()
+    ungroup() %>%
+    filter(! is.na(ndvi))
   plan(sequential)
   
   # add altitude (get_elev_points results in a json error)
   elevs_aggr <- d_aggr %>%
-    filter(central_date == first(central_date)) %>%
+    slice(1:1e4) %>%
     select(x, y) %>%
     mutate(z = 1) %>%
     rast(crs = 'EPSG:4326') %>%
     get_elev_raster(z = 3) %>% # nearest finer res than 0.10x0.10
-    crop(st_buffer(taiga, 1e4))
+    crop(st_buffer(taiga, 1e4)) %>%
+    rast()
   
   plot(elevs_aggr)
   plot(taiga, add = TRUE, col = 'transparent')
   
   d_aggr <- mutate(d_aggr,
-                   elev_m = extract(elevs_aggr, select(d_aggr, x, y)),
-                   year = year(central_date),
-                   doy = yday(central_date))
+                   elev_m = extract(elevs_aggr, select(d_aggr, x, y)))
   
   # very few elevations < 0
   range(d_aggr$elev_m)
@@ -554,14 +573,14 @@ if(file.exists('models/taiga-test/gaussian-gam-sos-aggr.rds')) {
   saveRDS(m_gaus_aggr, 'models/taiga-test/gaussian-gam-sos-aggr.rds')
   p_sos_aggr <-
     plot_grid(
-    draw(m_gaus_aggr, select = 1, rug = FALSE, dist = 0.07) &
-      geom_sf(data = taiga, inherit.aes = FALSE, fill = 'transparent',
-              linewidth = 1),
-    draw(m_gaus_aggr, select = 2, rug = FALSE, dist = 0.07),
-    draw(m_gaus_aggr, select = 3, rug = FALSE, dist = 0.07),
-    draw(m_gaus_aggr, select = 4, rug = FALSE, dist = 0.07))
+      draw(m_gaus_aggr, select = 1, rug = FALSE, dist = 0.07) &
+        geom_sf(data = taiga, inherit.aes = FALSE, fill = 'transparent',
+                linewidth = 0.5),
+      draw(m_gaus_aggr, select = 2, rug = FALSE, dist = 0.07),
+      draw(m_gaus_aggr, select = 3, rug = FALSE, dist = 0.07),
+      draw(m_gaus_aggr, select = 4, rug = FALSE, dist = 0.07))
   ggsave('figures/taiga-test/taiga-ndvi-gaussian-sos-aggr-terms.png',
-         p_sos_aggr, width = 9, height = 6, units = 'in', dpi = 300,
+         p_sos_aggr, width = 9, height = 8, units = 'in', dpi = 300,
          bg = 'white')
 }
 
@@ -582,8 +601,7 @@ get_preds <- function(nd, space = TRUE) {
   # get model predictions
   if(space) {
     preds <- nd %>%
-      mutate(.,
-             full_mu =
+      mutate(full_mu =
                predict(object = m_gaus, newdata = .,
                        type = 'response', se.fit = FALSE,
                        terms = c('(Intercept)', 's(y,x)', 's(elev_m)')),
@@ -685,10 +703,9 @@ get_preds <- function(nd, space = TRUE) {
 preds_comp_s <-
   elevs %>%
   mask(st_transform(taiga, st_crs(elevs))) %>%
-  as.data.frame(xy = TRUE) %>%
+  as.data.frame(xy = TRUE, na.rm = TRUE) %>%
   rename(elev_m = 3) %>%
   filter(! is.na(elev_m)) %>%
-  mutate(elev_m = if_else(elev_m < 0, 0, elev_m)) %>%
   mutate(year = 0, doy = 0) %>%
   get_preds(space = TRUE) %>% # add model predictions
   mutate(model = factor(model, levels = c('diff', 'Full dataset',
