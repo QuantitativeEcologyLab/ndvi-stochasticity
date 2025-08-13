@@ -44,7 +44,8 @@ bodies %>%
   plot(col = 'darkorange', border = 'darkorange', add = TRUE)
 
 # large bodies of water are split into multiple polygons
-plot(st_geometry(filter(bodies, Shape_Area > 7.5)), axes = TRUE)
+plot(st_geometry(filter(bodies, Shape_Area > 7.5)), axes = TRUE,
+     col = 'cornflowerblue')
 
 #' not sure what units `bodies$Shape_Area` is in: not km^2 or mi^2
 # attempting to see metadata for bodies gives "Unable to transform metadata for item 'e750071279bf450cbd510454a80f2e63' (Error 500)"
@@ -118,9 +119,9 @@ bodies <- bodies %>%
 # not masking to keep to find coastlines
 r_bodies <- bodies %>%
   vect() %>%
-  rasterize(y = rast(list.files(path = 'data/avhrr-viirs-ndvi/raster-files',
-                                pattern = '.nc', full.names = TRUE)[1],
-                     lyr = 'QA'),
+  rasterize(list.files('data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v006/N07_AVH13C1/',
+                       pattern = '.nc', full.names = TRUE)[1] %>%
+              rast(lyr = 'QA'),
             cover = TRUE, background = 0)
 
 plot(r_bodies)
@@ -128,7 +129,7 @@ plot(r_bodies)
 writeRaster(r_bodies, 'data/water-body-raster.tif')
 plot(rast('data/water-body-raster.tif'))
 
-# check that masking by and adding prop water helps the model
+# check that masking by prop water and it as a term helps the model
 d <- readRDS('data/taiga-test/taiga-ndvi-t-2-s-2-aggr.rds') %>%
   mutate(prop_water = extract(r_bodies, select(., x, y))[, 2])
 
@@ -137,20 +138,22 @@ plot_grid(
   ggplot(d, aes(prop_water)) +
     geom_histogram(color = 'black', fill = 'grey',
                    breaks = seq(0, 1, by = 0.025), center = 0.0125) +
-    labs(x = 'Proportion of pixel covered by water', y = 'Count'),
+    labs(x = 'Proportion of pixel covered by water', y = 'Count') +
+    scale_x_continuous(expand = c(0.02, 0)),
   ggplot(d, aes(prop_water)) +
     stat_ecdf(geom = 'step', n = 41) +
-    geom_vline(xintercept = 0.5, color = 'grey', lty = 'dashed') +
-    labs(x = 'Proportion of pixel covered by water',
-         y = 'ECDF'),
+    geom_vline(xintercept = c(0.4, 0.5), color = 'grey', lty = 'dashed') +
+    labs(x = 'Proportion of pixel covered by water', y = 'ECDF') +
+    scale_x_continuous(expand = c(0.02, 0)),
   labels = 'AUTO', ncol = 1)
 ggsave('figures/taiga-test/prop-water-distr.png', width = 6, height = 8,
        dpi = 600, bg = 'white')
 
 # using 0.4 because 0.5 results in excessive bias, and data loss is minimal
+mean(d$prop_water > 0.4) # 0.03519987
 d <- filter(d, prop_water < 0.4)
 
-# fits in ~ 6 minutes
+# fits in ~ 5 minutes
 m <- bam(
   ndvi ~
     s(y, x, bs = 'sos', k = 200) +
@@ -177,7 +180,7 @@ taiga <- read_sf('data/ecoregions/ecoregions-polygons.shp') %>%
   st_union() %>%
   st_geometry() %>%
   st_as_sf() %>%
-  st_transform(crs(rast('data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v005_AVH13C1_NOAA-07_19810624_c20170610041337.nc')))
+  st_transform(crs(rast('data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v006/N07_AVH13C1/N07_AVH13C1.A1981175.006.2022270161458.nc')))
 plot(taiga, col = 'forestgreen')
 
 elevs <- d %>%
@@ -190,7 +193,7 @@ elevs <- d %>%
   project(crs(taiga)) %>%
   mask(taiga)
 
-mu <-
+preds_mu <-
   elevs %>%
   as.data.frame(xy = TRUE) %>%
   rename(elev_m = 3) %>%
@@ -201,7 +204,7 @@ mu <-
                       se.fit = FALSE, discrete = FALSE, # T gives low res
                       terms = c('(Intercept)', 's(y,x)', 's(elev_m)')))
 
-s2 <- d %>%
+preds_s2 <- d %>%
   transmute(x, y, e2 = resid(m)^2) %>%
   summarise(s2 = mean(e2), .by = c(x, y)) %>%
   rast() %>%
@@ -209,15 +212,17 @@ s2 <- d %>%
   project(elevs, res = res(elevs)) %>% #' project to same as `elevs`
   as.data.frame(xy = TRUE)
 
+mean(preds_s2$s2 > 0.04) * 100
+
 plot_grid(
-  ggplot(mu) +
+  ggplot(preds_mu) +
     geom_raster(aes(x, y, fill = mu)) +
     geom_sf(data = taiga, fill = 'transparent', color = 'black') +
     scale_fill_viridis_c('NDVI', option = 'A') +
     labs(x = NULL, y = NULL),
-  s2 %>%
+  preds_s2 %>%
     mutate(s2 = if_else(s2 > 0.04, 0.04, s2)) %>%
-    filter(., st_as_sf(., coords = c('x', 'y')) %>%
+    filter(st_as_sf(., coords = c('x', 'y')) %>%
              st_set_crs('EPSG:4326') %>%
              st_intersects(st_transform(taiga, 'EPSG:4326'),
                            sparse = TRUE) %>%
