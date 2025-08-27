@@ -10,6 +10,8 @@ color('okabeito')(8)[c(3, 4, 6, 7)]
 pal_groups <- c('#56B4E9', 'grey', '#009E73', '#0072B2', '#D55E00')
 plot_scheme_colorblind(pal_groups[c(1, 2, 4, 3, 5)]) # achromatic view ok
 
+#' *ADD: SLOPE, ASPECT, PRECIP*
+
 robinson_crs <- '+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs'
 
 shp <- read_sf('data/ecoregions/ecoregions-polygons.shp') %>%
