@@ -95,6 +95,7 @@ unassigned <- ecoregions %>%
                              REALM %in% c('AA', 'IM', 'OC') ~ 'islands',
                              REALM == 'AN' ~ 'antarctica',
                              .default = 'unassigned'))
+
 filter(unassigned, group_2 == 'unassigned') # no polygons left unassigned
 
 # make a shapefile of dissolved borders
@@ -103,6 +104,8 @@ shp_g <- ecoregions %>%
   mutate(area_km2 = st_area(.) / 1e6) %>%
   arrange(desc(area_km2)) %>%
   mutate(group = factor(group, levels = unique(group)))
+
+plot(shp_g['group'])
 
 # plot unassigned polygons by the new realm
 ggplot() +
@@ -166,6 +169,7 @@ shp_g <- ecoregions %>%
   arrange(desc(area_km2)) %>%
   mutate(group = factor(group, levels = unique(group)))
 
+# note: africa and arabian peninsula are split between groups 
 ggplot() +
   geom_sf(aes(fill = group), shp_g, color = 'black') +
   scale_fill_bright() +
@@ -175,10 +179,17 @@ ggplot() +
 # save the final files ----
 if(! dir.exists('data/ecoregions')) dir.create('data/ecoregions')
 st_write(ecoregions, 'data/ecoregions/ecoregions-polygons.shp')
-st_write(shp_g, 'data/ecoregions/groups-polygons.shp')
 
-# save a raster of the biomes
-rasterize(ecoregions, r_0, field = 'biome') %>%
-  aggregate(2, fun = 'modal', na.rm = TRUE) %>%
-  writeRaster('data/ecoregions/biomes-0.1-degrees.tif')
-plot(rast('data/ecoregions/biomes-0.1-degrees.tif'))
+# edited in QGIS: made single african group, unified arabian peninsula
+# made a shapefile of dissolved borders
+ecoregions <- read_sf('data/ecoregions/ecoregions-polygons-edited.shp')
+ecoregions
+
+shp_g <- read_sf('data/ecoregions/groups-polygons.shp')
+shp_g
+
+# plot unassigned polygons by the new unified groups
+ggplot() +
+  geom_sf(aes(fill = group), data = shp_g, color = 'black') +
+  scale_fill_bright() +
+  theme(legend.position = 'top')
