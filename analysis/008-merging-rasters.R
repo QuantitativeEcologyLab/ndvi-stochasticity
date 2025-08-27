@@ -5,6 +5,7 @@ library('terra')     # for rasters
 library('purrr')     # for functional programming
 library('furrr')     # for parallelized functional programming
 library('lubridate') # for working with dates
+library('elevatr')   # for elevation data
 source('analysis/figures/000-default-ggplot-theme.R')
 source('functions/is_flagged.R')
 
@@ -50,8 +51,62 @@ plot(prop_water_aggr)
 elev_m <- rast('data/elev-raster.tif') %>%
   project(prop_water_aggr, res = res(prop_water_aggr)) %>%
   ifel(is.na(prop_water_aggr), NA, .)
+res(prop_water) # res is 0.05 x 0.05
+plot(prop_water)
+
+# download raster of elevation (m) ----
+if(file.exists('data/elev-raster.tif'))  {
+  elev_m <- rast('data/elev-raster.tif')
+} else {
+  elev_m <- rast('data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v006/N07_AVH13C1/N07_AVH13C1.A1981175.006.2022270161458.nc') %>%
+    get_elev_raster(z = 4) %>% # nearest finer res than 0.05 x 0.05
+    rast() %>% # convert from raster to SpatRaster
+    project(prop_water, res = res(prop_water))
+  res(elev_m)
+  writeRaster(elev_m, 'data/elev-raster.tif')
+}
+
 plot(elev_m)
-all(res(prop_water_aggr) == res(elev_m))
+all(res(prop_water) == res(elev_m))
+
+# calculate slope and aspect (degrees) from the elevation raster ----
+if(file.exists('data/slope-raster-degrees.tif')) {
+  slope <- rast('data/slope-raster-degrees.tif')
+} else {
+  slope <- terrain(x = elev_m, v = 'slope', neighbors = 8, unit = 'degrees',
+                   filename = 'data/slope-raster-degrees.tif')
+  plot(slope)
+}
+
+if(file.exists('data/aspect-raster-degrees.tif')) {
+  aspect <- rast('data/aspect-raster-degrees.tif')
+} else {
+  aspect <- terrain(x = elev_m, v = 'aspect', neighbors = 8, unit = 'degrees',
+                    filename = 'data/aspect-raster-degrees.tif')
+  plot(aspect)
+}
+
+# calculate long-term average precipitation raster (1979-01 to 2025-07) ----
+# https://cds.climate.copernicus.eu/datasets/ecv-for-climate-change
+if(file.exists('data/precipitation-monthly-mean-m-day.tif')) {
+  monthly_precip <- rast('data/precipitation-monthly-mean-m-day.tif') %>%
+    mask(st_transform(group_shp, crs(.)))
+} else {
+  r_0 <- rast('data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v006/N07_AVH13C1/N07_AVH13C1.A1981175.006.2022270161458.nc')
+  
+  monthly_precip <-
+    tibble(fn = list.files('data/ecmwf-era5-precipitation-rasters',
+                           full.names = TRUE),
+           r = map(fn, rast),
+           month = map_int(r, \(.r) lubridate::month(time(.r)))) %>%
+    summarize(mean = list(mean(rast(r))), .by = month) %>%
+    pull(mean) %>%
+    rast() %>%
+    project(r_0, res = res(r_0))
+  names(monthly_precip) <- month.name
+  
+  writeRaster(monthly_precip, 'data/precipitation-monthly-mean-m-day.tif')
+}
 
 # find number of cells per complete raster (i.e., assuming no NAs) ----
 # lat: 1 deg = ~110 km
@@ -323,9 +378,14 @@ map_chr(GROUPS, function(.group) {
     select(date_group, central_date, ndvi_df) %>%
     unnest(ndvi_df) %>%
     rename(ndvi_aggr = mean) %>%
-    mutate(prop_water = extract(prop_water_aggr, tibble(x, y))[, 2],
+    mutate(doy = yday(central_date), year = year(central_date),
+           prop_water = extract(aggregate(prop_water, s_res),
+                                tibble(x, y))[, 2],
            elev_m = extract(elev_m, tibble(x, y))[, 2],
-           doy = yday(central_date), year = year(central_date)) %>%
+           slope_deg = extract(slope, tibble(x, y))[, 2],
+           aspect_deg = extract(aspect, tibble(x, y))[, 2],
+           precip_m_day = extract(monthly_precip[[month(central_date)]],
+                                  tibble(x, y))[, 2]) %>%
     saveRDS(.filename)
   
   return(paste(.group, 'saved.'))

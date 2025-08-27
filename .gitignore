@@ -92,3 +92,4 @@ data/wwf-ecoregions
 data/avhrr-viirs-ndvi/group-level-datasets/*
 !data/avhrr-viirs-ndvi/group-level-datasets/*-10-days*
 data/avhrr-viirs-ndvi/global-diagnostics/monthly-ecdf-summary-10-percent-subset.rds
+data/precipitation-monthly-mean-m-day.tif
