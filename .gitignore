@@ -74,7 +74,7 @@ data/other-rasters/*
 # ignore file with EarthData token
 analysis/MY-TOKEN.md
 
-# ignore excessively large files (> 100 MB)
+# ignore files > 100 MB
 data/hbam-ndvi-data*
 data/hbam-var-ndvi-data*
 data/ndvi-global-*
@@ -93,3 +93,4 @@ data/avhrr-viirs-ndvi/group-level-datasets/*
 !data/avhrr-viirs-ndvi/group-level-datasets/*-10-days*
 data/avhrr-viirs-ndvi/global-diagnostics/monthly-ecdf-summary-10-percent-subset.rds
 data/precipitation-monthly-mean-m-day.tif
+data/precipitation-yearly-mean-m-day.tif

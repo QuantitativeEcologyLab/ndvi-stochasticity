@@ -1,0 +1,274 @@
+region: africa; parameter: mean
+
+Family: gaussian 
+Link function: identity 
+
+Formula:
+ndvi_aggr ~ s(prop_water, bs = "cr", k = 5) + s(sqrt(elev_m), 
+    bs = "cr", k = 5) + s(y, x, bs = "sos", k = .k) + s(aspect_deg, 
+    bs = "cc", k = 10) + s(sqrt(sqrt(slope_deg)), k = 6) + s(log(precip_m_day), 
+    bs = "cr", k = 6) + ti(sqrt(elev_m), y, x, bs = c("cr", "sos"), 
+    d = c(1, 2), k = c(6, 100))
+
+Parametric coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept) 0.126207   0.009799   12.88   <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Approximate significance of smooth terms:
+                              edf   Ref.df       F p-value    
+s(prop_water)               3.600    3.894  4988.0 < 2e-16 ***
+s(sqrt(elev_m))             3.985    3.998   201.2 < 2e-16 ***
+s(y,x)                   1970.024 1990.000   578.3 0.00591 ** 
+s(aspect_deg)               7.869    8.000   281.5 < 2e-16 ***
+s(sqrt(sqrt(slope_deg)))    4.991    5.000  2114.1 < 2e-16 ***
+s(log(precip_m_day))        5.000    5.000 43845.2 < 2e-16 ***
+ti(sqrt(elev_m),y,x)      477.441  495.000   669.4 < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+R-sq.(adj) =  0.861   Deviance explained = 86.1%
+fREML = -1.2356e+07  Scale est. = 0.0028527  n = 8185105
+
+--------------------------
+
+Family: gaussian 
+Link function: identity 
+
+Formula:
+e2 ~ s(prop_water, bs = "cr", k = 5) + s(sqrt(elev_m), bs = "cr", 
+    k = 5) + s(y, x, bs = "sos", k = .k) + s(aspect_deg, bs = "cc", 
+    k = 10) + s(sqrt(sqrt(slope_deg)), k = 6) + s(log(precip_m_day), 
+    bs = "cr", k = 6) + ti(sqrt(elev_m), y, x, bs = c("cr", "sos"), 
+    d = c(1, 2), k = c(6, 100)) + s(mu_hat, bs = "cr", k = 10)
+
+Parametric coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept) 0.006280   0.001081   5.811 6.22e-09 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Approximate significance of smooth terms:
+                              edf   Ref.df       F p-value    
+s(prop_water)               3.409    3.782 3538.41  <2e-16 ***
+s(sqrt(elev_m))             3.771    3.897   45.97  <2e-16 ***
+s(y,x)                   1958.138 1990.000  110.43   0.166    
+s(aspect_deg)               6.721    8.000   48.27  <2e-16 ***
+s(sqrt(sqrt(slope_deg)))    4.959    4.998  606.06  <2e-16 ***
+s(log(precip_m_day))        4.995    5.000  646.66  <2e-16 ***
+ti(sqrt(elev_m),y,x)      459.350  495.000  162.21  <2e-16 ***
+s(mu_hat)                   8.984    9.000 1855.90  <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+R-sq.(adj) =  0.257   Deviance explained = 25.7%
+fREML = -2.7736e+07  Scale est. = 6.6576e-05  n = 8185105
+
+= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+
+region: indo-malay-oceania-australasia; parameter: mean
+
+Family: gaussian 
+Link function: identity 
+
+Formula:
+ndvi_aggr ~ s(prop_water, bs = "cr", k = 5) + s(sqrt(elev_m), 
+    bs = "cr", k = 5) + s(y, x, bs = "sos", k = .k) + s(aspect_deg, 
+    bs = "cc", k = 10) + s(sqrt(sqrt(slope_deg)), k = 6) + s(log(precip_m_day), 
+    bs = "cr", k = 6) + ti(sqrt(elev_m), y, x, bs = c("cr", "sos"), 
+    d = c(1, 2), k = c(6, 100))
+
+Parametric coefficients:
+            Estimate Std. Error t value Pr(>|t|)
+(Intercept)  0.03252    0.03789   0.858    0.391
+
+Approximate significance of smooth terms:
+                             edf Ref.df       F p-value    
+s(prop_water)              3.989      4  9960.2  <2e-16 ***
+s(sqrt(elev_m))            1.000      1   108.6  <2e-16 ***
+s(y,x)                   791.510    884   298.9  <2e-16 ***
+s(aspect_deg)              7.847      8   806.3  <2e-16 ***
+s(sqrt(sqrt(slope_deg)))   4.984      5  1053.8  <2e-16 ***
+s(log(precip_m_day))       4.998      5 34957.3  <2e-16 ***
+ti(sqrt(elev_m),y,x)     419.861    495   788.0  <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+R-sq.(adj) =  0.777   Deviance explained = 77.7%
+fREML = -4.2119e+06  Scale est. = 0.0056051  n = 3594931
+
+--------------------------
+
+Family: gaussian 
+Link function: identity 
+
+Formula:
+e2 ~ s(prop_water, bs = "cr", k = 5) + s(sqrt(elev_m), bs = "cr", 
+    k = 5) + s(y, x, bs = "sos", k = .k) + s(aspect_deg, bs = "cc", 
+    k = 10) + s(sqrt(sqrt(slope_deg)), k = 6) + s(log(precip_m_day), 
+    bs = "cr", k = 6) + ti(sqrt(elev_m), y, x, bs = c("cr", "sos"), 
+    d = c(1, 2), k = c(6, 100)) + s(mu_hat, bs = "cr", k = 10)
+
+Parametric coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept) 0.044269   0.005106    8.67   <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Approximate significance of smooth terms:
+                             edf  Ref.df        F p-value    
+s(prop_water)              3.768   3.962 1139.852  <2e-16 ***
+s(sqrt(elev_m))            1.000   1.000    0.026   0.873    
+s(y,x)                   813.701 879.000   96.266  <2e-16 ***
+s(aspect_deg)              7.405   8.000  196.833  <2e-16 ***
+s(sqrt(sqrt(slope_deg)))   4.987   5.000 2499.073  <2e-16 ***
+s(log(precip_m_day))       4.980   5.000  744.423  <2e-16 ***
+ti(sqrt(elev_m),y,x)     367.287 495.000   78.905  <2e-16 ***
+s(mu_hat)                  8.990   9.000 1736.314  <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+R-sq.(adj) =  0.193   Deviance explained = 19.3%
+fREML = -9.3627e+06  Scale est. = 0.00031933  n = 3594931
+
+= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+
+region: neotropic-nearctic; parameter: mean
+
+Family: gaussian 
+Link function: identity 
+
+Formula:
+ndvi_aggr ~ s(prop_water, bs = "cr", k = 5) + s(sqrt(elev_m), 
+    bs = "cr", k = 5) + s(y, x, bs = "sos", k = .k) + s(aspect_deg, 
+    bs = "cc", k = 10) + s(sqrt(sqrt(slope_deg)), k = 6) + s(log(precip_m_day), 
+    bs = "cr", k = 6) + ti(sqrt(elev_m), y, x, bs = c("cr", "sos"), 
+    d = c(1, 2), k = c(6, 100))
+
+Parametric coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  0.96782    0.02183   44.33   <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Approximate significance of smooth terms:
+                              edf Ref.df       F p-value    
+s(prop_water)               3.987      4 16992.9  <2e-16 ***
+s(sqrt(elev_m))             3.998      4  2223.3  <2e-16 ***
+s(y,x)                   1232.702   1299   845.3  <2e-16 ***
+s(aspect_deg)               7.507      8  1147.4  <2e-16 ***
+s(sqrt(sqrt(slope_deg)))    4.995      5  1833.2  <2e-16 ***
+s(log(precip_m_day))        4.999      5 99276.0  <2e-16 ***
+ti(sqrt(elev_m),y,x)      489.826    495  1736.0  <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+R-sq.(adj) =  0.737   Deviance explained = 73.7%
+fREML = -9.1213e+06  Scale est. = 0.0092848  n = 9916343
+
+--------------------------
+
+Family: gaussian 
+Link function: identity 
+
+Formula:
+e2 ~ s(prop_water, bs = "cr", k = 5) + s(sqrt(elev_m), bs = "cr", 
+    k = 5) + s(y, x, bs = "sos", k = .k) + s(aspect_deg, bs = "cc", 
+    k = 10) + s(sqrt(sqrt(slope_deg)), k = 6) + s(log(precip_m_day), 
+    bs = "cr", k = 6) + ti(sqrt(elev_m), y, x, bs = c("cr", "sos"), 
+    d = c(1, 2), k = c(6, 100)) + s(mu_hat, bs = "cr", k = 10)
+
+Parametric coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept) 0.041563   0.003326    12.5   <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Approximate significance of smooth terms:
+                              edf   Ref.df       F p-value    
+s(prop_water)               3.984    4.000  3619.4  <2e-16 ***
+s(sqrt(elev_m))             3.600    3.838   386.5  <2e-16 ***
+s(y,x)                   1231.039 1299.000   155.9  <2e-16 ***
+s(aspect_deg)               7.520    8.000   426.0  <2e-16 ***
+s(sqrt(sqrt(slope_deg)))    4.904    4.994  1502.2  <2e-16 ***
+s(log(precip_m_day))        4.990    5.000  3615.8  <2e-16 ***
+ti(sqrt(elev_m),y,x)      428.409  495.000   365.0  <2e-16 ***
+s(mu_hat)                   8.998    9.000 10541.3  <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+R-sq.(adj) =  0.118   Deviance explained = 11.8%
+fREML = -2.4709e+07  Scale est. = 0.00040055  n = 9916343
+
+= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+
+region: palearctic; parameter: mean
+
+Family: gaussian 
+Link function: identity 
+
+Formula:
+ndvi_aggr ~ s(prop_water, bs = "cr", k = 5) + s(sqrt(elev_m), 
+    bs = "cr", k = 5) + s(y, x, bs = "sos", k = .k) + s(aspect_deg, 
+    bs = "cc", k = 10) + s(sqrt(sqrt(slope_deg)), k = 6) + s(log(precip_m_day), 
+    bs = "cr", k = 6) + ti(sqrt(elev_m), y, x, bs = c("cr", "sos"), 
+    d = c(1, 2), k = c(6, 100))
+
+Parametric coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  -0.1931     0.0251  -7.693 1.43e-14 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Approximate significance of smooth terms:
+                              edf  Ref.df        F p-value    
+s(prop_water)               3.892   3.991  15925.4  <2e-16 ***
+s(sqrt(elev_m))             3.970   3.999    496.2  <2e-16 ***
+s(y,x)                   1931.446   9.000 128399.4       1    
+s(aspect_deg)               7.911   8.000   1385.8  <2e-16 ***
+s(sqrt(sqrt(slope_deg)))    4.973   5.000   1959.2  <2e-16 ***
+s(log(precip_m_day))        5.000   5.000  56024.8  <2e-16 ***
+ti(sqrt(elev_m),y,x)      482.675 259.000   3318.1  <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+R-sq.(adj) =  0.748   Deviance explained = 74.8%
+fREML = -1.2852e+07  Scale est. = 0.0094161  n = 14077443
+
+--------------------------
+
+Family: gaussian 
+Link function: identity 
+
+Formula:
+e2 ~ s(prop_water, bs = "cr", k = 5) + s(sqrt(elev_m), bs = "cr", 
+    k = 5) + s(y, x, bs = "sos", k = .k) + s(aspect_deg, bs = "cc", 
+    k = 10) + s(sqrt(sqrt(slope_deg)), k = 6) + s(log(precip_m_day), 
+    bs = "cr", k = 6) + ti(sqrt(elev_m), y, x, bs = c("cr", "sos"), 
+    d = c(1, 2), k = c(6, 100)) + s(mu_hat, bs = "cr", k = 10)
+
+Parametric coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept) 0.014638   0.000176   83.16   <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Approximate significance of smooth terms:
+                               edf   Ref.df      F p-value    
+s(prop_water)            3.915e+00    3.995 7323.4  <2e-16 ***
+s(sqrt(elev_m))          3.920e+00    3.993  429.3  <2e-16 ***
+s(y,x)                   4.715e-04 1939.000    0.0  <2e-16 ***
+s(aspect_deg)            7.863e+00    8.000  395.9  <2e-16 ***
+s(sqrt(sqrt(slope_deg))) 4.991e+00    5.000 4226.9  <2e-16 ***
+s(log(precip_m_day))     4.993e+00    5.000 3867.2  <2e-16 ***
+ti(sqrt(elev_m),y,x)     4.714e+02  495.000 1549.4  <2e-16 ***
+s(mu_hat)                8.733e+00    8.961 4572.5  <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+R-sq.(adj) =  0.143   Deviance explained = 14.3%
+fREML = -3.5275e+07  Scale est. = 0.00038981  n = 14077443
+
+= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+
