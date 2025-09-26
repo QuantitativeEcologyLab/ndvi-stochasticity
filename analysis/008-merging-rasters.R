@@ -246,7 +246,7 @@ df_sizes
 dates <-
   mutate(dates,
          julian = julian(date),
-         date_group = as.Integer(julian - (julian %% t_res))) %>%
+         date_group = as.integer(julian - (julian %% t_res))) %>%
   # dates and number of rasters for each date_group
   group_by(date_group) %>%
   mutate(n_rasters = sum(! is.na(file_name)),
@@ -302,6 +302,7 @@ if(FALSE) {
                precip_m_day = as.integer(precip_m_day * 1e4))
   z3 <- select(z2, ! c(date_group, slope_deg, aspect_deg))
   
+  # using integers and dropping columns cuts dataset size in half
   tibble(object = paste0('z', 0:3),
          size_Gb = map_dbl(object, \(.n) get(.n) %>%
                              object.size() %>%
@@ -350,7 +351,7 @@ doy_cutoffs <- tibble(
 # create the datasets
 plan(multisession, workers = availableCores(logical = FALSE) - 2)
 
-map_chr(GROUPS[-1], function(.group) {
+map_chr(GROUPS, function(.group) {
   # get the shapefile for the area
   .shp <- filter(group_shp, group == .group) %>%
     st_geometry() %>%
