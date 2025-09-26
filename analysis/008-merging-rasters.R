@@ -1,11 +1,12 @@
-library('dplyr')     # for data wrangling
-library('tidyr')     # for data wrangling
-library('sf')        # for shapefiles
-library('terra')     # for rasters
-library('purrr')     # for functional programming
-library('furrr')     # for parallelized functional programming
-library('lubridate') # for working with dates
-library('elevatr')   # for elevation data
+library('dplyr')         # for data wrangling
+library('tidyr')         # for data wrangling
+library('sf')            # for shapefiles
+library('terra')         # for rasters
+library('purrr')         # for functional programming
+library('furrr')         # for parallelized functional programming
+library('lubridate')     # for working with dates
+library('elevatr')       # for elevation data
+library('qs')            #'faster than `saveRDS()`/`readRDS()`
 source('analysis/figures/000-default-ggplot-theme.R')
 source('functions/is_flagged.R')
 
@@ -32,24 +33,26 @@ if(FIRST_100_ONLY) {
 
 # all AVHRR rasters have the same CRS, VIIRS use a different CRS ----
 # check crs for first, last, and a random sample of rasters
-file_names %>%
-  `[`(if(FIRST_100_ONLY) {
-    1:100
-  } else {
-    c(1, length(file_names), sample(length(file_names), size = 100))
-  }) %>%
-  map_chr(function(.fn) { # fast enough that it is not worth parallelizing
-    crs(rast(.fn))
-  }) %>%
-  unique() %>%
-  cat()
+if(FALSE) {
+  file_names %>%
+    `[`(if(FIRST_100_ONLY) {
+      1:100
+    } else {
+      c(1, length(file_names), sample(length(file_names), size = 100))
+    }) %>%
+    map_chr(function(.fn) { # fast enough that it is not worth parallelizing
+      crs(rast(.fn))
+    }) %>%
+    unique() %>%
+    cat()
+}
 
 # antarctica has too little data and variation to do anything interesting
 group_shp <- read_sf('data/ecoregions/groups-polygons.shp') %>%
   filter(group != 'Antarctic')
-plot(group_shp['group'])
+if(FALSE) plot(group_shp['group'])
 
-# raster of proportion water
+# raster of proportion water (aggregated later, after masking NDVI rasters)
 prop_water <- rast('data/water-body-raster.tif') %>%
   ifel(. < 0.4, ., NA_real_)
 res(prop_water) # res is 0.05 x 0.05
@@ -90,8 +93,7 @@ if(file.exists('data/aspect-raster-degrees.tif')) {
 # calculate long-term average precipitation raster (1979-01 to 2025-07) ----
 # https://cds.climate.copernicus.eu/datasets/ecv-for-climate-change
 if(file.exists('data/precipitation-yearly-mean-m-day.tif')) {
-  yearly_precip <- rast('data/precipitation-yearly-mean-m-day.tif') %>%
-    mask(st_transform(group_shp, crs(.)))
+  yearly_precip <- rast('data/precipitation-yearly-mean-m-day.tif')
 } else {
   r_0 <- rast('data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v006/N07_AVH13C1/N07_AVH13C1.A1981175.006.2022270161458.nc')
   
@@ -118,7 +120,12 @@ if(file.exists('data/precipitation-yearly-mean-m-day.tif')) {
   writeRaster(monthly_precip, 'data/precipitation-monthly-mean-m-day.tif')
 }
 
+yearly_precip <- yearly_precip %>%
+  mask(st_transform(group_shp)) %>%
+  project(prop_water)
+
 # find number of cells per complete raster (i.e., assuming no NAs) ----
+# find area of pixels at different latitudes
 # lat: 1 deg = ~110 km
 # long: 1 deg = 111.320*cos(lat) km
 tibble(
@@ -239,15 +246,15 @@ df_sizes
 dates <-
   mutate(dates,
          julian = julian(date),
-         date_group = julian - (julian %% t_res)) %>%
+         date_group = as.Integer(julian - (julian %% t_res))) %>%
   # dates and number of rasters for each date_group
   group_by(date_group) %>%
   mutate(n_rasters = sum(! is.na(file_name)),
          start_date = min(date),
          central_date = mean(date),
          end_date = max(date),
-         doy = yday(central_date),
-         year = year(central_date)) %>%
+         doy = yday(central_date) %>% as.integer(),
+         year = year(central_date) %>% as.integer()) %>%
   ungroup()
 
 dates %>%
@@ -258,8 +265,8 @@ dates %>%
   summarize(total = n())
 
 # make a figure showing the data density (drops 12 groups with no rasters)
-dates %>%
-  ggplot() +
+p_n_rasters <-
+  ggplot(dates) +
   coord_equal(ratio = 3) +
   geom_rect(aes(xmin = doy - 2.5, xmax = doy + 2.5,
                 ymin = year - 0.5, ymax = year + 0.5,
@@ -272,7 +279,7 @@ dates %>%
   theme(legend.position = 'top')
 
 if(! file.exists('figures/input-data/n-rasters-time.pdf')) {
-  ggsave('figures/input-data/n-rasters-time.pdf',
+  ggsave('figures/input-data/n-rasters-time.pdf', p_n_rasters,
          width = 10, height = 5, units = 'in', dpi = 300, bg = 'white')
 }
 
@@ -280,9 +287,53 @@ if(! file.exists('figures/input-data/n-rasters-time.pdf')) {
 # spatRast objects cannot be run in parallel and moved across sessions:
 # https://stackoverflow.com/questions/67445883/terra-package-returns-error-when-try-to-run-parallel-operations/67449818#67449818
 
+# testing object size using one of the datasets
+if(FALSE) {
+  z0 <- readRDS('H:/GitHub/ndvi-stochasticity/data/avhrr-viirs-ndvi/group-level-datasets/aggregated-indo-malay-oceania-australasia-t-2-s-2-ndvi-data-100-days.rds')
+  z1 <- data.frame(z0)
+  z2 <- mutate(z0,
+               ndvi_aggr = as.integer(ndvi_aggr * 1e4),
+               doy = as.integer(doy),
+               year = as.integer(year),
+               prop_water = as.integer(prop_water * 1e4),
+               elev_m = as.integer(elev_m * 1e4),
+               slope_deg = as.integer(slope_deg * 1e4),
+               aspect_deg = as.integer(aspect_deg * 1e4),
+               precip_m_day = as.integer(precip_m_day * 1e4))
+  z3 <- select(z2, ! c(date_group, slope_deg, aspect_deg))
+  
+  tibble(object = paste0('z', 0:3),
+         size_Gb = map_dbl(object, \(.n) get(.n) %>%
+                             object.size() %>%
+                             format(units = 'Gb', digits = 3) %>%
+                             gsub(' Gb', '', .) %>%
+                             as.numeric()),
+         rel_size = size_Gb / size_Gb[1])
+}
+
 # ensure all rasters have the same and correct resolution
 unique(c(0.05, res(prop_water), res(elev_m), res(slope), res(aspect),
          res(yearly_precip)))
+
+# create a stack of rasters to exract from
+# converting to int and dropping terrain variables to minimize dataset size
+covariates <-
+  list(
+    prop_water_1e4 = as.int(aggregate(prop_water, s_res, na.rm=TRUE)*1e4),
+    elev_m = aggregate(elev_m, s_res, na.rm = TRUE) %>%
+      ifel(. < 0, 0, .) %>%
+      as.int(), # to avoid issues with coast
+    # slope_deg_1e4 = as.int(aggregate(slope, s_res, na.rm = TRUE) * 1e4),
+    # aspect_deg_1e4 = as.int(aggregate(aspect, s_res, na.rm = TRUE) * 1e4),
+    precip_m_day_1e4 = as.int(aggregate(yearly_precip, s_res,
+                                        na.rm = TRUE) * 1e4)) %>%
+  rast() %>%
+  mask(st_transform(group_shp, crs(.)))
+plot(covariates)
+
+tibble(x = -119.3949 + rnorm(5), y = 49.93928 + rnorm(5)) %>%
+  st_as_sf(crs = crs(covariates), coords = c('x', 'y')) %>%
+  extract(covariates, ., ID = FALSE)
 
 # calculate aggregated mean NDVI for each realm ----
 GROUPS <- arrange(df_sizes, nrow_1e6)$group
@@ -320,7 +371,8 @@ map_chr(GROUPS[-1], function(.group) {
              '-t-', t_res, '-s-', s_res, '-ndvi-data.rds')
   }
   
-  dates %>%
+  .d <-
+    dates %>%
     filter(! is.na(file_name)) %>% # drop missing rasters
     nest(cluster = ! c(date_group, central_date)) %>%
     mutate(
@@ -354,6 +406,8 @@ map_chr(GROUPS[-1], function(.group) {
           # crop and mask based on the shapefile of the group
           .r <- crop(.r, st_transform(.shp, crs(.r)), mask = TRUE)
           
+          .r$NDVI <- as.int(.r$NDVI * 1e4)
+          
           return(.r$NDVI)
         }) %>%
           rast() %>% # convert list to stack of rasters
@@ -363,21 +417,15 @@ map_chr(GROUPS[-1], function(.group) {
       }, .options = furrr_options(seed = NULL), .progress = TRUE)) %>%
     select(date_group, central_date, ndvi_df) %>%
     unnest(ndvi_df) %>%
-    rename(ndvi_aggr = mean) %>%
-    mutate(
-      doy = yday(central_date), year = year(central_date),
-      prop_water = extract(aggregate(prop_water, s_res, na.rm = TRUE),
-                           tibble(x, y))[, 2],
-      elev_m = extract(aggregate(elev_m, s_res, na.rm = TRUE),
-                       tibble(x, y))[, 2],
-      elev_m = if_else(elev_m < 0, 0, elev_m), # to avoid issues with coast
-      slope_deg = extract(aggregate(slope, s_res, na.rm = TRUE),
-                          tibble(x, y))[, 2],
-      aspect_deg = extract(aggregate(aspect, s_res, na.rm = TRUE),
-                           tibble(x, y))[, 2],
-      precip_m_day = extract(aggregate(yearly_precip, s_res, na.rm = TRUE),
-                             tibble(x, y))[, 2]) %>%
-    saveRDS(.filename)
+    rename(ndvi_aggr = mean)
+  
+  qsave(.d, file = gsub('-ndvi-data', '-ndvi-data-incomplete', .filename))
+  
+  .d %>%
+    bind_cols(extract(covariates, select(.d, x, y), ID = FALSE)) %>%
+    mutate(doy = as.integer(yday(central_date)),
+           year = as.integer(year(central_date))) %>%
+    qsave(.filename)
   
   return(paste(.group, 'saved.'))
 })
