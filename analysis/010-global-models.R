@@ -1,13 +1,16 @@
 library('dplyr')   # for data wrangling
-library('sf')      # for shapefiles
 library('mgcv')    # for Genralized Additive Models
 library('gratia')  # for plotting GAMs
+library('qs')      # for saving R objects quicker than with saveRDS
 source('analysis/figures/000-default-ggplot-theme.R')
 
-eco <- st_read('data/ecoregions/ecoregions-polygons.shp', quiet = TRUE)
+NCORES <- future::availableCores(logical = FALSE) - 2
 
 GROUPS <-
-  unique(eco$group) %>%
+  sf::st_read('data/ecoregions/ecoregions-polygons.shp', quiet = TRUE) %>%
+  filter(group != 'Antarctic') %>%
+  pull(group) %>%
+  unique() %>%
   tolower() %>%
   gsub(', ', '-', .)
 
@@ -15,16 +18,16 @@ GROUPS <-
 map(GROUPS, function(GROUP) {
   gc() # clean up before starting
   
-  d <- readRDS(paste0('data/ndvi-data-', GROUP, '.rds'))
+  d <- qread(paste0('data/avhrr-viirs-ndvi/group-level-datasets/aggregated-',
+                    GROUP, '-t-2-s-2-ndvi-data.qs'), nthreads = NCORES)
   
   DATE <- paste(Sys.Date()) # make a character to avoid bad conversions
   
   k_s <-
-    case_when(GROUP == 'australasia-indo-malay-oceania' ~ 1e3,
-              GROUP == 'antarctic' ~ 1e3,
-              GROUP == 'afrotropic' ~ 1e3,
-              GROUP == 'nearctic-neotropic' ~ 1e3,
-              GROUP == 'palearctic' ~ 1e3)
+    case_when(GROUP == 'africa' ~ 2000,
+              GROUP == 'indo-malay-oceania-australasia' ~ 900,
+              GROUP == 'neotropic-nearctic' ~ 1300,
+              GROUP == 'palearctic' ~ 2000)
   
   m_mu <- bam(
     ndvi ~
@@ -34,21 +37,21 @@ map(GROUPS, function(GROUP) {
       s(year, bs = 'cr', k = 20) + # year effect
       s(doy, bs = 'cc', k = 10) + # seasonal/day of year effect
       s(elev_m, bs = 'cr', k = 10) + # elevation effect
-      # tensor interaction smooths
+      # tensor product interaction smooths
       ti(year, doy, bs = c('cr', 'cc'), k = c(10, 10)) +
-      ti(year, y, x, bs = c('cr', 'sos'), d = c(1, 2), k = c(6, k_s / 2)) +
+      ti(year, y, x, bs = c('cr', 'sos'), d = c(1, 2), k = c(10, k_s / 2)) +
       ti(doy, y, x, bs = c('cc', 'sos'), d = c(1, 2), k = c(10, k_s / 2)),
     family = gaussian(),
     data = d,
     method = 'fREML',
     knots = list(doy = c(0.5, 366.5)),
     discrete = TRUE,
-    nthreads = 60,
+    nthreads = NCORES,
     control = gam.control(trace = TRUE),
     samfrac = 0.01) # initial guess using only 1% of data (default = 100%)
   
-  saveRDS(m_mu, paste0('models/global-models/bam-mean-ndvi-', GROUP, '-',
-                       DATE, '.rds'))
+  qsave(m_mu, paste0('models/global-models/bam-mean-ndvi-', GROUP, '-',
+                     DATE, '.qs'), nthreads = NCORES)
   
   sink(file = 'models/global-models/global-model-summaries.txt',
        append = TRUE)
@@ -85,11 +88,18 @@ map(GROUPS, function(GROUP) {
          bg = 'white')
   
   # find pixel-level variance ----
-  # model has an link function: link = response
-  d$mu_hat <- fitted(m_mu)
-  d$e_2 <- residuals(m_mu)^2
-  d$e_2 <- d$e^2 # Var(Y) = E((Y - E(Y))^2) = E(e^2)
-  saveRDS(d, paste0('data/bam-var-ndvi-data-', GROUP, '-', DATE, '.rds'))
+  # model has an identity link function: link = response
+  d <- bind_cols(d,
+                 predict.bam(m_mu, newdata = d, type = 'response',
+                             se.fit = TRUE, newdata.guaranteed = TRUE,
+                             nthreads = NCORES, block.size = 5e6) %>%
+                   as.data.frame() %>%
+                   rename(mu_hat = fit,
+                          se_mu_hat = se.fit)) %>%
+    mutate(e_2 = (ndvi_aggr - mu_hat)^2)
+  
+  qsave(d, paste0('data/bam-var-ndvi-data-', GROUP, '-', DATE, '.qs'),
+        nthreads = NCORES)
   
   # check pixel-level mean residuals
   if(FALSE) {
@@ -117,21 +127,21 @@ map(GROUPS, function(GROUP) {
       s(year, bs = 'cr', k = 20) + # year effect
       s(doy, bs = 'cc', k = 10) + # seasonal/day of year effect
       s(elev_m, bs = 'cr', k = 10) + # elevation effect
-      # tensor interaction smooths
+      # tensor product interaction smooths
       ti(year, doy, bs = c('cr', 'cc'), k = c(10, 10)) +
-      ti(year, y, x, bs = c('cr', 'sos'), d = c(1, 2), k = c(6, k_s / 2)) +
+      ti(year, y, x, bs = c('cr', 'sos'), d = c(1, 2), k = c(10, k_s / 2)) +
       ti(doy, y, x, bs = c('cc', 'sos'), d = c(1, 2), k = c(10, k_s / 2)),
     family = gaussian(),
     data = d,
     method = 'fREML',
     knots = list(doy = c(0.5, 366.5)),
     discrete = TRUE,
-    nthreads = 60,
+    nthreads = NCORES,
     control = gam.control(trace = TRUE),
     samfrac = 0.01) # initial guess using only 1% of data (default = 100%)
   
-  saveRDS(m_s2, paste0('models/global-models/bam-variance-ndvi-', GROUP,
-                       '-', DATE, '.rds'))
+  qsave(m_s2, paste0('models/global-models/bam-variance-ndvi-', GROUP,
+                     '-', DATE, '.qs'), nthreads = NCORES)
   
   sink(file = 'models/global-models/global-model-summaries.txt',
        append = TRUE)
