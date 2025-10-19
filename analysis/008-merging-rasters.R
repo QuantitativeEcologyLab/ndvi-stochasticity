@@ -1,3 +1,4 @@
+setwd('H/GitHub/ndvi-stochasticity/') # for EME Linux
 library('dplyr')         # for data wrangling
 library('tidyr')         # for data wrangling
 library('sf')            # for shapefiles
@@ -10,6 +11,9 @@ library('qs')            #'faster than `saveRDS()`/`readRDS()`
 source('analysis/figures/000-default-ggplot-theme.R')
 source('functions/is_flagged.R')
 
+# using a factor of 2 causes the palearctic group to fail because the dataset
+# has too many rows, resulting in the error:
+#' `Long vectors are not yet supported. Requested output size must be less than 2147483647.`
 s_res <- 2 # factor for spatial aggregation
 t_res <- 2 # factor for temporal aggregation
 
@@ -242,7 +246,7 @@ df_sizes <-
          below_max = nrow_1e6 < max_rows / 1e6)
 df_sizes
 
-# check number of 2-days windows with less than 2 days
+# check number of t_res-day windows with less than t_res days
 dates <-
   mutate(dates,
          julian = julian(date),
@@ -320,14 +324,13 @@ unique(c(0.05, res(prop_water), res(elev_m), res(slope), res(aspect),
 # converting to int and dropping terrain variables to minimize dataset size
 covariates <-
   list(
-    prop_water_1e4 = as.int(aggregate(prop_water, s_res, na.rm=TRUE)*1e4),
+    prop_water = aggregate(prop_water, s_res, na.rm=TRUE),
     elev_m = aggregate(elev_m, s_res, na.rm = TRUE) %>%
       ifel(. < 0, 0, .) %>%
       as.int(), # to avoid issues with coast
-    # slope_deg_1e4 = as.int(aggregate(slope, s_res, na.rm = TRUE) * 1e4),
-    # aspect_deg_1e4 = as.int(aggregate(aspect, s_res, na.rm = TRUE) * 1e4),
-    precip_m_day_1e4 = as.int(aggregate(yearly_precip, s_res,
-                                        na.rm = TRUE) * 1e4)) %>%
+    # slope_deg = as.int(aggregate(slope, s_res, na.rm = TRUE)),
+    # aspect_deg = as.int(aggregate(aspect, s_res, na.rm = TRUE)),
+    precip_m_day = aggregate(yearly_precip, s_res, na.rm = TRUE)) %>%
   rast() %>%
   mask(st_transform(group_shp, crs(.)))
 plot(covariates)
@@ -336,8 +339,16 @@ tibble(x = -119.3949 + rnorm(5), y = 49.93928 + rnorm(5)) %>%
   st_as_sf(crs = crs(covariates), coords = c('x', 'y')) %>%
   extract(covariates, ., ID = FALSE)
 
+# covariates as a data frame to use across cores
+covariates_df <- as.data.frame(covariates, xy = TRUE)
+
 # calculate aggregated mean NDVI for each realm ----
 GROUPS <- arrange(df_sizes, nrow_1e6)$group
+
+# remove unnecessary RAM-demanding objects
+rm(aspect, elev_m, p_n_rasters, prop_water, slope, yearly_precip)
+
+gc()
 
 # for more info on cutoffs, see https://github.com/QuantitativeEcologyLab/stochasticity_parks/blob/main/Scripts/005-create-dataset.R
 doy_cutoffs <- tibble(
@@ -369,11 +380,10 @@ map_chr(GROUPS, function(.group) {
     .filename <-
       paste0('data/avhrr-viirs-ndvi/group-level-datasets/aggregated-',
              gsub(', ', '-', tolower(.group)),
-             '-t-', t_res, '-s-', s_res, '-ndvi-data.rds')
+             '-t-', t_res, '-s-', s_res, '-ndvi-data.qs')
   }
   
-  .d <-
-    dates %>%
+  dates %>%
     filter(! is.na(file_name)) %>% # drop missing rasters
     nest(cluster = ! c(date_group, central_date)) %>%
     mutate(
@@ -381,52 +391,52 @@ map_chr(GROUPS, function(.group) {
       ndvi_df = future_map(cluster, function(.cl) {
         #' import `t_res` rasters for the cluster
         #' but clean each raster individually before averaging
-        map2(.cl$file_name, .cl$date, \(.fn, .date) {
-          .r <- rast(.fn)
-          
-          # drop cloudy pixels
-          # not dropping pixels with cloud shadow because it reduces the
-          # sample size too much with little change in NDVI: see taiga test
-          .r$NDVI <- ifel(is_flagged(.r$QA, 1), NA, .r$NDVI)
-          
-          # drop pixels with prop_water > 0.4
-          .r$NDVI <- # import so we can parallellize
-            ifel(project(rast('data/water-body-raster.tif'),
-                         .r$NDVI, res = res(.r$NDVI)) < 0.4, .r$NDVI, NA)
-          
-          # remove unrealistically high NDVI values at high latitudes
-          cutoff <- doy_cutoffs$y[which(doy_cutoffs$month == month(.date))]
-          
-          if(! is.na(cutoff)) {
-            .r$NDVI <- ifel(.r$NDVI > 0 & init(.r, 'y') >= cutoff, NA, .r$NDVI)
-          }
-          
-          # aggregating spatially
-          .r <- terra::aggregate(.r, s_res, na.rm = TRUE)
-          
-          # crop and mask based on the shapefile of the group
-          .r <- crop(.r, st_transform(.shp, crs(.r)), mask = TRUE)
-          
-          .r$NDVI <- as.int(.r$NDVI * 1e4)
-          
-          return(.r$NDVI)
-        }) %>%
+        r_ndvi <-
+          map2(.cl$file_name, .cl$date, \(.fn, .date) {
+            .r <- rast(.fn)
+            
+            # drop cloudy pixels
+            # not dropping pixels with cloud shadow because it reduces the
+            # sample size too much with little change in NDVI: see taiga test
+            .r$NDVI <- ifel(is_flagged(.r$QA, 1), NA, .r$NDVI)
+            
+            # drop pixels with prop_water > 0.4
+            .r$NDVI <- # import so we can parallellize
+              ifel(project(rast('data/water-body-raster.tif'),
+                           .r$NDVI, res = res(.r$NDVI)) < 0.4, .r$NDVI, NA)
+            
+            # remove unrealistically high NDVI values at high latitudes
+            cutoff <- doy_cutoffs$y[which(doy_cutoffs$month == month(.date))]
+            
+            if(! is.na(cutoff)) {
+              .r$NDVI <- ifel(.r$NDVI > 0 & init(.r, 'y') >= cutoff, NA, .r$NDVI)
+            }
+            
+            # aggregating spatially
+            .r <- terra::aggregate(.r, s_res, na.rm = TRUE)
+            
+            # crop and mask based on the shapefile of the group
+            .r <- crop(.r, st_transform(.shp, crs(.r)), mask = TRUE)
+            
+            return(.r$NDVI)
+          }) %>%
           rast() %>% # convert list to stack of rasters
-          mean(na.rm = TRUE) %>% # aggregate the stack temporally
-          as.data.frame(x, xy = TRUE) %>%
+          mean(na.rm = TRUE) # aggregate the stack temporally
+        
+        out <- rast(covariates_df, crs = 'EPSG:4326') %>%
+          project(r_ndvi)
+        out$NDVI <- r_ndvi
+        
+        as.data.frame(out, xy = TRUE) %>%
+          filter(! is.na(NDVI)) %>%
           return()
       }, .options = furrr_options(seed = NULL), .progress = TRUE)) %>%
     select(date_group, central_date, ndvi_df) %>%
     unnest(ndvi_df) %>%
-    rename(ndvi_aggr = mean)
-  
-  qsave(.d, file = gsub('-ndvi-data', '-ndvi-data-incomplete', .filename))
-  
-  .d %>%
-    bind_cols(extract(covariates, select(.d, x, y), ID = FALSE)) %>%
+    rename(ndvi_aggr = NDVI) %>%
     mutate(doy = as.integer(yday(central_date)),
            year = as.integer(year(central_date))) %>%
-    qsave(.filename)
+    qsave(file = .filename, nthreads = availableCores(logical = FALSE) - 2)
   
   return(paste(.group, 'saved.'))
 })
