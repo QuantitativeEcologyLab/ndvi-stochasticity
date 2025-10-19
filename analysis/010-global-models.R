@@ -1,3 +1,4 @@
+# EME Linux: 2.2 TB RAM, Intel Xeon Platinum 8462Y+ processor, 64 cores
 library('dplyr')   # for data wrangling
 library('mgcv')    # for Genralized Additive Models
 library('gratia')  # for plotting GAMs
@@ -13,6 +14,7 @@ GROUPS <-
   unique() %>%
   tolower() %>%
   gsub(', ', '-', .)
+GROUPS
 
 # set up the data for the model
 map(GROUPS, function(GROUP) {
@@ -67,25 +69,6 @@ map(GROUPS, function(GROUP) {
   plot(m_mu, pages = 1, too.far = 0.01, scheme = c(1, 5, 1, 1, 1, 3, 5, 5),
        scale = 0)
   dev.off()
-  
-  # plot each smooth separately
-  p_bam_doy <- draw(m_mu, rug = FALSE,
-                    select = which(grepl('doy', smooths(m_mu))))
-  ggsave(paste0('figures/bam-mean-ndvi-doy-', GROUP, '-', DATE, '.png'),
-         plot = p_bam_doy, width = 8, height = 6, units = 'in', dpi = 300,
-         bg = 'white')
-  
-  p_bam_y <- draw(m_mu, rug = FALSE,
-                  select = which(grepl('year', smooths(m_mu))))
-  ggsave(paste0('figures/bam-mean-ndvi-year-', GROUP, '-', DATE, '.png'),
-         plot = p_bam_y, width = 8, height = 6, units = 'in', dpi = 300,
-         bg = 'white')
-  
-  p_bam_elev <- draw(m_mu, rug = FALSE,
-                     select = which(smooths(m_mu) == 's(elevation_m)'))
-  ggsave(paste0('figures/bam-mean-ndvi-elev_m-', GROUP, '-', DATE, '.png'),
-         plot = p_bam_elev, width = 8, height = 6, units = 'in', dpi = 300,
-         bg = 'white')
   
   # find pixel-level variance ----
   # model has an identity link function: link = response
@@ -157,23 +140,4 @@ map(GROUPS, function(GROUP) {
   plot(m_s2, pages = 1, too.far = 0.01, scheme = c(1, 5, 1, 1, 1, 3, 5, 5),
        scale = 0)
   dev.off()
-  
-  # plot each smooth separately
-  p_bam_doy <- draw(m_s2, rug = FALSE,
-                    select = which(grepl('doy', smooths(m_s2))))
-  ggsave(paste0('figures/bam-variance-ndvi-doy-', GROUP, '-', DATE, '.png'),
-         plot = p_bam_doy, width = 8, height = 6, units = 'in', dpi = 300,
-         bg = 'white')
-  
-  p_bam_y <- draw(m_s2, rug = FALSE,
-                  select = which(grepl('year', smooths(m_s2))))
-  ggsave(paste0('figures/bam-variance-ndvi-year-', GROUP, '-', DATE, '.png'),
-         plot = p_bam_y, width = 8, height = 6, units = 'in', dpi = 300,
-         bg = 'white')
-  
-  p_bam_elev <- draw(m_s2, rug = FALSE,
-                     select = which(smooths(m_s2) == 's(elevation_m)'))
-  ggsave(paste0('figures/bam-variance-ndvi-elev_m-', GROUP, '-', DATE, '.png'),
-         plot = p_bam_elev, width = 8, height = 6, units = 'in', dpi = 300,
-         bg = 'white')
 })
