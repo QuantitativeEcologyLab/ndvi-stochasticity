@@ -17,7 +17,7 @@ institute:
   - cmps: Department of Computer Science, Math, Physics, and Statistics, The University of British Columbia Okanagan, Kelowna, British Columbia, Canada.
 bibliography: 'ndvi-stochasticity.bib'
 csl: 'journal-of-remote-sensing.csl'
-suppress-bibliography: true
+suppress-bibliography: true # refs can only be in main text
 urlcolor: cyan
 fontsize: 12pt
 indent: true
@@ -55,17 +55,21 @@ knitr::opts_chunk$set(echo = FALSE, out.width = '100%', fig.align = 'center', fi
 library('knitr')
 ```
 
-\noindent Figure A1 below illustrates the color palettes used in the main manuscript and this appendix, for each type of vision (trichromatic, deuteranope, protanope, tritanope, and achomatic). The NDVI palette is a modified version of the Bukavu palette by Fabio Crameri [@crameri_geodynamic_2018; @crameri_scientific_2018]. Palette A3 is a modified version of a pallette by Masataka Okabe and Kei Ito [@okabe_color_2008]. All other palettes were created by Fabio Crameri [@crameri_geodynamic_2018; @crameri_scientific_2018]. All original palettes are available via the `khroma` package [@frerebeau_khroma_2024] for `R` [@r_core_team_r_2024]. Figures A2-A5 show some of the data used for fitting the models for estimating mean NDVI and the variance around the mean. See the Code Availability statement in the main text for the code used to produce the figures. The shapefile of WWF ecozones and biomes was obtained from the work of @olson_terrestrial_2001.
+\noindent Figure A1 below illustrates the color palettes used in the main manuscript and this appendix, for each type of vision (trichromatic, deuteranope, protanope, tritanope, and achomatic). The NDVI palette is a modified version of the Bukavu palette by Fabio Crameri [@crameri_geodynamic_2018; @crameri_scientific_2018]. Palette A4 is a modified version of a pallette by Masataka Okabe and Kei Ito [@okabe_color_2008]. All other palettes were created by Fabio Crameri [@crameri_geodynamic_2018; @crameri_scientific_2018]. All original palettes are available via the `khroma` package [@frerebeau_khroma_2024] for `R` [@r_core_team_r_2024]. Figures A6 and A7 show some of the data used for fitting the models for estimating mean NDVI and the variance around the mean. See the Code Availability statement in the main text for the code used to produce the figures. The shapefile of WWF ecozones and biomes was obtained from the work of @olson_terrestrial_2001.
 
 \singlespacing
 
-\clearpage <!-- for cleaner pagination and to keep groups and biomes on the same page-->
-
-```{r color-palettes, fig.cap="Color palettes used in the main manuscript and the figures below."}
+```{r color-palettes, fig.cap="Color palettes used in the main manuscript and the figures below, along with simulated color-deficient views."}
 include_graphics('../figures/input-data/color-palettes.pdf')
 ```
 
-```{r n-rasters, fig.cap="Number of days with a raster within each 2-day period. used for temporal aggregation of the data."}
+\clearpage <!-- for cleaner pagination and to keep groups and biomes on the same page-->
+
+```{r ndvi-ecdf, fig.cap="Monthly empirical cumulative density fuctions of NDVI across latitude. The white lines indicate the 99$^{th}$ quantiles of NDVI at each latitude (thin lines) and floored latitude (thicker step functions). The red areas indicate the NDVI values $> 0$ removed in each month. No values at latitudes $< 60^\\circ$S were removed since Antarctica was not included in the analyses."}
+include_graphics('../figures/global-diagnostics/monthly-latitudinal-ecdf.pdf')
+```
+
+```{r n-rasters, fig.cap="Number of days with a raster within each 2-day period used for temporal aggregation of the data.", out.width='90%'}
 include_graphics('../figures/input-data/n-rasters-time.pdf')
 ```
 
