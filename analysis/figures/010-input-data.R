@@ -10,8 +10,6 @@ color('okabeito')(8)[c(3, 4, 6, 7)]
 pal_groups <- c('#56B4E9', 'grey', '#009E73', '#0072B2', '#D55E00')
 plot_scheme_colorblind(pal_groups[c(1, 2, 4, 3, 5)]) # achromatic view ok
 
-#' *ADD: SLOPE, ASPECT, PRECIP*
-
 robinson_crs <- '+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs'
 
 shp <- read_sf('data/ecoregions/ecoregions-polygons.shp') %>%
@@ -59,13 +57,13 @@ if(FALSE) {
   plot_scheme(color('lajolla')(10)) # for elevation
   plot_scheme(color('bamako')(10)) # for n rasters
   plot_scheme(color('davos')(10)) # for DENVar
+  plot_scheme(color('tokyo')(10)) # for NDVI ECDF
   plot_scheme(color('bilbao')(10))
   plot_scheme(color('nuuk')(10))
   plot_scheme(color('oslo')(10))
   plot_scheme(color('grayC')(10))
   plot_scheme(color('hawaii')(10))
   plot_scheme(color('lapaz')(10))
-  plot_scheme(color('tokyo')(10))
   plot_scheme(color('buda')(10))
   plot_scheme(color('acton')(10))
   plot_scheme(color('turku')(10))
@@ -197,27 +195,25 @@ plot_pal(pal_groups)
 
 p_palettes <-
   plot_grid(
-    plot_grid(
       NULL, NULL,
       plot_pal(ndvi_pal),
       plot_pal(rev(color('davos')(1e3))),
-      labels = c('NDVI', 'DENVar'), label_x = 0.5, hjust = 0.5, nrow = 2,
-      rel_heights = c(0.075, 1), label_size = 18),
-    plot_grid(
-      NULL, NULL, NULL,
-      plot_pal(rev(color('bamako')(3))), # A2
-      plot_pal(pal_groups), # A3
-      plot_pal(color('discreterainbow')(n_biomes)), # A4
-      labels = paste0('Fig. A', 2:4), label_x = 0.5, hjust = 0.5, nrow = 2,
-      rel_heights = c(0.075, 1), label_size = 18),
-    plot_grid(
       NULL, NULL,
-      plot_pal(color('lajolla')(1e3)), # A5
-      plot_pal(rev(color('devon')(1e3))), # A6
-      labels = paste0('Fig. A', 5:6), label_x = 0.5, hjust = 0.5, nrow = 2,
-      rel_heights = c(0.075, 1), label_size = 18),
-    ncol = 1)
+      plot_pal(rev(color('tokyo')(1e3))), # A2
+      plot_pal(rev(color('bamako')(5))), # A3
+      NULL, NULL,
+      plot_pal(pal_groups), # A4
+      plot_pal(color('discreterainbow')(n_biomes)), # A5
+      NULL, NULL,
+      plot_pal(color('lajolla')(1e3)), # A6
+      plot_pal(rev(color('devon')(1e3))), # A7
+      labels = c('NDVI', 'DENVar', '', '',
+                 c('Fig. A2', 'Fig. A3', '', '',
+                   'Fig. A4', 'Fig. A5', '', '',
+                   'Fig. A6', 'Fig. A7')),
+      label_x = 0.5, hjust = 0.5, rel_heights = rep(c(0.075, 1), 4),
+      label_size = 18, ncol = 2)
 
 ggsave('figures/input-data/color-palettes.pdf', p_palettes,
-       width = 10, height = 5, scale = 2, units = 'in', dpi = 300,
+       width = 10, height = 6.67, scale = 2, units = 'in', dpi = 300,
        bg = 'white')
