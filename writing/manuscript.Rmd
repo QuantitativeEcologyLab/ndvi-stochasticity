@@ -45,7 +45,7 @@ editor_options:
 
 ```{r, echo=FALSE}
 # need to write abstract before cover page to state number of words in it
-abstract <- "Remote-sensing estimates of habitat productivity such as the Normalized Differnece Vegetation Index (NDVI) have helped develop and support a variety of hypotheses and inform policy and industriy-related decisions. The free availability of such data has allowed widespread access and use of well-established metrics of habitat productivity. However, historically, users tended to focus solely on (predictable) trends in productivity. In recent years, people have been recognizing the importance of envrironmental unpredictability (stochasticity), particularly as climate change and human-induced rapid environmental change transform the ecosystems species have evolved in and adapted to. We adress this gap by presenting a new global Dynamic Estimate of NDVI Variance, *DENVar*. We estimate spatiotemporal trends in mean NDVI and the variance around the mean using Hierarchical Generalized Additive Models, which provide a flexible yet transparent model structure, unlike machine learning approaches such as neural netwoks. We show that DENVar can be used as a reliable proxy of environmental stochasticity, strongly correlates with ***XXX***, and can be used to test many hepotheses related to environmental stochasitcity, such as forage stochasticity, regime shifts, ... . We conclude by offering some considerations around quantifying and interpreting envirnomental stochasticity, and we provide a publicly and freely available shiny app for estimating mean NDVI and the variance around it, DENVar, for given coordinates and optional dates. The app requires no knowledge of statistics or coding. Additionally, we provide a temporally static raster of mean NDVI and DENVar for the years 1981-2025 that can be used for GIS applications and does not require any knowledge of $\\texttt{R}$."
+abstract <- "Remote-sensing estimates of habitat productivity such as the Normalized Differnece Vegetation Index (NDVI) have helped develop and support a variety of hypotheses and inform policy and industriy-related decisions. The free availability of such data has allowed widespread access and use of well-established metrics of habitat productivity. However, historically, users tended to focus solely on (predictable) trends in productivity. In recent years, people have been recognizing the importance of envrironmental unpredictability (stochasticity), particularly as climate change and human-induced rapid environmental change transform the ecosystems species have evolved in and adapted to. We adress this gap by presenting a new global Dynamic Estimate of NDVI Variance, *DENVar*. We estimate spatiotemporal trends in mean NDVI and the variance around the mean using Hierarchical Generalized Additive Models, which provide a flexible yet transparent and interpretable model structure. We show that DENVar can be used as a reliable proxy of environmental stochasticity, strongly correlates with ***XXX***, and can be used to test many hepotheses related to environmental stochasitcity, such as forage stochasticity, regime shifts, ... . We conclude by offering some considerations around quantifying and interpreting envirnomental stochasticity, and we provide a publicly and freely available shiny app for estimating mean NDVI and the variance around it, DENVar, for given coordinates and optional dates. The app requires no knowledge of statistics or coding. Additionally, we provide a temporally static raster of mean NDVI and DENVar for the years 1981-2025 that can be used for GIS applications and does not require any knowledge of $\\texttt{R}$."
 
 if(FALSE) {
   stringi::stri_count_words(abstract)
@@ -98,11 +98,11 @@ useful refs:
 * https://www.sciencedirect.com/science/article/abs/pii/S0034425711001957?fr=RR-2&ref=pdf_download&rr=962beb22bcb58443
 * https://www.nature.com/articles/s41467-025-61585-5
 * AVHRR cloud detection using MODIS data:
-  * franch_30_2017
-  * villaescusa-nadal_modis-based_2022
+* franch_30_2017
+* villaescusa-nadal_modis-based_2022
 * see `to-read` folder
 
-stochasticity impacts a wide range of processes, from the individual scale [@mezzini_how_2005] to the ecosystem scales [@marcus_ref_2025]
+stochasticity impacts a wide range of processes, from the individual scale [@mezzini_how_2025] to the ecosystem scales [@noonan_planning_2025]
 
 submitting at journal of remote sensing? (https://spj.science.org/page/remotesensing/for-authors)
 
@@ -254,7 +254,7 @@ if(TEST_CDV) {
 
 ## Choice of color palettes
 
-We represent NDVI using a modified version of Fabio Crameri's divergent *bukavu* palette [@crameri_geodynamic_2018; @crameri_misuse_2020], which has high-contrast for deuteranope and protanope vision. For NDVI values between 0 and 1 (the right half of the palette), the colors also have sufficient contrast for the colors to also be distinguishable by strong tritanope and achomatic vision. Fig. A1 contains an approximate representation of how each vision type would perceive each color palettes used. We obtained all color palettes with three or more colors from the `khroma` package [v. 1.14.0, @frerebeau_khroma_2024] for `R` [v. 4.4.1, @r_core_team_r_2024].
+We represent NDVI using a modified version of Fabio Crameri's divergent *bukavu* palette [@crameri_geodynamic_2018; @crameri_misuse_2020], which has high-contrast for deuteranope and protanope vision. For NDVI values between -0.1 and 1, the colors also have sufficient contrast for the colors to also be distinguishable by strong tritanope and achomatic vision. Fig. A1 contains an approximate representation of how each vision type would perceive each color palettes used. We obtained all color palettes with three or more colors from the `khroma` package [v. 1.14.0, @frerebeau_khroma_2024] for `R` [v. 4.4.1, @r_core_team_r_2024].
 
 ## Input data
 
@@ -262,11 +262,11 @@ AVHRR data: from 1981-06-24 to 2013-12-31
 
 VIIRS data: from 2014-01-01 to 2025-06-29
 
-lack of data at high-latitudes issues is partially because of polar night in winter 
+We downloaded NDVI image composites from satellites with AVHRR and VIIRS sensors [@vermote_noaa_2018; @vermote_noaa_2022] directly from the NOAA data servers (AVHRR data: [https://ladsweb.modaps.eosdis.nasa.gov/archive/allData](https://ladsweb.modaps.eosdis.nasa.gov/archive/allData); VIIRS data: [www.ncei.noaa.gov/data/](www.ncei.noaa.gov/data/); Fig. A2)). We removed all cloudy pixels from AVHRR rasters and probably or confidently cloudy pixels from VIIRS ratsers. Additionally, we removed pixels with excessively high NDVI values at high latitudes between September and March using latitudinal cutoffs based on the monthly empirical cumulative distribution function of NDVI across latitude (Fig. B2). We did not remove values at latitudes $< 60^\circ$S since we exclude Antarctica from the analyses.
 
-We downloaded the NDVI image composites from satellites with AVHRR and VIIRS sensors [@vermote_noaa_2018; @vermote_noaa_2022] directly from the NOAA data servers (AVHRR data: [https://ladsweb.modaps.eosdis.nasa.gov/archive/allData](https://ladsweb.modaps.eosdis.nasa.gov/archive/allData); VIIRS data: [www.ncei.noaa.gov/data/](www.ncei.noaa.gov/data/); Fig. A2)). The code for downloading the data is available on GitHub (see the code avaialbility statement). After removing all probably or confidently cloudy pixels, the number of non-NA land raster cells was substantially larger than the maximum data frame size in `R`, ($3.17 \times 10 ^{10} > 2^{31} - 1 \approx 0.21 \times 10^{10}$), so we reduced the dataset size by splitting the dataset across the aggregating the averaged rasters by a factor of $2 \times 2$ with `terra::aggregate(fact = 2)`. Although this resulted in a reduction in sample size, the temporal averaging also reduced signal-related noise.
+To ensure the number of rows for each dataset was below the maximum data frame size in `R` ($3.17 \times 10 ^{10} > 2^{31} - 1 \approx 0.21 \times 10^{10}$), we reduced the dataset size by splitting the dataset across four spatial groups (Fig. A4) and spatiotemporally averaged the (cleaned) rasters by a factor of four. The final dataset thus had one raster every four days with a spatial resolution of $0.05^\circ\times4=0.2^\circ$. Despite the substantial reduction in dataset size, the dataset creation and modeling were still challenging for the machine used, which had 2.2 TB of RAM and an Intel Xeon Platinum  8462Y+ processor (32 cores).
 
-The predictor data for the models included: WWF biome [@olson_terrestrial_2001, see Fig. A3], ecoregion [the individual polygons from @olson_terrestrial_2001, see Fig. A4], integer day of year (1 to 366), integer year (1981 to 2025), and elevation above sea level (Fig. A5). We excluded all polygons that did not have any NDVI data (0.06% of land, 29% of the polygons, maximum area: $452~\text{km}^2 \approx (21~\text{km})^2$). We distinguished between biomes in the northern and southern hemisphere to allow for different seasonal trends between hemispheres. The 15-day averages allowed us to have non-repeating values of day of year across years, since 15 is not a factor of 365 or 366. We downloaded the global digital elevation model using the `get_elev_raster()` function from the `elevatr` package for `R` [v. 0.99.0, @hollister_elevatr_2023] with a resolution of 0.076 degrees.
+The predictor data for the models included: integer day of year (1 to 366), integer year (1981 to 2025), elevation above sea level (Fig. A6), and proportion pixel covered by water (Fig. A7). We downloaded the global digital elevation model using the `get_elev_raster()` function from the `elevatr` package for `R` [v. 0.99.0, @hollister_elevatr_2023] with a an original resolution of 0.076 degrees. To remove any biases towards negative NDVI values, we removed all raster cells with > 40% water cover before the spatiotemporal aggregation.
 
 ```{r n_doys, eval=FALSE}
 # approximate estimate of the number of unique DOY values
@@ -275,39 +275,27 @@ length(unique(lubridate::yday(as.Date('1981-09-01') + seq(0, 15800, by = 15))))
 
 ## Modeling
 
-We estimated spatiotemporal trends in mean NDVI using Hierarchical Generalized Additive Models (HGAMs) via the `mgcv` package for `R` [v. 1.9-3, @wood_generalized_2017]. To reduce modeling fitting times with negligible losses to model accuracy, we used the `bam()` function with fast REstricted Marginal Likelihood (`method = fREML`) and covariate discretization (`discrete = TRUE`). See @wood_generalized_2015 and @wood_generalized_2017-1 for more information. Ideally, NDVI should be modeled using beta location-scale models (after the linear transformation $Y^*=\frac{Y + 1}{2}$) to account for the fact that: (1) NDVI is bounded between -1 and 1, and (2) the variance in NDVI is dependent on the mean (and vice-versa), since ecosystems with very low NDVI (e.g., rock, ice, or concrete) or very high NDVI (e.g., dense forest) tend to have lower variance in NDVI. However, preliminary tests showed that fitting times for beta models were prohibitive, especially for beta location-scale models. In contrast, Gaussian models fit substantially faster and provided very similar spatialtemporal estimates of mean NDVI (see the `analysis/000-sardinia-test.R` script in the GitHub repository). The global model for the mean NDVI had the structure below:
+We estimated spatiotemporal trends in mean NDVI using Generalized Additive Models (GAMs) via the `mgcv` package for `R` [v. 1.9-3, @wood_generalized_2017]. To reduce modeling fitting times with negligible losses to model accuracy, we used the `bam()` function with fast REstricted Marginal Likelihood (`method = fREML`) and covariate discretization [`discrete = TRUE`$;$ @wood_generalized_2015; @wood_generalized_2017-1]. Ideally, NDVI should be modeled using beta location-scale models (after the linear transformation $Y^*=\frac{Y + 1}{2}$) to account for the fact that: (1) NDVI is bounded between -1 and 1, and (2) the variance in NDVI is dependent on the mean (and vice-versa), since ecosystems with very low NDVI (e.g., rock, ice, or concrete) or very high NDVI (e.g., dense forest) tend to have lower variance in NDVI. However, preliminary tests showed that fitting times for beta models were prohibitive, especially for beta location-scale models. In contrast, Gaussian models fit substantially faster and provided very similar spatialtemporal estimates of mean NDVI (see Appendix B). For each region show in Fig. A4, the model for the mean NDVI had the structure below:
 
 \singlespacing
 
-\small
-
-```{r m_mean, eval=FALSE, echo=TRUE}
-m_mean <- bam(
-  ndvi_15_day_mean ~
-    biome + # to avoid intercept shrinkage
-    s(poly_id, bs = 'mrf', xt = list(nb = nbs)) +
-    s(doy, biome, bs = 'fs', xt = list(bs = 'cc'), k = 10) +
-    s(year, biome, bs = 'fs', xt = list(bs = 'cr'), k = 10) +
-    ti(doy, year, biome, bs = c('cc', 'cr', 're'), k = c(5, 5)) +
-    s(elevation_m, bs = 'cr', k = 5),
-  family = gaussian(),
-  data = d,
-  method = 'fREML',
-  knots = list(doy = c(0.5, 366.5)),
-  drop.unused.levels = TRUE,
-  discrete = TRUE,
-  samfrac = 0.001, # find initial guesses with a subset of the data
-  nthreads = future::availableCores(logical = FALSE) - 2,
-  control = gam.control(trace = TRUE))
-```
-
-\normalsize
+\begin{equation}\label{eq:mu-gam}
+\begin{cases}
+\text{NDVI} \sim \text{Normal}(\mu, \sigma^2) \\
+\begin{aligned}
+\mu = \beta_0 + f_{1}(\texttt{prop\_water}) + f_{2}(\texttt{elev\_m}) + f_{3}(\texttt{doy}) + f_{4}(\texttt{year}) + f_{5}(\texttt{lat}, \texttt{long}) + \\
+f_{6T}(\texttt{doy}, \texttt{year}) + f_{7T}(\texttt{doy}, \texttt{lat}, \texttt{long}) + f_{8T}(\texttt{year}, \texttt{lat}, \texttt{long})
+\end{aligned}
+\end{cases},
+\end{equation}
 
 \doublespacing
 
-Biome-specific fixed-effect intercepts allowed to account for the differences in mean NDVI throught biomes without coefficient shrinkage (i.e., reversion towards the global mean). A Markov Random Field of the ecoregions [`bs = mrf`, see page ***240?*** of @wood_generalized_2017] estimated smoothed, ecoregion-specific deviations from the biome-level spatial means. Two factor-smooth interaction terms (`bs = 'fs'`) accounted for biome-specific seasonal and yearly trends. Seasonal terms were made cyclical by using cyclical cubic splines (`xt = list(bs = 'cc')`), which are continuous up to and including second derivative at the edge knots (0.5 and 366.5, which correspond to 00:00 of January 1^st^ and 24:00 of December 31^st^, respectively). A tensor product interaction smooth for each biome estimated the change in seasonal trends over the years. Finally, a smooth of elevation above sea level accounted for the effect of altitude. See @pedersen_hierarchical_2019 for more information on hierarchical modeling and the use and interpretation of factor smooth interaction terms.
+\noindent where, for a given (aggregated) pixel, `prop_water` is the proportion of water within the pixel, `elev_m` is elevation above sea level in meters, `doy` is integer day of year, `year` is integer year, and `lat` and `long` are latitude and longitude, respectively. $f_j(~)$ indicate the $j^{\text{th}}$ marginal smooth functions, while $f_jT(~)$ indicate the $j^{\text{th}}$ tensor product interaction terms. Latitude and longitude were modeled using a spline-on-the-sphere basis [`bs = 'sos'`$;$ @wood_generalized_2017], while seasonal terms used cyclical cubic splines (`bs = 'cc'`) with edge knots 0.5 and 366.5.
 
-A second HGAM estimated the variance in NDVI around the mean estimated by the model above. The model had an identical structure to the model for the mean, with the exception that (1) the response variable was the squared residual from the first model, such that the model estimated the mean squared residual (i.e., the variance) for a given point in time and space, and (2) a smooth term of the estimated mean NDVI. *Estimating the variance as the spatially or spatiotemporally varying mean squared residuals included the pixel-level squared bias.* The model is available below:
+***HERE***
+
+A second GAM estimated the variance in NDVI around the mean estimated by the model above. The model had an identical structure to the model for the mean, with the exception that (1) the response variable was the squared residual from the first model, such that the model estimated the mean squared residual (i.e., the variance) for a given point in time and space, and (2) a smooth term of the estimated mean NDVI. *Estimating the variance as the spatially or spatiotemporally varying mean squared residuals included the pixel-level squared bias.* The model is available below:
 
 \singlespacing
 
