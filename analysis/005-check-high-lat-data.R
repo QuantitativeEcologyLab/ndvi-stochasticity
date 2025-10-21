@@ -286,8 +286,8 @@ p_cutoffs <-
   geom_raster(aes(ndvi, y, fill = p), d_ecdf) +
   geom_rect(aes(xmin = 0, xmax = Inf, ymin = ymin, ymax = Inf), cutoffs,
             fill = '#8B102080', color = '#8B0000', linetype = 'dashed') +
-  geom_path(aes(ndvi, y), q_99, color = 'white', linewidth = 0.1) +
-  geom_path(aes(ndvi_2, y), q_99, color = 'white', linewidth = 0.3) +
+  geom_path(aes(ndvi, y), q_99, color = 'white', linewidth = 0.05) +
+  geom_path(aes(ndvi_2, y), q_99, color = 'white', linewidth = 0.15) +
   scale_fill_tokyo(name = 'ECDF(NDVI)', reverse = TRUE) +
   scale_x_continuous('NDVI', expand = c(0, 0)) +
   scale_y_continuous('Latitude', expand = c(0, 0), limits = c(-90, 90),
@@ -297,16 +297,14 @@ p_cutoffs <-
         panel.background = element_rect(fill = 'grey'),
         plot.margin = unit(c(5.5, 11, 5.5, 5.5), 'points'))
 
-colorblindr::cvd_grid(p_cutoffs, severity = 1)
-
-ggsave('figures/global-diagnostics/monthly-latitudinal-ecdf.png', p_cutoffs,
-       width = 12, height = 10, units = 'in', dpi = 300, bg = 'white')
+ggsave('figures/global-diagnostics/monthly-latitudinal-ecdf.pdf', p_cutoffs,
+       width = 10, height = 6, units = 'in', bg = 'white')
 
 # the change in cutoff throughout the year can be estimated by a function
 # with very little uncertainty, but using these smooth changes risks
 # leaving some extreme values in the data. it may be worth doing the check
 # at intervals finer than a month (e.g., 7 or 14 days), but we can probably
-# make the change in future versions, if necessary.
+# make the change in future versions if necessary.
 if(FALSE) {
   doy_cutoffs <- tibble(
     date = c('2025-01-15', '2025-02-15', '2025-03-15', '2025-04-15',
