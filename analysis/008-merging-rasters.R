@@ -271,20 +271,18 @@ dates %>%
 # make a figure showing the data density (drops 12 groups with no rasters)
 p_n_rasters <-
   ggplot(dates) +
-  coord_equal(ratio = 3) +
+  coord_equal(ratio = 4) +
   geom_rect(aes(xmin = doy - 2.5, xmax = doy + 2.5,
                 ymin = year - 0.5, ymax = year + 0.5,
                 fill = factor(n_rasters))) +
   scale_x_continuous('Day of year', expand = c(0, 0)) +
-  scale_y_continuous('Year') +
-  scale_fill_manual(
-    'Number of rasters',
-    values = c('#FFE599', '#5F7D13', '#003F4C')) +
+  scale_y_continuous('Year', expand = c(0, 0)) +
+  scale_fill_manual('Number of rasters', values = rev(color('bamako')(5)))+
   theme(legend.position = 'top')
 
 if(! file.exists('figures/input-data/n-rasters-time.pdf')) {
   ggsave('figures/input-data/n-rasters-time.pdf', p_n_rasters,
-         width = 10, height = 5, units = 'in', dpi = 300, bg = 'white')
+         width = 9, height = 6, units = 'in', bg = 'white')
 }
 
 # create the aggregated datasets ----
