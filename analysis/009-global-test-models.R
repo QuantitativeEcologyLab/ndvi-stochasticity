@@ -1,5 +1,5 @@
 # lab PC: 128 GB of RAM, 12th Gen Intel(R) Core(TM) i7-12700K 3.60 GHz, 12 cores
-# EME Linux: 2.2 TB RAM, Intel Xeon Platinum 8462Y+ processor, 64 cores
+# EME Linux: 2.2 TB RAM, Intel Xeon Platinum 8462Y+ processor, 32 cores
 #' *THE MODELS FIT IN THIS SCRIPT ARE FOR INITIAL TESTING ONLY*
 #' *DO NOT USE THESE MODELS TO PREDICT FOR ANY PROJECTS*
 library('dplyr')   # for data wrangling

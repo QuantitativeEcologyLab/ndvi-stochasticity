@@ -1,5 +1,5 @@
 # specs of the EME Linux:
-# 2.2 TB RAM, Intel Xeon Platinum 8462Y+ processor, 64 cores
+# 2.2 TB RAM, Intel Xeon Platinum 8462Y+ processor, 32 cores
 library('dplyr')     # for data wrangling
 library('tidyr')     # for data wrangling
 library('sf')        # for shapefiles

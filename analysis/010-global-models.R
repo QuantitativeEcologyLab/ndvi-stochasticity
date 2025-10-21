@@ -1,4 +1,4 @@
-# EME Linux: 2.2 TB RAM, Intel Xeon Platinum 8462Y+ processor, 64 cores
+# EME Linux: 2.2 TB RAM, Intel Xeon Platinum 8462Y+ processor, 32 cores
 library('dplyr')   # for data wrangling
 library('mgcv')    # for Genralized Additive Models
 library('gratia')  # for plotting GAMs
