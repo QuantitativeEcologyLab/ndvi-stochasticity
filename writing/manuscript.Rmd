@@ -1,5 +1,11 @@
 ---
-title: "DENVar: A global Dynamic Estimate of NDVI Variance"
+# Full titles can be a maximum of 100 characters, including spaces. 
+# Title Format: Use title case, capitalizing the first letter of each word, except for certain small words, such as articles and short prepositions
+title: "DENVar: A Global Dynamic Estimate of NDVI Variance"
+# Authors should be listed in order of contribution to the paper, by first name, then middle initial (if any), followed by last name.
+# Authors should be listed in the order in which they will appear in the published version if the manuscript is accepted. 
+# Use an asterisk (*) to identify the corresponding author, and be sure to include that person’s e-mail address. Use symbols (in this order: †, ‡, §, ||, ¶, #, ††, ‡‡, etc.) for author notes, such as present addresses, “These authors contributed equally to this work” notations, and similar information.
+# You can include group authors, but please include a list of the actual authors (the group members) in the Supplementary Materials.
 author:
   - name: Stefano Mezzini
     institute: [braes, biol]
@@ -17,22 +23,30 @@ institute:
 bibliography: 'ndvi-stochasticity.bib'
 nocite: |
   @crameri_geodynamic_2018, @crameri_scientific_2018, @okabe_color_2008, @frerebeau_khroma_2024, @olson_terrestrial_2001
-csl: 'journal-of-remote-sensing.csl'
+csl: 'movement-ecology.csl'
 fontsize: 12pt
+documentclass: article
 indent: true
+geometry:
+  - margin=1.25in
 header-includes:
-    - \usepackage{setspace}\doublespacing # for double-spaced text
     - \usepackage{indentfirst} # for indenting first line of each paragraph
     - \usepackage[small]{titlesec} # for smaller font for headings
-    - \usepackage{caption} # for more customization of captions
-    - \captionsetup[figure]{font={scriptsize, doublespacing}, labelfont=bf, aboveskip=4pt, belowskip=-15pt}
-    - \usepackage{hanging} # for hanging indents in references
-    - \usepackage[left]{lineno} # for line numbers
+    - \usepackage[utf8]{inputenc}
+    - \usepackage{authblk}
+    - \usepackage{setspace}
+    - \usepackage{graphicx}
+    - \graphicspath{ {../figures} }
+    - \usepackage{subcaption}
+    - \usepackage{amsmath}
+    - \usepackage{lineno}
+    - \linenumbers
+
 subparagraph: true # needed for \usepackage[small]{titlesec}
 urlcolor: cyan
 output:
   bookdown::pdf_document2:
-    pandoc_args:
+    pandoc_args: # necessary for authors and affiliations
 # https://github.com/pandoc/lua-filters/blob/master/author-info-blocks/README.md
       - '--lua-filter=scholarly-metadata.lua'
       - '--lua-filter=author-info-blocks.lua'
@@ -45,28 +59,26 @@ editor_options:
 
 ```{r, echo=FALSE}
 # need to write abstract before cover page to state number of words in it
-abstract <- "Remote-sensing estimates of habitat productivity such as the Normalized Differnece Vegetation Index (NDVI) have helped develop and support a variety of hypotheses and inform policy and industriy-related decisions. The free availability of such data has allowed widespread access and use of well-established metrics of habitat productivity. However, historically, users tended to focus solely on (predictable) trends in productivity. In recent years, people have been recognizing the importance of envrironmental unpredictability (stochasticity), particularly as climate change and human-induced rapid environmental change transform the ecosystems species have evolved in and adapted to. We adress this gap by presenting a new global Dynamic Estimate of NDVI Variance, *DENVar*. We estimate spatiotemporal trends in mean NDVI and the variance around the mean using Hierarchical Generalized Additive Models, which provide a flexible yet transparent and interpretable model structure. We show that DENVar can be used as a reliable proxy of environmental stochasticity, strongly correlates with ***XXX***, and can be used to test many hepotheses related to environmental stochasitcity, such as forage stochasticity, regime shifts, ... . We conclude by offering some considerations around quantifying and interpreting envirnomental stochasticity, and we provide a publicly and freely available shiny app for estimating mean NDVI and the variance around it, DENVar, for given coordinates and optional dates. The app requires no knowledge of statistics or coding. Additionally, we provide a temporally static raster of mean NDVI and DENVar for the years 1981-2025 that can be used for GIS applications and does not require any knowledge of $\\texttt{R}$."
-
-if(FALSE) {
-  stringi::stri_count_words(abstract)
-}
+abstract <- "Remote-sensing proxies of habitat productivity such as the Normalized Differnece Vegetation Index (NDVI) have helped develop and support many hypotheses and projects. However, historically, users tended to focus solely on trends in mean productivity. In recent years, the variace around the mean (i.e., stochasticity) has gained more attention, particularly as climate change and human-induced rapid environmental change transform the ecosystems species have evolved in and adapted to. Still, calculating trends in NDVI stochasticity requires careful modeling, since stochasticity estimates are conditional on the estimated mean and the scale at which the data are collected and modeled. We thus present a new global Dynamic Estimate of NDVI Variance, *DENVar*. We estimate spatiotemporal trends in NDVI mean and variance using Generalized Additive Models, which provide a flexible yet transparent and interpretable model structure. We show that DENVar correlates nonlinearly with ***XXX*** and can be used to test many hepotheses related to environmental stochasitcity, such as optimal foraging theory and regime shifts as well as for conservation. We provide a publicly and freely available repository for downloading rasters of daily and long-term averages of DENVar and the related estimates of mean NDVI."
 ```
 
 <!-- elements of the title page -->
 
-\clearpage
+\ 
+
+\noindent \textbf{Date}: `r Sys.Date()`
 
 \noindent \textbf{Article type}: Research article
 
-\noindent \textbf{Words in abstract}: `r stringi::stri_count_words(abstract)`
+\noindent \textbf{Words in abstract}: `r stringi::stri_count_words(abstract)` / 250
 
-\noindent \textbf{Words in main text}: `r suppressMessages(wordcountaddin::word_count())`
+\noindent \textbf{Words in main text}: `r suppressMessages(wordcountaddin::word_count())` / 15,000
 
 \noindent \textbf{Figures}: \textcolor{red}{\textbf{XXX}}
 
-\noindent \textbf{Tables}: \textcolor{red}{\textbf{XXX}}
+\noindent \textbf{Tables}: \textcolor{red}{\textbf{XXX}} 
 
-\noindent \textbf{References}: \textcolor{red}{\textbf{XXX}}
+\noindent \textbf{References}: \textcolor{red}{\textbf{XXX}} / 60
 
 \noindent \textbf{Appendices}: \textcolor{red}{\textbf{XXX}}
 
@@ -74,9 +86,9 @@ if(FALSE) {
 
 <!-- start main body on a new page -->
 
-\newpage
+\clearpage
 
-\doublespacing
+\onehalfspacing
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, out.width = '100%', fig.align = 'center', message = FALSE, warning = FALSE, comment = '#')
@@ -93,42 +105,36 @@ TEST_CDV <- FALSE
 
 \newpage
 
+\doublespacing
+
 useful refs:
 
-* https://www.sciencedirect.com/science/article/abs/pii/S0034425711001957?fr=RR-2&ref=pdf_download&rr=962beb22bcb58443
-* https://www.nature.com/articles/s41467-025-61585-5
+* Global evaluation of four AVHRR–NDVI data sets: Intercomparison and assessment against Landsat imagery: https://www.sciencedirect.com/science/article/abs/pii/S0034425711001957?fr=RR-2&ref=pdf_download&rr=962beb22bcb58443
+* Taylor’s law predicts unprecedented pulses of forest disturbance under global change: https://www.nature.com/articles/s41467-025-61585-5
 * AVHRR cloud detection using MODIS data:
 * franch_30_2017
 * villaescusa-nadal_modis-based_2022
+* NDVI is available at a variety of scales @tarnavsky_multiscale_2008
 * see `to-read` folder
-
-stochasticity impacts a wide range of processes, from the individual scale [@mezzini_how_2025] to the ecosystem scales [@noonan_planning_2025]
-
-submitting at journal of remote sensing? (https://spj.science.org/page/remotesensing/for-authors)
 
 \newpage
 
 # Introduction
 
-<!-- remote sensing allows us to study landscapes in detail and over large spatiotemporal scales. Advantages and limitations of remote sensing (no field work, "free"; polluted signal, irregular res) -->
+\noindent The Normalized Difference Vegetation Index [NDVI$;$ @rouse_monitoring_1974; @rouse_monitoring_1974-1] is a proxy of primary productivity used in a wide range of disciplines, including ecology [@pettorelli_using_2005; @pettorelli_normalized_2011], landscape phenology [@merkle_large_2016; @hmimina_evaluation_2013], agriculture [@franch_30_2017], forestry [@joao_indicator-based_2018], and conservation [@mallegowda_assessing_2015; @marcus_planning_2025]. High-resolution, remotely-sensed NDVI data have allowed analysts to estimate plant biomass without the need for fieldwork [@bhatti_field_2024; @borowik_normalized_2013] and leverage such estimates for studying animal movement behavior [@aikens_greenscape_2017; @merkle_large_2016]. Still, most work is limited to quantifying changes in and responses to mean NDVI while ignoring changes in the variance around the mean.
 
-\noindent The Normalized Difference Vegetation Index (NDVI), an estimate of plant greenness and productivity, was first introduced by @rouse_monitoring_1974 and @rouse_monitoring_1974-1 using spectral data from the Landsat 1 satellite. NDVI allowed researchers to evaluate plant productivity and phenology using satellite data [@tucker_red_1979] or hand-held devices [@tucker_monitoring_1979] via a proxy of primary productivity, forage availability, and vegetative cover. Satellite measurements of NDVI thus allowed analysts to remotely monitor not only vegetation but also animals' responses to changes in forage availability [@rouse_monitoring_1974-1; @pettorelli_using_2005; @pettorelli_normalized_2011].
+Environmental stochasticity has been studied for decades [@levins_evolution_1974; @stephens_optimal_1982; @lande_risks_1993; @saether_environmental_1997], but recent work has drawn more attention to the effects environmental stochasticity has at a wire range of scales, from individual organisms [@mezzini_how_2025; @rizzuto_forage_2021] to across landscapes [@zhang_ndvi_2009; @mutti_ndvi_2020; @marcus_planning_2025]. However, estimating trends in NDVI variance requires more nuanced modeling than estimating changes in mean NDVI, particularly when environments are temporally dynamic and spatially heterogeneous. The scale at which processes are observed determine how individuals' perception of and ability to respond to change [@levin_problem_1992]. A forest fire is severely disruptive and deadly for many insects [@fettig_fire_2022], while birds and large mammal may not struggle to escape the fire and or establish a new range [@franklin_relative_2021; @calhoun_movement_2024]. Similarly, the effects of the fire recovery will depend on its duration relative to other organisms' phenology and lifespan [@frankham_importance_2004]. Therefore, distinguishing between a change in mean NDVI and a stochastic fluctuation requires a conscious decision about the scale at which to consider the data.
 
-Since NDVI is not a direct measurement primary productivity but a proxy, it should be interpreted carefully [@pettorelli_normalized_2011]. NDVI is prone to loss of sensitivity in very green (i.e., highly saturated) environments [@matsushita_sensitivity_2007; @son_comparative_2014], and estimates vary across sensors [@beck_global_2011; @huang_commentary_2021; @huang_commentary_2021]. Results can depend on the sensor used to measure NDVI [@fan_global_2016], and the coarse scale of satellite-derived NDVI can be a substantial barrier when when assessing fine-scale changes, heterogeneity, or responses [@goodchild_scale_2023; @reid_its_2018; @nathan_big-data_2022]. Still, NDVI is often used because it is free, well-established, and available at a wide variety of spatiotemporal scales [@tarnavsky_multiscale_2008] while also requiring minimal work to acquire.
+***Add a paragraph on what effects stochasticity may have/why it's important?***
 
-<!-- Uses and history of ndvi [successes of NDVI: pettorelli, Aikens]. -->
+We present a new measure of environmental stochasticity, which we name the Dynamic Estimate of NDVI Variance (DENVar). We estimate DENVar using 44 years of NDVI data from the AVHRR and VIIRS collection of sensors and Generalized Additive Models (GAMs). Although satellites with AVHRR and VIIRS sensors provide data at a coarser resolution (0.05$^\circ$) than other satellites (e.g., 250m for MODIS), they are the only sensors to provide data at a daily frequency and and for more than 40 years. Our use of GAMs provides a flexible yet interpretable approach for estimating trends in mean and variance in NDVI without the rigidity of other more traditional methods (e.g., ARIMA) or the opaqueness of machine learning models such as neural networks [@simpson_modelling_2018; @wood_generalized_2017]. We illustrate the relationships between DENVar and multiple, relevant ecological metrics, and we provide access to a free repository of daily, global estimates of DENVar and the corresponding estimates of mean NDVI.
 
-NDVI has proven particularly useful in a multitude of fields, including animal movement behavior [@merkle_large_2016; @geremia_migrating_2019], landscape fragmentation [@mallegowda_assessing_2015], phenology [@hmimina_evaluation_2013], habitat classification [@clerici_exploring_2012], and forest recovery after fires [@joao_indicator-based_2018]. Historically, analysts focused on changes in mean NDVI, but recent work has included other metrics of NDVI, including rates of change [@aikens_greenscape_2017] and changes in variance [i.e., variation around the mean, stochasticity$;$ @zhang_ndvi_2009; @mutti_ndvi_2020; @mezzini_how_2025]. However, estimating trends in NDVI variance presents some additional challenges, particularly when environments are dynamic and (spatio)temporally heterogeneous.
+<!--
+extra text:
 
-<!-- requirements for good estimates of variance: comments on scale and smoothness -->
+Since NDVI is not a direct measurement primary productivity but a proxy, it should be interpreted carefully [@pettorelli_normalized_2011]. NDVI is prone to loss of sensitivity in very green (i.e., highly saturated) environments [@matsushita_sensitivity_2007; @son_comparative_2014], and estimates vary across sensors [@beck_global_2011; @huang_commentary_2021; @huang_commentary_2021]. Results can depend on the sensor used to measure NDVI [@fan_global_2016], and the coarse scale of satellite-derived NDVI can be a substantial barrier when when assessing fine-scale changes, heterogeneity, or responses [@goodchild_scale_2023; @reid_its_2018]. -->
 
-Fig. \@ref(fig:fig-smooth-wiggly)) illustrates some of the difficulties that arise in modeling trends in variance in NDVI. Disentangling signal from noise is a central aspect of estimating trends in NDVI variance, but what constitutes as signal is dependent on the observer's scale of perception [@levin_problem_1992; @steixner-kumar_strategies_2020]. A forest fire may be extremely disruptive to a small animal with limited motility and a small range size, while a bird or a large mammal may not struggle to survive after relocating or altering its movement behavior [@nathan_movement_2008; @riotte-lambert_environmental_2020]. Similarly, what may be a severe drought to an annual plant may be no more than an unusually dry year for a plant with a longer generation timescale [@frankham_importance_2004]. Thus, disentangling trends in mean NDVI from changes in NDVI variance requires a conscious decision about the scale at which to consider the data.
-
-<!-- Introduce the study -->
-
-In this article, we present the Dynamic Estimate of NDVI Variance (DENVar). We estimate DENVar using 44 years of NDVI data from the AVHRR and VIIRS collection of sensors and Generalized Additive Models (GAMs). Although satellites with AVHRR and VIIRS sensors provide data at a coarser resolution (0.05$^\circ$) than other satellites (e.g., 250m for MODIS), they are the only sensors to provide data at a daily frequency and and for more than 40 years. Generalized Additive Models provide a flexible yet interpretable approach for estimating trends in mean and variance in NDVI without the rigidity of other more traditional methods (e.g., ARIMA) or the opaqueness of machine learning models such as neural networks [@simpson_modelling_2018; @wood_generalized_2017]. We illustrate the relationships between DENVar and relevant ecological metrics, and we provide analysts with three options for incorporating DENVar in their own analyses without requiring any knowledge of `R`: (1) rasters of long-term averages from 1981 to 2025, rasters of yearly averages from 1982 to 2024, and a simple Shiny app that provides estimates for specific locations and dates.
-
-```{r fig-smooth-wiggly, cache=TRUE, fig.cap="\\textbf{Estimates of variance in NDVI depend on the estimated trends in mean NDVI.} Black lines indicate the estimated mean and variance in simulated NDVI (points). Grey ribbons correspond to 95% credible intervals, while the colored segments highlight significant increases (red) and decreases (blue).\\\\ Smoother estimates of the mean (top left) result in wigglier and larger variance estimates (bottom left), since short-term trends in the data are considered to be stochastic events. In contrast, wigglier estimates of the mean (top right) result in smoother and smaller variance estimates (bottom right), since short-term trends in the data are attributed to changes in the mean. The data in the top row is the same in both columns. It was generated as the sum of a sinusoidal function and a mean-reverting, correlated, stochastic process with mean zero. ***ADD METHODS OR REFERENCE APPENDIX***", fig.width=9, fig.height=6}
+```{r fig-smooth-wiggly, eval=FALSE, cache=TRUE, fig.cap="\\textbf{Estimates of variance in NDVI depend on the estimated trends in mean NDVI.} Black lines indicate the estimated mean and variance in simulated NDVI (points). Grey ribbons correspond to 95% credible intervals, while the colored segments highlight significant increases (red) and decreases (blue).\\\\ Smoother estimates of the mean (top left) result in wigglier and larger variance estimates (bottom left), since short-term trends in the data are considered to be stochastic events. In contrast, wigglier estimates of the mean (top right) result in smoother and smaller variance estimates (bottom right), since short-term trends in the data are attributed to changes in the mean. The data in the top row is the same in both columns. It was generated as the sum of a sinusoidal function and a mean-reverting, correlated, stochastic process with mean zero. ***ADD METHODS OR REFERENCE APPENDIX***", fig.width=9, fig.height=6}
 library('dplyr')   # for data wrangling
 library('tidyr')   # for data wrangling
 library('mgcv')    # for modeling
@@ -412,7 +418,7 @@ extreme events, black swans [@anderson_black-swan_2017; @logares_black_2012]
 
 read @lande_risks_1993
 
-\noindent Environmental stochasticity reduces habitats' energetic balance and carrying capacity [@chevin_adaptation_2010] as individuals struggle to rely on unpredictable resources and increase the instability of populations and communities [@lande_risks_1993]. Additionally, stochastic environments reduce the ability of specialist species to adapt and evolve while selecting for more generalist species [@levins_evolution_1974]. Consequently, stochastic environments tend to have lower species diversity [@marcus].
+\noindent Environmental stochasticity reduces habitats' energetic balance and carrying capacity [@chevin_adaptation_2010] as individuals struggle to rely on unpredictable resources and increase the instability of populations and communities [@lande_risks_1993]. Additionally, stochastic environments reduce the ability of specialist species to adapt and evolve while selecting for more generalist species [@levins_evolution_1974]. Consequently, stochastic environments tend to have lower species diversity [@marcus_planning_2025].
 
 ## Environmental stochasticity and fire ecology
 
