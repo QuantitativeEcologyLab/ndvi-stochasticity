@@ -74,8 +74,8 @@ data/other-rasters/*
 # ignore file with EarthData token
 analysis/MY-TOKEN.md
 
-# ignore GCB submission checklist
-writing/GCB-initial-submission-checklist-REX-July-2025.pdf
+# ignore JoRS test files
+writing/jors-guides
 
 # ignore files > 100 MB
 data/hbam-ndvi-data*
