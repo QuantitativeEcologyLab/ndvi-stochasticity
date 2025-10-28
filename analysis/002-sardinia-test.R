@@ -1,7 +1,7 @@
 # specs of my personal laptop:
 # 64.0 GB RAM, 13th Gen Intel Core i7-1370P processor, 14 cores
 # specs of the EME Linux:
-# 2.2 TB RAM, Intel Xeon Platinum 8462Y+ processor, 32 cores
+# 2.2 TB RAM, 2 Intel Xeon Platinum 8462Y+ processors, 64 cores
 library('dplyr')     # for data wrangling
 library('tidyr')     # for data wrangling
 library('sf')        # for shapefiles

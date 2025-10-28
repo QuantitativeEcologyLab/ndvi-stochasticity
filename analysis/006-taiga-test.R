@@ -1,5 +1,5 @@
 # specs of the EME Linux:
-# 2.2 TB RAM, Intel Xeon Platinum 8462Y+ processor, 32 cores
+# 2.2 TB RAM, 2 Intel Xeon Platinum 8462Y+ processors, 64 cores
 #' some code wrappted in `if(FALSE){...}` because it takes too long to run
 library('dplyr')     # for data wrangling
 library('tidyr')     # for data wrangling
