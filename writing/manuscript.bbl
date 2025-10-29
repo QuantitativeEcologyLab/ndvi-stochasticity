@@ -1255,7 +1255,7 @@
       \field{labelnamesource}{author}
       \field{labeltitlesource}{shorttitle}
       \field{edition}{3. printing}
-      \field{isbn}{978-0-691-08062-8 978-0-691-07959-2}
+      \field{isbn}{978-0-691-08062-8}
       \field{number}{2}
       \field{pagetotal}{120}
       \field{series}{Monographs in population biology}
@@ -1971,6 +1971,739 @@
       \field{pages}{459\bibrangedash 463}
       \range{pages}{5}
     \endentry
+    \entry{chevin_adaptation_2010}{article}{}{}
+      \name{author}{3}{}{%
+        {{hash=b7ccc25acaebff8b284b61e400261428}{%
+           family={Chevin},
+           familyi={C\bibinitperiod},
+           given={Luis-Miguel},
+           giveni={L\bibinithyphendelim M\bibinitperiod}}}%
+        {{hash=af16cb6bcbaa32c0b4b7e188fad0e401}{%
+           family={Lande},
+           familyi={L\bibinitperiod},
+           given={Russell},
+           giveni={R\bibinitperiod}}}%
+        {{hash=99f99a8fffbb3d8671430015f8b3ae91}{%
+           family={Mace},
+           familyi={M\bibinitperiod},
+           given={Georgina\bibnamedelima M.},
+           giveni={G\bibinitperiod\bibinitdelim M\bibinitperiod}}}%
+      }
+      \name{editor}{1}{}{%
+        {{hash=ec80056fbd282c45055040ff57a77811}{%
+           family={Kingsolver},
+           familyi={K\bibinitperiod},
+           given={Joel\bibnamedelima G.},
+           giveni={J\bibinitperiod\bibinitdelim G\bibinitperiod}}}%
+      }
+      \strng{namehash}{e5e3ff733aaac0faeb9e04ea6d2b44fc}
+      \strng{fullhash}{e5e3ff733aaac0faeb9e04ea6d2b44fc}
+      \strng{fullhashraw}{e5e3ff733aaac0faeb9e04ea6d2b44fc}
+      \strng{bibnamehash}{e5e3ff733aaac0faeb9e04ea6d2b44fc}
+      \strng{authorbibnamehash}{e5e3ff733aaac0faeb9e04ea6d2b44fc}
+      \strng{authornamehash}{e5e3ff733aaac0faeb9e04ea6d2b44fc}
+      \strng{authorfullhash}{e5e3ff733aaac0faeb9e04ea6d2b44fc}
+      \strng{authorfullhashraw}{e5e3ff733aaac0faeb9e04ea6d2b44fc}
+      \strng{editorbibnamehash}{ec80056fbd282c45055040ff57a77811}
+      \strng{editornamehash}{ec80056fbd282c45055040ff57a77811}
+      \strng{editorfullhash}{ec80056fbd282c45055040ff57a77811}
+      \strng{editorfullhashraw}{ec80056fbd282c45055040ff57a77811}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{shorttitle}
+      \field{day}{27}
+      \field{issn}{1545-7885}
+      \field{journaltitle}{{PLoS} Biology}
+      \field{langid}{english}
+      \field{month}{4}
+      \field{number}{4}
+      \field{shortjournal}{{PLoS} Biol}
+      \field{shorttitle}{Adaptation, Plasticity, and Extinction in a Changing Environment}
+      \field{title}{Adaptation, Plasticity, and Extinction in a Changing Environment: Towards a Predictive Theory}
+      \field{urlday}{11}
+      \field{urlmonth}{11}
+      \field{urlyear}{2020}
+      \field{volume}{8}
+      \field{year}{2010}
+      \field{dateera}{ce}
+      \field{urldateera}{ce}
+      \field{pages}{e1000357}
+      \range{pages}{-1}
+      \verb{doi}
+      \verb 10.1371/journal.pbio.1000357
+      \endverb
+      \verb{file}
+      \verb Full Text:C\:\\Users\\stefa\\Zotero\\storage\\BEPHBCRF\\Chevin et al. - 2010 - Adaptation, Plasticity, and Extinction in a Changi.pdf:application/pdf
+      \endverb
+      \verb{urlraw}
+      \verb https://dx.plos.org/10.1371/journal.pbio.1000357
+      \endverb
+      \verb{url}
+      \verb https://dx.plos.org/10.1371/journal.pbio.1000357
+      \endverb
+    \endentry
+    \entry{bull_metapopulation_2007}{article}{}{}
+      \name{author}{5}{}{%
+        {{hash=8f0f03be7acdfd7ff52a89ace7674109}{%
+           family={Bull},
+           familyi={B\bibinitperiod},
+           given={James\bibnamedelima C},
+           giveni={J\bibinitperiod\bibinitdelim C\bibinitperiod}}}%
+        {{hash=62d9b4a11c0ec42969c55253dfa6abcd}{%
+           family={Pickup},
+           familyi={P\bibinitperiod},
+           given={Nicola\bibnamedelima J},
+           giveni={N\bibinitperiod\bibinitdelim J\bibinitperiod}}}%
+        {{hash=c26cf742b2e2e3c34a574fadc83ae6c1}{%
+           family={Pickett},
+           familyi={P\bibinitperiod},
+           given={Brian},
+           giveni={B\bibinitperiod}}}%
+        {{hash=0456e45e6c1e17889f7950d980ad0349}{%
+           family={Hassell},
+           familyi={H\bibinitperiod},
+           given={Michael\bibnamedelima P},
+           giveni={M\bibinitperiod\bibinitdelim P\bibinitperiod}}}%
+        {{hash=436fb5bd3870f1ec63dc18b57690df5e}{%
+           family={Bonsall},
+           familyi={B\bibinitperiod},
+           given={Michael\bibnamedelima B},
+           giveni={M\bibinitperiod\bibinitdelim B\bibinitperiod}}}%
+      }
+      \strng{namehash}{e82cdb8dc017169ab80d9aa9f7eac321}
+      \strng{fullhash}{e82cdb8dc017169ab80d9aa9f7eac321}
+      \strng{fullhashraw}{e82cdb8dc017169ab80d9aa9f7eac321}
+      \strng{bibnamehash}{e82cdb8dc017169ab80d9aa9f7eac321}
+      \strng{authorbibnamehash}{e82cdb8dc017169ab80d9aa9f7eac321}
+      \strng{authornamehash}{e82cdb8dc017169ab80d9aa9f7eac321}
+      \strng{authorfullhash}{e82cdb8dc017169ab80d9aa9f7eac321}
+      \strng{authorfullhashraw}{e82cdb8dc017169ab80d9aa9f7eac321}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{abstract}{Extinction risk is a key area of investigation for contemporary ecologists and conservation biologists. Practical conservation efforts for vulnerable species can be considerably enhanced by thoroughly understanding the ecological processes that interact to determine species persistence or extinction. Theory has highlighted the importance of both extrinsic environmental factors and intrinsic demographic processes. In laboratory microcosms, single-species single-habitat patch experimental designs have been widely used to validate the theoretical prediction that environmental heterogeneity can increase extinction risk. Here, we develop on this theme by testing the effects of fluctuating resource levels in experimental multispecies metapopulations. We compare a three-species host–parasitoid assemblage that exhibits apparent competition to the individual pairwise, host–parasitoid interactions. Existing theory is broadly supported for two-species assemblages: environmental stochasticity reduces trophic interaction persistence time, while metapopulation structure increases persistence time. However, with increasing assemblage complexity, the effects of trophic interactions mask environmental impacts and persistence time is further reduced, regardless of resource renewal regime. We relate our findings to recent theory, highlighting the importance of taking into account both intrinsic and extrinsic factors, over a range of spatial scales, in order to understand resource–consumer dynamics.}
+      \field{day}{7}
+      \field{issn}{0962-8452, 1471-2954}
+      \field{journaltitle}{Proceedings of the Royal Society B: Biological Sciences}
+      \field{langid}{english}
+      \field{month}{1}
+      \field{number}{1606}
+      \field{shortjournal}{Proc. R. Soc. B.}
+      \field{title}{Metapopulation extinction risk is increased by environmental stochasticity and assemblage complexity}
+      \field{urlday}{29}
+      \field{urlmonth}{10}
+      \field{urlyear}{2025}
+      \field{volume}{274}
+      \field{year}{2007}
+      \field{dateera}{ce}
+      \field{urldateera}{ce}
+      \field{pages}{87\bibrangedash 96}
+      \range{pages}{10}
+      \verb{doi}
+      \verb 10.1098/rspb.2006.3691
+      \endverb
+      \verb{file}
+      \verb Full Text:C\:\\Users\\stefa\\Zotero\\storage\\ZINB9QV7\\Bull et al. - 2007 - Metapopulation extinction risk is increased by environmental stochasticity and assemblage complexity.pdf:application/pdf
+      \endverb
+      \verb{urlraw}
+      \verb https://royalsocietypublishing.org/doi/10.1098/rspb.2006.3691
+      \endverb
+      \verb{url}
+      \verb https://royalsocietypublishing.org/doi/10.1098/rspb.2006.3691
+      \endverb
+    \endentry
+    \entry{fung_quantifying_2018}{article}{}{}
+      \name{author}{3}{}{%
+        {{hash=5808c9ced2bf454af8756896b522f633}{%
+           family={Fung},
+           familyi={F\bibinitperiod},
+           given={Tak},
+           giveni={T\bibinitperiod}}}%
+        {{hash=72c4e51d6ddd0afc3ee05e6255d705c3}{%
+           family={O’Dwyer},
+           familyi={O\bibinitperiod},
+           given={James\bibnamedelima P.},
+           giveni={J\bibinitperiod\bibinitdelim P\bibinitperiod}}}%
+        {{hash=5ae00cbffdcd96fffa39e8032378c838}{%
+           family={Chisholm},
+           familyi={C\bibinitperiod},
+           given={Ryan\bibnamedelima A.},
+           giveni={R\bibinitperiod\bibinitdelim A\bibinitperiod}}}%
+      }
+      \strng{namehash}{db3eee51040bddf2d3dd4fb1c569ccd6}
+      \strng{fullhash}{db3eee51040bddf2d3dd4fb1c569ccd6}
+      \strng{fullhashraw}{db3eee51040bddf2d3dd4fb1c569ccd6}
+      \strng{bibnamehash}{db3eee51040bddf2d3dd4fb1c569ccd6}
+      \strng{authorbibnamehash}{db3eee51040bddf2d3dd4fb1c569ccd6}
+      \strng{authornamehash}{db3eee51040bddf2d3dd4fb1c569ccd6}
+      \strng{authorfullhash}{db3eee51040bddf2d3dd4fb1c569ccd6}
+      \strng{authorfullhashraw}{db3eee51040bddf2d3dd4fb1c569ccd6}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{1476945X}
+      \field{journaltitle}{Ecological Complexity}
+      \field{langid}{english}
+      \field{month}{5}
+      \field{shortjournal}{Ecological Complexity}
+      \field{title}{Quantifying species extinction risk under temporal environmental variance}
+      \field{urlday}{29}
+      \field{urlmonth}{10}
+      \field{urlyear}{2025}
+      \field{volume}{34}
+      \field{year}{2018}
+      \field{dateera}{ce}
+      \field{urldateera}{ce}
+      \field{pages}{139\bibrangedash 146}
+      \range{pages}{8}
+      \verb{doi}
+      \verb 10.1016/j.ecocom.2017.09.006
+      \endverb
+      \verb{urlraw}
+      \verb https://linkinghub.elsevier.com/retrieve/pii/S1476945X1730082X
+      \endverb
+      \verb{url}
+      \verb https://linkinghub.elsevier.com/retrieve/pii/S1476945X1730082X
+      \endverb
+    \endentry
+    \entry{marcus_changing_2023}{misc}{}{}
+      \name{author}{2}{}{%
+        {{hash=c360315756ed78f072c12c5d2ccfaae1}{%
+           family={Marcus},
+           familyi={M\bibinitperiod},
+           given={Rekha},
+           giveni={R\bibinitperiod}}}%
+        {{hash=f4c13c4b0af5e263505cc94e11b4e44d}{%
+           family={Noonan},
+           familyi={N\bibinitperiod},
+           given={Michael\bibnamedelima J.},
+           giveni={M\bibinitperiod\bibinitdelim J\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Ecology}%
+      }
+      \strng{namehash}{ae51ef74492bfbc6b113ebaf2a9f39c6}
+      \strng{fullhash}{ae51ef74492bfbc6b113ebaf2a9f39c6}
+      \strng{fullhashraw}{ae51ef74492bfbc6b113ebaf2a9f39c6}
+      \strng{bibnamehash}{ae51ef74492bfbc6b113ebaf2a9f39c6}
+      \strng{authorbibnamehash}{ae51ef74492bfbc6b113ebaf2a9f39c6}
+      \strng{authornamehash}{ae51ef74492bfbc6b113ebaf2a9f39c6}
+      \strng{authorfullhash}{ae51ef74492bfbc6b113ebaf2a9f39c6}
+      \strng{authorfullhashraw}{ae51ef74492bfbc6b113ebaf2a9f39c6}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{abstract}{Abstract Protected areas are widely used management tools designed to support the long-term conservation of biodiversity. The effectiveness of protected areas is being challenged by human-induced climate change, however, which is causing three broad shifts away from the current distribution of climate trends: a change in mean conditions, a change in the variance around the mean, and/or a change in symmetry. Though changes in average conditions are certainly important, the second behaviour, a change in variance, brings a unique set of challenges that species must respond to. As conditions become more variable, phenological events become less predictable, extreme weather events become more frequent, food security and ecosystem stability are compromised, and extinction risk increases. It therefore stands to reason that changes in the variance of local conditions should be a core consideration when designing protected areas. Here, we reviewed the literature to determine the extent to which changes in variance are being incorporated into protected area planning. Worryingly, we found that fewer than a quarter of the 100 studies we surveyed formally considered how climate change might change mean conditions, and only four considered climate change-induced changes in the variance around the mean. Our evaluation reveals an alarming gap in protected area research. The majority of researchers continue to make recommendations for protected areas without acknowledging that the area(s) they are recommending for protection may have markedly different conditions in the future. Whether variability is considered or not, stochastic events represent a serious threat to the persistence of species and complex ecosystems. Effective conservation requires actively considering how the stability of conditions within protected areas will be impacted by future climate change. As global climate patterns tend towards increasing unpredictability, protecting less variable habitat should be a priority to ensure local populations are not exposed to elevated extinction risk.}
+      \field{day}{29}
+      \field{langid}{english}
+      \field{month}{10}
+      \field{title}{Changing variability is an overlooked aspect of protected area planning}
+      \field{urlday}{23}
+      \field{urlmonth}{10}
+      \field{urlyear}{2025}
+      \field{year}{2023}
+      \field{dateera}{ce}
+      \field{urldateera}{ce}
+      \verb{doi}
+      \verb 10.1101/2023.10.26.564062
+      \endverb
+      \verb{file}
+      \verb Submitted Version:C\:\\Users\\stefa\\Zotero\\storage\\SUBQ9HXE\\Marcus and Noonan - 2023 - Changing variability is an overlooked aspect of protected area planning.pdf:application/pdf
+      \endverb
+      \verb{urlraw}
+      \verb http://biorxiv.org/lookup/doi/10.1101/2023.10.26.564062
+      \endverb
+      \verb{url}
+      \verb http://biorxiv.org/lookup/doi/10.1101/2023.10.26.564062
+      \endverb
+    \endentry
+    \entry{matsushita_sensitivity_2007}{article}{}{}
+      \name{author}{5}{}{%
+        {{hash=c2cdd9a7ea72dfa1fcc6e5e8ca2b7f3f}{%
+           family={Matsushita},
+           familyi={M\bibinitperiod},
+           given={Bunkei},
+           giveni={B\bibinitperiod}}}%
+        {{hash=b32f61b294f8e4aa5306c6ea6859da26}{%
+           family={Yang},
+           familyi={Y\bibinitperiod},
+           given={Wei},
+           giveni={W\bibinitperiod}}}%
+        {{hash=42990f77d0dad790e7a9f0d77aa2d3b0}{%
+           family={Chen},
+           familyi={C\bibinitperiod},
+           given={Jin},
+           giveni={J\bibinitperiod}}}%
+        {{hash=0e9e1c4bcded7685f7e2d7b040ffd9e6}{%
+           family={Onda},
+           familyi={O\bibinitperiod},
+           given={Yuyichi},
+           giveni={Y\bibinitperiod}}}%
+        {{hash=1416cc853df1b5c33ab4cbf54aa3feca}{%
+           family={Qiu},
+           familyi={Q\bibinitperiod},
+           given={Guoyu},
+           giveni={G\bibinitperiod}}}%
+      }
+      \strng{namehash}{8c0724c729b08366f26d85db389171ff}
+      \strng{fullhash}{8c0724c729b08366f26d85db389171ff}
+      \strng{fullhashraw}{8c0724c729b08366f26d85db389171ff}
+      \strng{bibnamehash}{8c0724c729b08366f26d85db389171ff}
+      \strng{authorbibnamehash}{8c0724c729b08366f26d85db389171ff}
+      \strng{authornamehash}{8c0724c729b08366f26d85db389171ff}
+      \strng{authorfullhash}{8c0724c729b08366f26d85db389171ff}
+      \strng{authorfullhashraw}{8c0724c729b08366f26d85db389171ff}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{shorttitle}
+      \field{abstract}{Vegetation indices play an important role in monitoring variations in vegetation.The Enhanced Vegetation Index ({EVI}) proposed by the {MODIS} Land Discipline Groupand the Normalized Difference Vegetation Index ({NDVI}) are both global-based vegetationindices aimed at providing consistent spatial and temporal information regarding globalvegetation. However, many environmental factors such as atmospheric conditions and soilbackground may produce errors in these indices. The topographic effect is another veryimportant factor, especially when the indices are used in areas of rough terrain. In thispaper, we theoretically analyzed differences in the topographic effect on the {EVI} and {theNDVI} based on a non-Lambertian model and two airborne-based images acquired from amountainous area covered by high-density Japanese cypress plantation were used as a casestudy. The results indicate that the soil adjustment factor “L” in the {EVI} makes it moresensitive to topographic conditions than is the {NDVI}. Based on these results, we stronglyrecommend that the topographic effect should be removed in the reflectance data beforethe {EVI} was calculated—as well as from other vegetation indices that similarly include a term without a band ratio format (e.g., the {PVI} and {SAVI})—when these indices are used in the area of rough terrain, where the topographic effect on the vegetation indices having only a band ratio format (e.g., the {NDVI}) can usually be ignored.}
+      \field{day}{5}
+      \field{issn}{1424-8220}
+      \field{journaltitle}{Sensors}
+      \field{langid}{english}
+      \field{month}{11}
+      \field{number}{11}
+      \field{shortjournal}{Sensors}
+      \field{shorttitle}{Sensitivity of the Enhanced Vegetation Index ({EVI}) and Normalized Difference Vegetation Index ({NDVI}) to Topographic Effects}
+      \field{title}{Sensitivity of the Enhanced Vegetation Index ({EVI}) and Normalized Difference Vegetation Index ({NDVI}) to Topographic Effects: A Case Study in High-density Cypress Forest}
+      \field{urlday}{15}
+      \field{urlmonth}{5}
+      \field{urlyear}{2025}
+      \field{volume}{7}
+      \field{year}{2007}
+      \field{dateera}{ce}
+      \field{urldateera}{ce}
+      \field{pages}{2636\bibrangedash 2651}
+      \range{pages}{16}
+      \verb{doi}
+      \verb 10.3390/s7112636
+      \endverb
+      \verb{file}
+      \verb Full Text:C\:\\Users\\stefa\\Zotero\\storage\\QKQJ8IQD\\Matsushita et al. - 2007 - Sensitivity of the Enhanced Vegetation Index (EVI).pdf:application/pdf
+      \endverb
+      \verb{urlraw}
+      \verb https://www.mdpi.com/1424-8220/7/11/2636
+      \endverb
+      \verb{url}
+      \verb https://www.mdpi.com/1424-8220/7/11/2636
+      \endverb
+    \endentry
+    \entry{son_comparative_2014}{article}{}{}
+      \name{author}{5}{}{%
+        {{hash=f1532a198366fada890f9dd8fb263924}{%
+           family={Son},
+           familyi={S\bibinitperiod},
+           given={N.T.},
+           giveni={N\bibinitperiod}}}%
+        {{hash=fa48977398f562d53b01f38e474323be}{%
+           family={Chen},
+           familyi={C\bibinitperiod},
+           given={C.F.},
+           giveni={C\bibinitperiod}}}%
+        {{hash=f23df59572df71a24d6fe68eed1d94c6}{%
+           family={Chen},
+           familyi={C\bibinitperiod},
+           given={C.R.},
+           giveni={C\bibinitperiod}}}%
+        {{hash=2b87b7d78562f61349f0eb8eb7a504dc}{%
+           family={Minh},
+           familyi={M\bibinitperiod},
+           given={V.Q.},
+           giveni={V\bibinitperiod}}}%
+        {{hash=e6c09b73d5e1d2c92a6c12d2ae1977d2}{%
+           family={Trung},
+           familyi={T\bibinitperiod},
+           given={N.H.},
+           giveni={N\bibinitperiod}}}%
+      }
+      \strng{namehash}{3fd445c38a33ab5293c0c603c207c6ce}
+      \strng{fullhash}{3fd445c38a33ab5293c0c603c207c6ce}
+      \strng{fullhashraw}{3fd445c38a33ab5293c0c603c207c6ce}
+      \strng{bibnamehash}{3fd445c38a33ab5293c0c603c207c6ce}
+      \strng{authorbibnamehash}{3fd445c38a33ab5293c0c603c207c6ce}
+      \strng{authornamehash}{3fd445c38a33ab5293c0c603c207c6ce}
+      \strng{authorfullhash}{3fd445c38a33ab5293c0c603c207c6ce}
+      \strng{authorfullhashraw}{3fd445c38a33ab5293c0c603c207c6ce}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0168-1923}
+      \field{journaltitle}{Agricultural and Forest Meteorology}
+      \field{langid}{english}
+      \field{month}{10}
+      \field{note}{Publisher: Elsevier {BV}}
+      \field{title}{A comparative analysis of multitemporal {MODIS} {EVI} and {NDVI} data for large-scale rice yield estimation}
+      \field{urlday}{23}
+      \field{urlmonth}{7}
+      \field{urlyear}{2025}
+      \field{volume}{197}
+      \field{year}{2014}
+      \field{dateera}{ce}
+      \field{urldateera}{ce}
+      \field{pages}{52\bibrangedash 64}
+      \range{pages}{13}
+      \verb{doi}
+      \verb 10.1016/j.agrformet.2014.06.007
+      \endverb
+      \verb{urlraw}
+      \verb https://linkinghub.elsevier.com/retrieve/pii/S016819231400149X
+      \endverb
+      \verb{url}
+      \verb https://linkinghub.elsevier.com/retrieve/pii/S016819231400149X
+      \endverb
+    \endentry
+    \entry{beck_global_2011}{article}{}{}
+      \name{author}{6}{}{%
+        {{hash=d7dcede9d412a3d8fa3b91daafdbea4d}{%
+           family={Beck},
+           familyi={B\bibinitperiod},
+           given={Hylke\bibnamedelima E.},
+           giveni={H\bibinitperiod\bibinitdelim E\bibinitperiod}}}%
+        {{hash=2c2328aae86c1cf0e3d05bbea9d110ef}{%
+           family={{McVicar}},
+           familyi={M\bibinitperiod},
+           given={Tim\bibnamedelima R.},
+           giveni={T\bibinitperiod\bibinitdelim R\bibinitperiod}}}%
+        {{hash=b5fc03e00b20b0d4592d55426e97b59c}{%
+           family={Van\bibnamedelima Dijk},
+           familyi={V\bibinitperiod\bibinitdelim D\bibinitperiod},
+           given={Albert\bibnamedelima I.J.M.},
+           giveni={A\bibinitperiod\bibinitdelim I\bibinitperiod}}}%
+        {{hash=f55b38acc61a40fcd8e621162ff56584}{%
+           family={Schellekens},
+           familyi={S\bibinitperiod},
+           given={Jaap},
+           giveni={J\bibinitperiod}}}%
+        {{hash=b77639fe448f4e9048c206be4092f82f}{%
+           family={De\bibnamedelima Jeu},
+           familyi={D\bibinitperiod\bibinitdelim J\bibinitperiod},
+           given={Richard\bibnamedelima A.M.},
+           giveni={R\bibinitperiod\bibinitdelim A\bibinitperiod}}}%
+        {{hash=6b8d28491cc65aac6095ac47b2a13eca}{%
+           family={Bruijnzeel},
+           familyi={B\bibinitperiod},
+           given={L.\bibnamedelimi Adrian},
+           giveni={L\bibinitperiod\bibinitdelim A\bibinitperiod}}}%
+      }
+      \strng{namehash}{6cc79cd9ff0db24868c094554c4c7f43}
+      \strng{fullhash}{6cc79cd9ff0db24868c094554c4c7f43}
+      \strng{fullhashraw}{6cc79cd9ff0db24868c094554c4c7f43}
+      \strng{bibnamehash}{6cc79cd9ff0db24868c094554c4c7f43}
+      \strng{authorbibnamehash}{6cc79cd9ff0db24868c094554c4c7f43}
+      \strng{authornamehash}{6cc79cd9ff0db24868c094554c4c7f43}
+      \strng{authorfullhash}{6cc79cd9ff0db24868c094554c4c7f43}
+      \strng{authorfullhashraw}{6cc79cd9ff0db24868c094554c4c7f43}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{shorttitle}
+      \field{issn}{0034-4257}
+      \field{journaltitle}{Remote Sensing of Environment}
+      \field{langid}{english}
+      \field{month}{10}
+      \field{note}{Publisher: Elsevier {BV}}
+      \field{number}{10}
+      \field{shorttitle}{Global evaluation of four {AVHRR}–{NDVI} data sets}
+      \field{title}{Global evaluation of four {AVHRR}–{NDVI} data sets: Intercomparison and assessment against Landsat imagery}
+      \field{urlday}{21}
+      \field{urlmonth}{7}
+      \field{urlyear}{2025}
+      \field{volume}{115}
+      \field{year}{2011}
+      \field{dateera}{ce}
+      \field{urldateera}{ce}
+      \field{pages}{2547\bibrangedash 2563}
+      \range{pages}{17}
+      \verb{doi}
+      \verb 10.1016/j.rse.2011.05.012
+      \endverb
+      \verb{urlraw}
+      \verb https://linkinghub.elsevier.com/retrieve/pii/S0034425711001957
+      \endverb
+      \verb{url}
+      \verb https://linkinghub.elsevier.com/retrieve/pii/S0034425711001957
+      \endverb
+    \endentry
+    \entry{fan_global_2016}{article}{}{}
+      \name{author}{2}{}{%
+        {{hash=3460ebae224d05a69d161c98b2b115e1}{%
+           family={Fan},
+           familyi={F\bibinitperiod},
+           given={Xingwang},
+           giveni={X\bibinitperiod}}}%
+        {{hash=174f1d49a7732a6c97e5d08da9d29463}{%
+           family={Liu},
+           familyi={L\bibinitperiod},
+           given={Yuanbo},
+           giveni={Y\bibinitperiod}}}%
+      }
+      \strng{namehash}{dcecd9a20b566e0263a3168fdca49e88}
+      \strng{fullhash}{dcecd9a20b566e0263a3168fdca49e88}
+      \strng{fullhashraw}{dcecd9a20b566e0263a3168fdca49e88}
+      \strng{bibnamehash}{dcecd9a20b566e0263a3168fdca49e88}
+      \strng{authorbibnamehash}{dcecd9a20b566e0263a3168fdca49e88}
+      \strng{authornamehash}{dcecd9a20b566e0263a3168fdca49e88}
+      \strng{authorfullhash}{dcecd9a20b566e0263a3168fdca49e88}
+      \strng{authorfullhashraw}{dcecd9a20b566e0263a3168fdca49e88}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{09242716}
+      \field{journaltitle}{{ISPRS} Journal of Photogrammetry and Remote Sensing}
+      \field{langid}{english}
+      \field{month}{11}
+      \field{shortjournal}{{ISPRS} Journal of Photogrammetry and Remote Sensing}
+      \field{title}{A global study of {NDVI} difference among moderate-resolution satellite sensors}
+      \field{urlday}{14}
+      \field{urlmonth}{2}
+      \field{urlyear}{2024}
+      \field{volume}{121}
+      \field{year}{2016}
+      \field{dateera}{ce}
+      \field{urldateera}{ce}
+      \field{pages}{177\bibrangedash 191}
+      \range{pages}{15}
+      \verb{doi}
+      \verb 10.1016/j.isprsjprs.2016.09.008
+      \endverb
+      \verb{urlraw}
+      \verb https://linkinghub.elsevier.com/retrieve/pii/S0924271616303975
+      \endverb
+      \verb{url}
+      \verb https://linkinghub.elsevier.com/retrieve/pii/S0924271616303975
+      \endverb
+    \endentry
+    \entry{huang_commentary_2021}{article}{}{}
+      \name{author}{5}{}{%
+        {{hash=dacf1f74e9e4a96e153f815150fe8b6c}{%
+           family={Huang},
+           familyi={H\bibinitperiod},
+           given={Sha},
+           giveni={S\bibinitperiod}}}%
+        {{hash=d0affe44883e0738ba02489b33fb7370}{%
+           family={Tang},
+           familyi={T\bibinitperiod},
+           given={Lina},
+           giveni={L\bibinitperiod}}}%
+        {{hash=913aac8a6d5a5bf2fe4eab941b5c3958}{%
+           family={Hupy},
+           familyi={H\bibinitperiod},
+           given={Joseph\bibnamedelima P.},
+           giveni={J\bibinitperiod\bibinitdelim P\bibinitperiod}}}%
+        {{hash=a84866b4900b3fe9a714de1f78dbf282}{%
+           family={Wang},
+           familyi={W\bibinitperiod},
+           given={Yang},
+           giveni={Y\bibinitperiod}}}%
+        {{hash=62a4158ef8a844a3d1635654748453a5}{%
+           family={Shao},
+           familyi={S\bibinitperiod},
+           given={Guofan},
+           giveni={G\bibinitperiod}}}%
+      }
+      \strng{namehash}{8b78da8af315ce6ca9ee36f61ba1b1e4}
+      \strng{fullhash}{8b78da8af315ce6ca9ee36f61ba1b1e4}
+      \strng{fullhashraw}{8b78da8af315ce6ca9ee36f61ba1b1e4}
+      \strng{bibnamehash}{8b78da8af315ce6ca9ee36f61ba1b1e4}
+      \strng{authorbibnamehash}{8b78da8af315ce6ca9ee36f61ba1b1e4}
+      \strng{authornamehash}{8b78da8af315ce6ca9ee36f61ba1b1e4}
+      \strng{authorfullhash}{8b78da8af315ce6ca9ee36f61ba1b1e4}
+      \strng{authorfullhashraw}{8b78da8af315ce6ca9ee36f61ba1b1e4}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{abstract}{Abstract The Normalized Difference Vegetation Index ({NDVI}), one of the earliest remote sensing analytical products used to simplify the complexities of multi-spectral imagery, is now the most popular index used for vegetation assessment. This popularity and widespread use relate to how an {NDVI} can be calculated with any multispectral sensor with a visible and a near-{IR} band. Increasingly low costs and weights of multispectral sensors mean they can be mounted on satellite, aerial, and increasingly—Unmanned Aerial Systems ({UAS}). While studies have found that the {NDVI} is effective for expressing vegetation status and quantified vegetation attributes, its widespread use and popularity, especially in {UAS} applications, carry inherent risks of misuse with end users who received little to no remote sensing education. This article summarizes the progress of {NDVI} acquisition, highlights the areas of {NDVI} application, and addresses the critical problems and considerations in using {NDVI}. Detailed discussion mainly covers three aspects: atmospheric effect, saturation phenomenon, and sensor factors. The use of {NDVI} can be highly effective as long as its limitations and capabilities are understood. This consideration is particularly important to the {UAS} user community.}
+      \field{issn}{1007-662X, 1993-0607}
+      \field{journaltitle}{Journal of Forestry Research}
+      \field{langid}{english}
+      \field{month}{2}
+      \field{number}{1}
+      \field{shortjournal}{J. For. Res.}
+      \field{title}{A commentary review on the use of normalized difference vegetation index ({NDVI}) in the era of popular remote sensing}
+      \field{urlday}{14}
+      \field{urlmonth}{2}
+      \field{urlyear}{2024}
+      \field{volume}{32}
+      \field{year}{2021}
+      \field{dateera}{ce}
+      \field{urldateera}{ce}
+      \field{pages}{1\bibrangedash 6}
+      \range{pages}{6}
+      \verb{doi}
+      \verb 10.1007/s11676-020-01155-1
+      \endverb
+      \verb{file}
+      \verb Full Text:C\:\\Users\\stefa\\Zotero\\storage\\DB9AJQW8\\Huang et al. - 2021 - A commentary review on the use of normalized diffe.pdf:application/pdf
+      \endverb
+      \verb{urlraw}
+      \verb https://link.springer.com/10.1007/s11676-020-01155-1
+      \endverb
+      \verb{url}
+      \verb https://link.springer.com/10.1007/s11676-020-01155-1
+      \endverb
+    \endentry
+    \entry{goodchild_scale_2023}{book}{}{}
+      \name{author}{2}{}{%
+        {{hash=e89c8c0dc94bdd20c257b1d74f262ced}{%
+           family={Goodchild},
+           familyi={G\bibinitperiod},
+           given={Michael\bibnamedelima F.},
+           giveni={M\bibinitperiod\bibinitdelim F\bibinitperiod}}}%
+        {{hash=e2ed88eea6939fe538f4e96fb355971b}{%
+           family={Quattrochi},
+           familyi={Q\bibinitperiod},
+           given={Dale\bibnamedelima A.},
+           giveni={D\bibinitperiod\bibinitdelim A\bibinitperiod}}}%
+      }
+      \list{location}{1}{%
+        {New York}%
+      }
+      \list{publisher}{1}{%
+        {Routledge}%
+      }
+      \strng{namehash}{066f900d9fd4c41a3376ee21dca2e5b8}
+      \strng{fullhash}{066f900d9fd4c41a3376ee21dca2e5b8}
+      \strng{fullhashraw}{066f900d9fd4c41a3376ee21dca2e5b8}
+      \strng{bibnamehash}{066f900d9fd4c41a3376ee21dca2e5b8}
+      \strng{authorbibnamehash}{066f900d9fd4c41a3376ee21dca2e5b8}
+      \strng{authornamehash}{066f900d9fd4c41a3376ee21dca2e5b8}
+      \strng{authorfullhash}{066f900d9fd4c41a3376ee21dca2e5b8}
+      \strng{authorfullhashraw}{066f900d9fd4c41a3376ee21dca2e5b8}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{day}{6}
+      \field{edition}{1}
+      \field{isbn}{978-0-203-74017-0}
+      \field{langid}{english}
+      \field{month}{1}
+      \field{title}{Scale in Remote Sensing and {GIS}}
+      \field{urlday}{15}
+      \field{urlmonth}{5}
+      \field{urlyear}{2025}
+      \field{year}{2023}
+      \field{dateera}{ce}
+      \field{urldateera}{ce}
+      \verb{doi}
+      \verb 10.1201/9780203740170
+      \endverb
+      \verb{urlraw}
+      \verb https://www.taylorfrancis.com/books/9780203740170
+      \endverb
+      \verb{url}
+      \verb https://www.taylorfrancis.com/books/9780203740170
+      \endverb
+    \endentry
+    \entry{reid_its_2018}{article}{}{}
+      \name{author}{5}{}{%
+        {{hash=c8b4fccda8f779916720223cd54b5fef}{%
+           family={Reid},
+           familyi={R\bibinitperiod},
+           given={Colleen\bibnamedelima E.},
+           giveni={C\bibinitperiod\bibinitdelim E\bibinitperiod}}}%
+        {{hash=dfe6d5d8623ec24a3d8f9c0fc93c2272}{%
+           family={Kubzansky},
+           familyi={K\bibinitperiod},
+           given={Laura\bibnamedelima D.},
+           giveni={L\bibinitperiod\bibinitdelim D\bibinitperiod}}}%
+        {{hash=1ac6a4900d951998b27738caa3d3b677}{%
+           family={Li},
+           familyi={L\bibinitperiod},
+           given={Jiayue},
+           giveni={J\bibinitperiod}}}%
+        {{hash=41f0fd4246af687c12db826f1082a03c}{%
+           family={Shmool},
+           familyi={S\bibinitperiod},
+           given={Jessie\bibnamedelima L.},
+           giveni={J\bibinitperiod\bibinitdelim L\bibinitperiod}}}%
+        {{hash=20d6668f1992f10864bc9bc1f4337ddd}{%
+           family={Clougherty},
+           familyi={C\bibinitperiod},
+           given={Jane\bibnamedelima E.},
+           giveni={J\bibinitperiod\bibinitdelim E\bibinitperiod}}}%
+      }
+      \strng{namehash}{dc001459c081565604dcc5d0fc78c6d7}
+      \strng{fullhash}{dc001459c081565604dcc5d0fc78c6d7}
+      \strng{fullhashraw}{dc001459c081565604dcc5d0fc78c6d7}
+      \strng{bibnamehash}{dc001459c081565604dcc5d0fc78c6d7}
+      \strng{authorbibnamehash}{dc001459c081565604dcc5d0fc78c6d7}
+      \strng{authornamehash}{dc001459c081565604dcc5d0fc78c6d7}
+      \strng{authorfullhash}{dc001459c081565604dcc5d0fc78c6d7}
+      \strng{authorfullhashraw}{dc001459c081565604dcc5d0fc78c6d7}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{shorttitle}
+      \field{issn}{1353-8292}
+      \field{journaltitle}{Health \& Place}
+      \field{langid}{english}
+      \field{month}{11}
+      \field{note}{Publisher: Elsevier {BV}}
+      \field{shorttitle}{It's not easy assessing greenness}
+      \field{title}{It's not easy assessing greenness: A comparison of {NDVI} datasets and neighborhood types and their associations with self-rated health in New York City}
+      \field{urlday}{23}
+      \field{urlmonth}{7}
+      \field{urlyear}{2025}
+      \field{volume}{54}
+      \field{year}{2018}
+      \field{dateera}{ce}
+      \field{urldateera}{ce}
+      \field{pages}{92\bibrangedash 101}
+      \range{pages}{10}
+      \verb{doi}
+      \verb 10.1016/j.healthplace.2018.09.005
+      \endverb
+      \verb{urlraw}
+      \verb https://linkinghub.elsevier.com/retrieve/pii/S1353829218301151
+      \endverb
+      \verb{url}
+      \verb https://linkinghub.elsevier.com/retrieve/pii/S1353829218301151
+      \endverb
+    \endentry
+    \entry{wood_generalized_2017}{book}{}{}
+      \name{author}{1}{}{%
+        {{hash=4f816a96f8d000d6cb78dea6a1f2da1d}{%
+           family={Wood},
+           familyi={W\bibinitperiod},
+           given={Simon\bibnamedelima N.},
+           giveni={S\bibinitperiod\bibinitdelim N\bibinitperiod}}}%
+      }
+      \list{location}{1}{%
+        {Boca Raton}%
+      }
+      \list{publisher}{1}{%
+        {{CRC} Press/Taylor \& Francis Group}%
+      }
+      \strng{namehash}{4f816a96f8d000d6cb78dea6a1f2da1d}
+      \strng{fullhash}{4f816a96f8d000d6cb78dea6a1f2da1d}
+      \strng{fullhashraw}{4f816a96f8d000d6cb78dea6a1f2da1d}
+      \strng{bibnamehash}{4f816a96f8d000d6cb78dea6a1f2da1d}
+      \strng{authorbibnamehash}{4f816a96f8d000d6cb78dea6a1f2da1d}
+      \strng{authornamehash}{4f816a96f8d000d6cb78dea6a1f2da1d}
+      \strng{authorfullhash}{4f816a96f8d000d6cb78dea6a1f2da1d}
+      \strng{authorfullhashraw}{4f816a96f8d000d6cb78dea6a1f2da1d}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{shorttitle}
+      \field{edition}{Second edition}
+      \field{isbn}{978-1-4987-2833-1}
+      \field{series}{Chapman \& Hall/{CRC} texts in statistical science}
+      \field{shorttitle}{Generalized additive models}
+      \field{title}{Generalized additive models: an introduction with R}
+      \field{year}{2017}
+      \field{dateera}{ce}
+      \keyw{Linear models (Statistics),R (Computer program language),Random walks (Mathematics)}
+    \endentry
     \entry{simpson_modelling_2018}{article}{}{}
       \name{author}{1}{}{%
         {{hash=16eaab80354d2aa833b57ee82f9b1377}{%
@@ -2015,282 +2748,6 @@
       \endverb
       \verb{url}
       \verb https://www.frontiersin.org/article/10.3389/fevo.2018.00149/full
-      \endverb
-    \endentry
-    \entry{wood_generalized_2017}{book}{}{}
-      \name{author}{1}{}{%
-        {{hash=4f816a96f8d000d6cb78dea6a1f2da1d}{%
-           family={Wood},
-           familyi={W\bibinitperiod},
-           given={Simon\bibnamedelima N.},
-           giveni={S\bibinitperiod\bibinitdelim N\bibinitperiod}}}%
-      }
-      \list{location}{1}{%
-        {Boca Raton}%
-      }
-      \list{publisher}{1}{%
-        {{CRC} Press/Taylor \& Francis Group}%
-      }
-      \strng{namehash}{4f816a96f8d000d6cb78dea6a1f2da1d}
-      \strng{fullhash}{4f816a96f8d000d6cb78dea6a1f2da1d}
-      \strng{fullhashraw}{4f816a96f8d000d6cb78dea6a1f2da1d}
-      \strng{bibnamehash}{4f816a96f8d000d6cb78dea6a1f2da1d}
-      \strng{authorbibnamehash}{4f816a96f8d000d6cb78dea6a1f2da1d}
-      \strng{authornamehash}{4f816a96f8d000d6cb78dea6a1f2da1d}
-      \strng{authorfullhash}{4f816a96f8d000d6cb78dea6a1f2da1d}
-      \strng{authorfullhashraw}{4f816a96f8d000d6cb78dea6a1f2da1d}
-      \field{sortinit}{2}
-      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
-      \field{labelnamesource}{author}
-      \field{labeltitlesource}{shorttitle}
-      \field{edition}{Second edition}
-      \field{isbn}{978-1-4987-2833-1}
-      \field{series}{Chapman \& Hall/{CRC} texts in statistical science}
-      \field{shorttitle}{Generalized additive models}
-      \field{title}{Generalized additive models: an introduction with R}
-      \field{year}{2017}
-      \field{dateera}{ce}
-      \keyw{Linear models (Statistics),R (Computer program language),Random walks (Mathematics)}
-    \endentry
-    \entry{crameri_misuse_2020}{article}{}{}
-      \name{author}{3}{}{%
-        {{hash=3d651121d9f7ab7e447009675aa749ae}{%
-           family={Crameri},
-           familyi={C\bibinitperiod},
-           given={Fabio},
-           giveni={F\bibinitperiod}}}%
-        {{hash=b4078088371577f6f93d53b360a1b8e8}{%
-           family={Shephard},
-           familyi={S\bibinitperiod},
-           given={Grace\bibnamedelima E.},
-           giveni={G\bibinitperiod\bibinitdelim E\bibinitperiod}}}%
-        {{hash=52f2d0157618ea6924578e3f9e442db4}{%
-           family={Heron},
-           familyi={H\bibinitperiod},
-           given={Philip\bibnamedelima J.},
-           giveni={P\bibinitperiod\bibinitdelim J\bibinitperiod}}}%
-      }
-      \strng{namehash}{4927c0b838104e0fc7cc65c078c02fed}
-      \strng{fullhash}{4927c0b838104e0fc7cc65c078c02fed}
-      \strng{fullhashraw}{4927c0b838104e0fc7cc65c078c02fed}
-      \strng{bibnamehash}{4927c0b838104e0fc7cc65c078c02fed}
-      \strng{authorbibnamehash}{4927c0b838104e0fc7cc65c078c02fed}
-      \strng{authornamehash}{4927c0b838104e0fc7cc65c078c02fed}
-      \strng{authorfullhash}{4927c0b838104e0fc7cc65c078c02fed}
-      \strng{authorfullhashraw}{4927c0b838104e0fc7cc65c078c02fed}
-      \field{sortinit}{2}
-      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
-      \field{labelnamesource}{author}
-      \field{labeltitlesource}{title}
-      \field{abstract}{Abstract The accurate representation of data is essential in science communication. However, colour maps that visually distort data through uneven colour gradients or are unreadable to those with colour-vision deficiency remain prevalent in science. These include, but are not limited to, rainbow-like and red–green colour maps. Here, we present a simple guide for the scientific use of colour. We show how scientifically derived colour maps report true data variations, reduce complexity, and are accessible for people with colour-vision deficiencies. We highlight ways for the scientific community to identify and prevent the misuse of colour in science, and call for a proactive step away from colour misuse among the community, publishers, and the press.}
-      \field{day}{28}
-      \field{issn}{2041-1723}
-      \field{journaltitle}{Nature Communications}
-      \field{langid}{english}
-      \field{month}{10}
-      \field{number}{1}
-      \field{shortjournal}{Nat Commun}
-      \field{title}{The misuse of colour in science communication}
-      \field{urlday}{14}
-      \field{urlmonth}{4}
-      \field{urlyear}{2025}
-      \field{volume}{11}
-      \field{year}{2020}
-      \field{dateera}{ce}
-      \field{urldateera}{ce}
-      \field{pages}{5444}
-      \range{pages}{1}
-      \verb{doi}
-      \verb 10.1038/s41467-020-19160-7
-      \endverb
-      \verb{file}
-      \verb Full Text:C\:\\Users\\stefa\\Zotero\\storage\\P84VDYZJ\\Crameri et al. - 2020 - The misuse of colour in science communication.pdf:application/pdf
-      \endverb
-      \verb{urlraw}
-      \verb https://www.nature.com/articles/s41467-020-19160-7
-      \endverb
-      \verb{url}
-      \verb https://www.nature.com/articles/s41467-020-19160-7
-      \endverb
-    \endentry
-    \entry{r_core_team_r_2024}{book}{}{}
-      \name{author}{1}{}{%
-        {{hash=dcdebb6b35bff7c0568bf8c50ef8626d}{%
-           family={{R Core Team}},
-           familyi={R\bibinitperiod}}}%
-      }
-      \list{location}{1}{%
-        {Vienna, Austria}%
-      }
-      \list{publisher}{1}{%
-        {R Foundation for Statistical Computing}%
-      }
-      \strng{namehash}{dcdebb6b35bff7c0568bf8c50ef8626d}
-      \strng{fullhash}{dcdebb6b35bff7c0568bf8c50ef8626d}
-      \strng{fullhashraw}{dcdebb6b35bff7c0568bf8c50ef8626d}
-      \strng{bibnamehash}{dcdebb6b35bff7c0568bf8c50ef8626d}
-      \strng{authorbibnamehash}{dcdebb6b35bff7c0568bf8c50ef8626d}
-      \strng{authornamehash}{dcdebb6b35bff7c0568bf8c50ef8626d}
-      \strng{authorfullhash}{dcdebb6b35bff7c0568bf8c50ef8626d}
-      \strng{authorfullhashraw}{dcdebb6b35bff7c0568bf8c50ef8626d}
-      \field{sortinit}{2}
-      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
-      \field{labelnamesource}{author}
-      \field{labeltitlesource}{title}
-      \field{title}{R: A Language and Environment for Statistical Computing}
-      \field{year}{2024}
-      \field{dateera}{ce}
-      \verb{urlraw}
-      \verb https://www.R-project.org/
-      \endverb
-      \verb{url}
-      \verb https://www.R-project.org/
-      \endverb
-    \endentry
-    \entry{vermote_noaa_2018}{misc}{}{}
-      \name{author}{2}{}{%
-        {{hash=6da6ca2548299f4c0838c049c13ed521}{%
-           family={Vermote},
-           familyi={V\bibinitperiod},
-           given={Eric},
-           giveni={E\bibinitperiod}}}%
-        {{hash=6acb8f99382d1d709af9dc97ff17b8f3}{%
-           family={{NOAA CDR Program}},
-           familyi={N\bibinitperiod}}}%
-      }
-      \list{publisher}{1}{%
-        {{NOAA} National Centers for Environmental Information}%
-      }
-      \strng{namehash}{3bcd99f0c9173f314807e9b0db32cdf1}
-      \strng{fullhash}{3bcd99f0c9173f314807e9b0db32cdf1}
-      \strng{fullhashraw}{3bcd99f0c9173f314807e9b0db32cdf1}
-      \strng{bibnamehash}{3bcd99f0c9173f314807e9b0db32cdf1}
-      \strng{authorbibnamehash}{3bcd99f0c9173f314807e9b0db32cdf1}
-      \strng{authornamehash}{3bcd99f0c9173f314807e9b0db32cdf1}
-      \strng{authorfullhash}{3bcd99f0c9173f314807e9b0db32cdf1}
-      \strng{authorfullhashraw}{3bcd99f0c9173f314807e9b0db32cdf1}
-      \field{extraname}{1}
-      \field{sortinit}{2}
-      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
-      \field{labelnamesource}{author}
-      \field{labeltitlesource}{title}
-      \field{title}{{NOAA} Climate Data Record ({CDR}) of {AVHRR} Normalized Difference Vegetation Index ({NDVI}), Version 5}
-      \field{urlday}{14}
-      \field{urlmonth}{4}
-      \field{urlyear}{2025}
-      \field{year}{2018}
-      \field{dateera}{ce}
-      \field{urldateera}{ce}
-      \verb{doi}
-      \verb 10.7289/V5ZG6QH9
-      \endverb
-      \verb{urlraw}
-      \verb https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ncdc:C01558/html
-      \endverb
-      \verb{url}
-      \verb https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ncdc:C01558/html
-      \endverb
-    \endentry
-    \entry{vermote_noaa_2022}{misc}{}{}
-      \name{author}{2}{}{%
-        {{hash=6da6ca2548299f4c0838c049c13ed521}{%
-           family={Vermote},
-           familyi={V\bibinitperiod},
-           given={Eric},
-           giveni={E\bibinitperiod}}}%
-        {{hash=6acb8f99382d1d709af9dc97ff17b8f3}{%
-           family={{NOAA CDR Program}},
-           familyi={N\bibinitperiod}}}%
-      }
-      \list{publisher}{1}{%
-        {{NOAA} National Centers for Environmental Information}%
-      }
-      \strng{namehash}{3bcd99f0c9173f314807e9b0db32cdf1}
-      \strng{fullhash}{3bcd99f0c9173f314807e9b0db32cdf1}
-      \strng{fullhashraw}{3bcd99f0c9173f314807e9b0db32cdf1}
-      \strng{bibnamehash}{3bcd99f0c9173f314807e9b0db32cdf1}
-      \strng{authorbibnamehash}{3bcd99f0c9173f314807e9b0db32cdf1}
-      \strng{authornamehash}{3bcd99f0c9173f314807e9b0db32cdf1}
-      \strng{authorfullhash}{3bcd99f0c9173f314807e9b0db32cdf1}
-      \strng{authorfullhashraw}{3bcd99f0c9173f314807e9b0db32cdf1}
-      \field{extraname}{2}
-      \field{sortinit}{2}
-      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
-      \field{labelnamesource}{author}
-      \field{labeltitlesource}{title}
-      \field{title}{{NOAA} Climate Data Record ({CDR}) of {VIIRS} Normalized Difference Vegetation Index ({NDVI}), Version 1}
-      \field{urlday}{14}
-      \field{urlmonth}{4}
-      \field{urlyear}{2025}
-      \field{year}{2022}
-      \field{dateera}{ce}
-      \field{urldateera}{ce}
-      \verb{doi}
-      \verb 10.25921/GAKH-ST76
-      \endverb
-      \verb{urlraw}
-      \verb https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ncdc:C01677/html
-      \endverb
-      \verb{url}
-      \verb https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ncdc:C01677/html
-      \endverb
-    \endentry
-    \entry{hollister_elevatr_2023}{book}{}{}
-      \name{author}{6}{}{%
-        {{hash=2624b3a4a00dd317022caf87ce79eac6}{%
-           family={Hollister},
-           familyi={H\bibinitperiod},
-           given={Jeffrey},
-           giveni={J\bibinitperiod}}}%
-        {{hash=d5a62674ff61f16aaa6d731f6b0aaef9}{%
-           family={Shah},
-           familyi={S\bibinitperiod},
-           given={Tarak},
-           giveni={T\bibinitperiod}}}%
-        {{hash=a5b93245ea9995d89e95a8f9ec2e25dd}{%
-           family={Nowosad},
-           familyi={N\bibinitperiod},
-           given={Jakub},
-           giveni={J\bibinitperiod}}}%
-        {{hash=ad5a7f70bf978a61a233652368d7b183}{%
-           family={Robitaille},
-           familyi={R\bibinitperiod},
-           given={Alec\bibnamedelima L.},
-           giveni={A\bibinitperiod\bibinitdelim L\bibinitperiod}}}%
-        {{hash=80aff3c860e83e66ccbad23aa149a737}{%
-           family={Beck},
-           familyi={B\bibinitperiod},
-           given={Marcus\bibnamedelima W.},
-           giveni={M\bibinitperiod\bibinitdelim W\bibinitperiod}}}%
-        {{hash=8f35ee0241353df6913e5955610333ef}{%
-           family={Johnson},
-           familyi={J\bibinitperiod},
-           given={Mike},
-           giveni={M\bibinitperiod}}}%
-      }
-      \strng{namehash}{0f483e5d72ddd3adb4f6d1a5d114a2eb}
-      \strng{fullhash}{0f483e5d72ddd3adb4f6d1a5d114a2eb}
-      \strng{fullhashraw}{0f483e5d72ddd3adb4f6d1a5d114a2eb}
-      \strng{bibnamehash}{0f483e5d72ddd3adb4f6d1a5d114a2eb}
-      \strng{authorbibnamehash}{0f483e5d72ddd3adb4f6d1a5d114a2eb}
-      \strng{authornamehash}{0f483e5d72ddd3adb4f6d1a5d114a2eb}
-      \strng{authorfullhash}{0f483e5d72ddd3adb4f6d1a5d114a2eb}
-      \strng{authorfullhashraw}{0f483e5d72ddd3adb4f6d1a5d114a2eb}
-      \field{sortinit}{2}
-      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
-      \field{labelnamesource}{author}
-      \field{labeltitlesource}{title}
-      \field{title}{elevatr: Access Elevation Data from Various {APIs}}
-      \field{year}{2023}
-      \field{dateera}{ce}
-      \verb{doi}
-      \verb 10.5281/zenodo.8335450
-      \endverb
-      \verb{urlraw}
-      \verb https://github.com/jhollist/elevatr/
-      \endverb
-      \verb{url}
-      \verb https://github.com/jhollist/elevatr/
       \endverb
     \endentry
     \entry{wood_generalized_2015}{article}{}{}
@@ -2418,6 +2875,247 @@
       \verb https://www.tandfonline.com/doi/full/10.1080/01621459.2016.1195744
       \endverb
     \endentry
+    \entry{crameri_misuse_2020}{article}{}{}
+      \name{author}{3}{}{%
+        {{hash=3d651121d9f7ab7e447009675aa749ae}{%
+           family={Crameri},
+           familyi={C\bibinitperiod},
+           given={Fabio},
+           giveni={F\bibinitperiod}}}%
+        {{hash=b4078088371577f6f93d53b360a1b8e8}{%
+           family={Shephard},
+           familyi={S\bibinitperiod},
+           given={Grace\bibnamedelima E.},
+           giveni={G\bibinitperiod\bibinitdelim E\bibinitperiod}}}%
+        {{hash=52f2d0157618ea6924578e3f9e442db4}{%
+           family={Heron},
+           familyi={H\bibinitperiod},
+           given={Philip\bibnamedelima J.},
+           giveni={P\bibinitperiod\bibinitdelim J\bibinitperiod}}}%
+      }
+      \strng{namehash}{4927c0b838104e0fc7cc65c078c02fed}
+      \strng{fullhash}{4927c0b838104e0fc7cc65c078c02fed}
+      \strng{fullhashraw}{4927c0b838104e0fc7cc65c078c02fed}
+      \strng{bibnamehash}{4927c0b838104e0fc7cc65c078c02fed}
+      \strng{authorbibnamehash}{4927c0b838104e0fc7cc65c078c02fed}
+      \strng{authornamehash}{4927c0b838104e0fc7cc65c078c02fed}
+      \strng{authorfullhash}{4927c0b838104e0fc7cc65c078c02fed}
+      \strng{authorfullhashraw}{4927c0b838104e0fc7cc65c078c02fed}
+      \field{sortinit}{3}
+      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{abstract}{Abstract The accurate representation of data is essential in science communication. However, colour maps that visually distort data through uneven colour gradients or are unreadable to those with colour-vision deficiency remain prevalent in science. These include, but are not limited to, rainbow-like and red–green colour maps. Here, we present a simple guide for the scientific use of colour. We show how scientifically derived colour maps report true data variations, reduce complexity, and are accessible for people with colour-vision deficiencies. We highlight ways for the scientific community to identify and prevent the misuse of colour in science, and call for a proactive step away from colour misuse among the community, publishers, and the press.}
+      \field{day}{28}
+      \field{issn}{2041-1723}
+      \field{journaltitle}{Nature Communications}
+      \field{langid}{english}
+      \field{month}{10}
+      \field{number}{1}
+      \field{shortjournal}{Nat Commun}
+      \field{title}{The misuse of colour in science communication}
+      \field{urlday}{14}
+      \field{urlmonth}{4}
+      \field{urlyear}{2025}
+      \field{volume}{11}
+      \field{year}{2020}
+      \field{dateera}{ce}
+      \field{urldateera}{ce}
+      \field{pages}{5444}
+      \range{pages}{1}
+      \verb{doi}
+      \verb 10.1038/s41467-020-19160-7
+      \endverb
+      \verb{file}
+      \verb Full Text:C\:\\Users\\stefa\\Zotero\\storage\\P84VDYZJ\\Crameri et al. - 2020 - The misuse of colour in science communication.pdf:application/pdf
+      \endverb
+      \verb{urlraw}
+      \verb https://www.nature.com/articles/s41467-020-19160-7
+      \endverb
+      \verb{url}
+      \verb https://www.nature.com/articles/s41467-020-19160-7
+      \endverb
+    \endentry
+    \entry{r_core_team_r_2024}{book}{}{}
+      \name{author}{1}{}{%
+        {{hash=dcdebb6b35bff7c0568bf8c50ef8626d}{%
+           family={{R Core Team}},
+           familyi={R\bibinitperiod}}}%
+      }
+      \list{location}{1}{%
+        {Vienna, Austria}%
+      }
+      \list{publisher}{1}{%
+        {R Foundation for Statistical Computing}%
+      }
+      \strng{namehash}{dcdebb6b35bff7c0568bf8c50ef8626d}
+      \strng{fullhash}{dcdebb6b35bff7c0568bf8c50ef8626d}
+      \strng{fullhashraw}{dcdebb6b35bff7c0568bf8c50ef8626d}
+      \strng{bibnamehash}{dcdebb6b35bff7c0568bf8c50ef8626d}
+      \strng{authorbibnamehash}{dcdebb6b35bff7c0568bf8c50ef8626d}
+      \strng{authornamehash}{dcdebb6b35bff7c0568bf8c50ef8626d}
+      \strng{authorfullhash}{dcdebb6b35bff7c0568bf8c50ef8626d}
+      \strng{authorfullhashraw}{dcdebb6b35bff7c0568bf8c50ef8626d}
+      \field{sortinit}{3}
+      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{R: A Language and Environment for Statistical Computing}
+      \field{year}{2024}
+      \field{dateera}{ce}
+      \verb{urlraw}
+      \verb https://www.R-project.org/
+      \endverb
+      \verb{url}
+      \verb https://www.R-project.org/
+      \endverb
+    \endentry
+    \entry{vermote_noaa_2018}{misc}{}{}
+      \name{author}{2}{}{%
+        {{hash=6da6ca2548299f4c0838c049c13ed521}{%
+           family={Vermote},
+           familyi={V\bibinitperiod},
+           given={Eric},
+           giveni={E\bibinitperiod}}}%
+        {{hash=6acb8f99382d1d709af9dc97ff17b8f3}{%
+           family={{NOAA CDR Program}},
+           familyi={N\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {{NOAA} National Centers for Environmental Information}%
+      }
+      \strng{namehash}{3bcd99f0c9173f314807e9b0db32cdf1}
+      \strng{fullhash}{3bcd99f0c9173f314807e9b0db32cdf1}
+      \strng{fullhashraw}{3bcd99f0c9173f314807e9b0db32cdf1}
+      \strng{bibnamehash}{3bcd99f0c9173f314807e9b0db32cdf1}
+      \strng{authorbibnamehash}{3bcd99f0c9173f314807e9b0db32cdf1}
+      \strng{authornamehash}{3bcd99f0c9173f314807e9b0db32cdf1}
+      \strng{authorfullhash}{3bcd99f0c9173f314807e9b0db32cdf1}
+      \strng{authorfullhashraw}{3bcd99f0c9173f314807e9b0db32cdf1}
+      \field{extraname}{1}
+      \field{sortinit}{3}
+      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{{NOAA} Climate Data Record ({CDR}) of {AVHRR} Normalized Difference Vegetation Index ({NDVI}), Version 5}
+      \field{urlday}{14}
+      \field{urlmonth}{4}
+      \field{urlyear}{2025}
+      \field{year}{2018}
+      \field{dateera}{ce}
+      \field{urldateera}{ce}
+      \verb{doi}
+      \verb 10.7289/V5ZG6QH9
+      \endverb
+      \verb{urlraw}
+      \verb https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ncdc:C01558/html
+      \endverb
+      \verb{url}
+      \verb https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ncdc:C01558/html
+      \endverb
+    \endentry
+    \entry{vermote_noaa_2022}{misc}{}{}
+      \name{author}{2}{}{%
+        {{hash=6da6ca2548299f4c0838c049c13ed521}{%
+           family={Vermote},
+           familyi={V\bibinitperiod},
+           given={Eric},
+           giveni={E\bibinitperiod}}}%
+        {{hash=6acb8f99382d1d709af9dc97ff17b8f3}{%
+           family={{NOAA CDR Program}},
+           familyi={N\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {{NOAA} National Centers for Environmental Information}%
+      }
+      \strng{namehash}{3bcd99f0c9173f314807e9b0db32cdf1}
+      \strng{fullhash}{3bcd99f0c9173f314807e9b0db32cdf1}
+      \strng{fullhashraw}{3bcd99f0c9173f314807e9b0db32cdf1}
+      \strng{bibnamehash}{3bcd99f0c9173f314807e9b0db32cdf1}
+      \strng{authorbibnamehash}{3bcd99f0c9173f314807e9b0db32cdf1}
+      \strng{authornamehash}{3bcd99f0c9173f314807e9b0db32cdf1}
+      \strng{authorfullhash}{3bcd99f0c9173f314807e9b0db32cdf1}
+      \strng{authorfullhashraw}{3bcd99f0c9173f314807e9b0db32cdf1}
+      \field{extraname}{2}
+      \field{sortinit}{3}
+      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{{NOAA} Climate Data Record ({CDR}) of {VIIRS} Normalized Difference Vegetation Index ({NDVI}), Version 1}
+      \field{urlday}{14}
+      \field{urlmonth}{4}
+      \field{urlyear}{2025}
+      \field{year}{2022}
+      \field{dateera}{ce}
+      \field{urldateera}{ce}
+      \verb{doi}
+      \verb 10.25921/GAKH-ST76
+      \endverb
+      \verb{urlraw}
+      \verb https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ncdc:C01677/html
+      \endverb
+      \verb{url}
+      \verb https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ncdc:C01677/html
+      \endverb
+    \endentry
+    \entry{hollister_elevatr_2023}{book}{}{}
+      \name{author}{6}{}{%
+        {{hash=2624b3a4a00dd317022caf87ce79eac6}{%
+           family={Hollister},
+           familyi={H\bibinitperiod},
+           given={Jeffrey},
+           giveni={J\bibinitperiod}}}%
+        {{hash=d5a62674ff61f16aaa6d731f6b0aaef9}{%
+           family={Shah},
+           familyi={S\bibinitperiod},
+           given={Tarak},
+           giveni={T\bibinitperiod}}}%
+        {{hash=a5b93245ea9995d89e95a8f9ec2e25dd}{%
+           family={Nowosad},
+           familyi={N\bibinitperiod},
+           given={Jakub},
+           giveni={J\bibinitperiod}}}%
+        {{hash=ad5a7f70bf978a61a233652368d7b183}{%
+           family={Robitaille},
+           familyi={R\bibinitperiod},
+           given={Alec\bibnamedelima L.},
+           giveni={A\bibinitperiod\bibinitdelim L\bibinitperiod}}}%
+        {{hash=80aff3c860e83e66ccbad23aa149a737}{%
+           family={Beck},
+           familyi={B\bibinitperiod},
+           given={Marcus\bibnamedelima W.},
+           giveni={M\bibinitperiod\bibinitdelim W\bibinitperiod}}}%
+        {{hash=8f35ee0241353df6913e5955610333ef}{%
+           family={Johnson},
+           familyi={J\bibinitperiod},
+           given={Mike},
+           giveni={M\bibinitperiod}}}%
+      }
+      \strng{namehash}{0f483e5d72ddd3adb4f6d1a5d114a2eb}
+      \strng{fullhash}{0f483e5d72ddd3adb4f6d1a5d114a2eb}
+      \strng{fullhashraw}{0f483e5d72ddd3adb4f6d1a5d114a2eb}
+      \strng{bibnamehash}{0f483e5d72ddd3adb4f6d1a5d114a2eb}
+      \strng{authorbibnamehash}{0f483e5d72ddd3adb4f6d1a5d114a2eb}
+      \strng{authornamehash}{0f483e5d72ddd3adb4f6d1a5d114a2eb}
+      \strng{authorfullhash}{0f483e5d72ddd3adb4f6d1a5d114a2eb}
+      \strng{authorfullhashraw}{0f483e5d72ddd3adb4f6d1a5d114a2eb}
+      \field{sortinit}{3}
+      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{elevatr: Access Elevation Data from Various {APIs}}
+      \field{year}{2023}
+      \field{dateera}{ce}
+      \verb{doi}
+      \verb 10.5281/zenodo.8335450
+      \endverb
+      \verb{urlraw}
+      \verb https://github.com/jhollist/elevatr/
+      \endverb
+      \verb{url}
+      \verb https://github.com/jhollist/elevatr/
+      \endverb
+    \endentry
     \entry{burt_territoriality_1943}{article}{}{}
       \name{author}{1}{}{%
         {{hash=5fc312a04a8d54870dc0a34ae32f9ff9}{%
@@ -2434,8 +3132,8 @@
       \strng{authornamehash}{5fc312a04a8d54870dc0a34ae32f9ff9}
       \strng{authorfullhash}{5fc312a04a8d54870dc0a34ae32f9ff9}
       \strng{authorfullhashraw}{5fc312a04a8d54870dc0a34ae32f9ff9}
-      \field{sortinit}{3}
-      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{issn}{00222372}
@@ -2479,8 +3177,8 @@
       \strng{authornamehash}{da8e68d70a9a69a68b44f4c15b5b97f5}
       \strng{authorfullhash}{da8e68d70a9a69a68b44f4c15b5b97f5}
       \strng{authorfullhashraw}{da8e68d70a9a69a68b44f4c15b5b97f5}
-      \field{sortinit}{3}
-      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{issn}{00218790}
@@ -2524,8 +3222,8 @@
       \strng{authornamehash}{50d6de3f5363432af8de9ed35235cf76}
       \strng{authorfullhash}{50d6de3f5363432af8de9ed35235cf76}
       \strng{authorfullhashraw}{50d6de3f5363432af8de9ed35235cf76}
-      \field{sortinit}{3}
-      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{issn}{00405809}
@@ -2598,8 +3296,8 @@
       \strng{authornamehash}{db6771d90a7e0a00095a78cbf81208df}
       \strng{authorfullhash}{db6771d90a7e0a00095a78cbf81208df}
       \strng{authorfullhashraw}{db6771d90a7e0a00095a78cbf81208df}
-      \field{sortinit}{3}
-      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{abstract}{Abstract As animal home range size ({HRS}) provides valuable information for species conservation, it is important to understand the driving factors of {HRS} variation. It is widely known that differences in species traits (e.g. body mass) are major contributors to variation in mammal {HRS}. However, most studies examining how environmental variation explains mammal {HRS} variation have been limited to a few species, or only included a single (mean) {HRS} estimate for the majority of species, neglecting intraspecific {HRS} variation. Additionally, most studies examining environmental drivers of {HRS} variation included only terrestrial species, neglecting marine species. Using a novel dataset of 2800 {HRS} estimates from 586 terrestrial and 27 marine mammal species, we quantified the relationships between {HRS} and environmental variables, accounting for species traits. Our results indicate that terrestrial mammal {HRS} was on average 5.3 times larger in areas with low human disturbance (human footprint index [{HFI}] = 0), compared to areas with maximum human disturbance ({HFI} = 50). Similarly, {HRS} was on average 5.4 times larger in areas with low annual mean productivity ({NDVI} = 0), compared to areas with high productivity ({NDVI} = 1). In addition, {HRS} increased by a factor of 1.9 on average from low to high seasonality in productivity (standard deviation ({SD}) of monthly {NDVI} from 0 to 0.36). Of these environmental variables, human disturbance and annual mean productivity explained a larger proportion of {HRS} variance than seasonality in productivity. Marine mammal {HRS} decreased, on average, by a factor of 3.7 per 10°C decline in annual mean sea surface temperature ({SST}), and increased by a factor of 1.5 per 1°C increase in {SST} seasonality ({SD} of monthly values). Annual mean {SST} explained more variance in {HRS} than {SST} seasonality. Due to the small sample size, caution should be taken when interpreting the marine mammal results. Our results indicate that environmental variation is relevant for {HRS} and that future environmental changes might alter the {HRS} of individuals, with potential consequences for ecosystem functioning and the effectiveness of conservation actions.}
@@ -2632,58 +3330,6 @@
       \verb https://besjournals.onlinelibrary.wiley.com/doi/10.1111/1365-2656.14073
       \endverb
     \endentry
-    \entry{marcus_changing_2023}{misc}{}{}
-      \name{author}{2}{}{%
-        {{hash=c360315756ed78f072c12c5d2ccfaae1}{%
-           family={Marcus},
-           familyi={M\bibinitperiod},
-           given={Rekha},
-           giveni={R\bibinitperiod}}}%
-        {{hash=f4c13c4b0af5e263505cc94e11b4e44d}{%
-           family={Noonan},
-           familyi={N\bibinitperiod},
-           given={Michael\bibnamedelima J.},
-           giveni={M\bibinitperiod\bibinitdelim J\bibinitperiod}}}%
-      }
-      \list{publisher}{1}{%
-        {Ecology}%
-      }
-      \strng{namehash}{ae51ef74492bfbc6b113ebaf2a9f39c6}
-      \strng{fullhash}{ae51ef74492bfbc6b113ebaf2a9f39c6}
-      \strng{fullhashraw}{ae51ef74492bfbc6b113ebaf2a9f39c6}
-      \strng{bibnamehash}{ae51ef74492bfbc6b113ebaf2a9f39c6}
-      \strng{authorbibnamehash}{ae51ef74492bfbc6b113ebaf2a9f39c6}
-      \strng{authornamehash}{ae51ef74492bfbc6b113ebaf2a9f39c6}
-      \strng{authorfullhash}{ae51ef74492bfbc6b113ebaf2a9f39c6}
-      \strng{authorfullhashraw}{ae51ef74492bfbc6b113ebaf2a9f39c6}
-      \field{sortinit}{3}
-      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
-      \field{labelnamesource}{author}
-      \field{labeltitlesource}{title}
-      \field{abstract}{Abstract Protected areas are widely used management tools designed to support the long-term conservation of biodiversity. The effectiveness of protected areas is being challenged by human-induced climate change, however, which is causing three broad shifts away from the current distribution of climate trends: a change in mean conditions, a change in the variance around the mean, and/or a change in symmetry. Though changes in average conditions are certainly important, the second behaviour, a change in variance, brings a unique set of challenges that species must respond to. As conditions become more variable, phenological events become less predictable, extreme weather events become more frequent, food security and ecosystem stability are compromised, and extinction risk increases. It therefore stands to reason that changes in the variance of local conditions should be a core consideration when designing protected areas. Here, we reviewed the literature to determine the extent to which changes in variance are being incorporated into protected area planning. Worryingly, we found that fewer than a quarter of the 100 studies we surveyed formally considered how climate change might change mean conditions, and only four considered climate change-induced changes in the variance around the mean. Our evaluation reveals an alarming gap in protected area research. The majority of researchers continue to make recommendations for protected areas without acknowledging that the area(s) they are recommending for protection may have markedly different conditions in the future. Whether variability is considered or not, stochastic events represent a serious threat to the persistence of species and complex ecosystems. Effective conservation requires actively considering how the stability of conditions within protected areas will be impacted by future climate change. As global climate patterns tend towards increasing unpredictability, protecting less variable habitat should be a priority to ensure local populations are not exposed to elevated extinction risk.}
-      \field{day}{29}
-      \field{langid}{english}
-      \field{month}{10}
-      \field{title}{Changing variability is an overlooked aspect of protected area planning}
-      \field{urlday}{23}
-      \field{urlmonth}{10}
-      \field{urlyear}{2025}
-      \field{year}{2023}
-      \field{dateera}{ce}
-      \field{urldateera}{ce}
-      \verb{doi}
-      \verb 10.1101/2023.10.26.564062
-      \endverb
-      \verb{file}
-      \verb Submitted Version:C\:\\Users\\stefa\\Zotero\\storage\\SUBQ9HXE\\Marcus and Noonan - 2023 - Changing variability is an overlooked aspect of protected area planning.pdf:application/pdf
-      \endverb
-      \verb{urlraw}
-      \verb http://biorxiv.org/lookup/doi/10.1101/2023.10.26.564062
-      \endverb
-      \verb{url}
-      \verb http://biorxiv.org/lookup/doi/10.1101/2023.10.26.564062
-      \endverb
-    \endentry
     \entry{nilsen_can_2005}{article}{}{}
       \name{author}{3}{}{%
         {{hash=e2f6ba2c6dabd6ee75f48a30e0b94e93}{%
@@ -2710,8 +3356,8 @@
       \strng{authornamehash}{5bb18542a596ebd11649c9dc4b2a6457}
       \strng{authorfullhash}{5bb18542a596ebd11649c9dc4b2a6457}
       \strng{authorfullhashraw}{5bb18542a596ebd11649c9dc4b2a6457}
-      \field{sortinit}{3}
-      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{issn}{1195-6860, 2376-7626}
@@ -2785,8 +3431,8 @@
       \strng{authornamehash}{fdcbf9c54037091f837cf304ef7ca6b5}
       \strng{authorfullhash}{cba351ee14422204f9bc4b254b5959f2}
       \strng{authorfullhashraw}{cba351ee14422204f9bc4b254b5959f2}
-      \field{sortinit}{3}
-      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{issn}{00301299}
@@ -2861,8 +3507,8 @@
       \strng{authornamehash}{ad5339e9a2943b51a08b5f2f9a4447f5}
       \strng{authorfullhash}{994dddc8b9adce0d6bac5bb251fee4b3}
       \strng{authorfullhashraw}{994dddc8b9adce0d6bac5bb251fee4b3}
-      \field{sortinit}{3}
-      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{abstract}{Newly emerging plants provide the best forage for herbivores. To exploit this fleeting resource, migrating herbivores align their movements to surf the wave of spring green-up. With new technology to track migrating animals, the Green Wave Hypothesis has steadily gained empirical support across a diversity of migratory taxa. This hypothesis assumes the green wave is controlled by variation in climate, weather, and topography, and its progression dictates the timing, pace, and extent of migrations. However, aggregate grazers that are also capable of engineering grassland ecosystems make some of the world’s most impressive migrations, and it is unclear how the green wave determines their movements. Here we show that Yellowstone’s bison ( Bison bison ) do not choreograph their migratory movements to the wave of spring green-up. Instead, bison modify the green wave as they migrate and graze. While most bison surfed during early spring, they eventually slowed and let the green wave pass them by. However, small-scale experiments indicated that feedback from grazing sustained forage quality. Most importantly, a 6-fold decadal shift in bison density revealed that intense grazing caused grasslands to green up faster, more intensely, and for a longer duration. Our finding broadens our understanding of the ways in which animal movements underpin the foraging benefit of migration. The widely accepted Green Wave Hypothesis needs to be revised to include large aggregate grazers that not only move to find forage, but also engineer plant phenology through grazing, thereby shaping their own migratory movements.}
@@ -2927,8 +3573,8 @@
       \strng{authornamehash}{036c4c603ec09382530d72df60f405cf}
       \strng{authorfullhash}{036c4c603ec09382530d72df60f405cf}
       \strng{authorfullhashraw}{036c4c603ec09382530d72df60f405cf}
-      \field{sortinit}{3}
-      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{issn}{09609822}
@@ -2978,8 +3624,8 @@
       \strng{authornamehash}{91e8cdf5419426d8bbf2cf35162228ff}
       \strng{authorfullhash}{91e8cdf5419426d8bbf2cf35162228ff}
       \strng{authorfullhashraw}{91e8cdf5419426d8bbf2cf35162228ff}
-      \field{sortinit}{3}
-      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{abstract}{A rich neural representation of its environment enables an adaptable organism to respond to changes , One of the most difficult problems for an adaptable agent is gauging how to behave in a nonstationary environment. When conditions are stable, an organism generally pursues a strategy known to provide the best outcome. However, when environmental conditions change, an organism abandons the current action plan and searches for a new best option. The most challenging aspect of this search—calculating the exact time point at which to change strategies—requires the brain to integrate past and present observations and evaluate whether they remain consistent with current environmental conditions. On page 1076 of this issue, Domenech et al. ( 1 ) report on the modeling of rare direct electrical recordings from the prefrontal cortices ({PFCs}) of a small group of human epilepsy patients as they flexibly negotiated a nonstationary environment.}
@@ -3094,8 +3740,8 @@
       \strng{authornamehash}{3186d37b495fc789748e84b1b1c2f9f8}
       \strng{authorfullhash}{f96a2e18348229741611d1167a5acdfa}
       \strng{authorfullhashraw}{f96a2e18348229741611d1167a5acdfa}
-      \field{sortinit}{3}
-      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{issn}{1354-1013, 1365-2486}
@@ -3149,8 +3795,8 @@
       \strng{authornamehash}{c1ff9bf2c9614e70b1dd7a268bca8d0e}
       \strng{authorfullhash}{c1ff9bf2c9614e70b1dd7a268bca8d0e}
       \strng{authorfullhashraw}{c1ff9bf2c9614e70b1dd7a268bca8d0e}
-      \field{sortinit}{3}
-      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{abstract}{Spatial memory facilitates resource acquisition where resources are patchy, but how it influences movement behaviour of wide-ranging species remains to be resolved. We examined African elephant spatial memory reflected in movement decisions regarding access to perennial waterholes. State–space models of movement data revealed a rapid, highly directional movement behaviour almost exclusively associated with visiting perennial water. Behavioural change point ({BCP}) analyses demonstrated that these goal-oriented movements were initiated on average 4.59 km, and up to 49.97 km, from the visited waterhole, with the closest waterhole accessed 90\% of the time. Distances of decision points increased when switching to different waterholes, during the dry season, or for female groups relative to males, while selection of the closest waterhole decreased when switching. Overall, our analyses indicated detailed spatial knowledge over large scales, enabling elephants to minimize travel distance through highly directional movement when accessing water. We discuss the likely cognitive and socioecological mechanisms driving these spatially precise movements that are most consistent with our findings. By applying modern analytic techniques to high-resolution movement data, this study illustrates emerging approaches for studying how cognition structures animal movement behaviour in different ecological and social contexts.}
@@ -3245,8 +3891,8 @@
       \strng{authornamehash}{bd38fc0f188d0d9cedbdbf426f6de171}
       \strng{authorfullhash}{456db6575833e089f2522aeef6125208}
       \strng{authorfullhashraw}{456db6575833e089f2522aeef6125208}
-      \field{sortinit}{3}
-      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{abstract}{In terrestrial systems, the green wave hypothesis posits that migrating animals can enhance foraging opportunities by tracking phenological variation in high-quality forage across space (i.e., “resource waves”). To track resource waves, animals may rely on proximate cues and/or memory of long-term average phenologies. Although there is growing evidence of resource tracking in terrestrial migrants, such drivers remain unevaluated in migratory marine megafauna. Here we present a test of the green wave hypothesis in a marine system. We compare 10 years of blue whale movement data with the timing of the spring phytoplankton bloom resulting in increased prey availability in the California Current Ecosystem, allowing us to investigate resource tracking both contemporaneously (response to proximate cues) and based on climatological conditions (memory) during migrations. Blue whales closely tracked the long-term average phenology of the spring bloom, but did not track contemporaneous green-up. In addition, blue whale foraging locations were characterized by low long-term habitat variability and high long-term productivity compared with contemporaneous measurements. Results indicate that memory of long-term average conditions may have a previously underappreciated role in driving migratory movements of long-lived species in marine systems, and suggest that these animals may struggle to respond to rapid deviations from historical mean environmental conditions. Results further highlight that an ecological theory of migration is conserved across marine and terrestrial systems. Understanding the drivers of animal migration is critical for assessing how environmental changes will affect highly mobile fauna at a global scale.}
@@ -3301,8 +3947,8 @@
       \strng{authornamehash}{f7ccaf90e37d4725c6c330db7fde4789}
       \strng{authorfullhash}{f7ccaf90e37d4725c6c330db7fde4789}
       \strng{authorfullhashraw}{f7ccaf90e37d4725c6c330db7fde4789}
-      \field{sortinit}{3}
-      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{issn}{01695347}
@@ -3369,8 +4015,8 @@
       \strng{authornamehash}{c1c196a204de28b78584b356560a8e5a}
       \strng{authorfullhash}{c1c196a204de28b78584b356560a8e5a}
       \strng{authorfullhashraw}{c1c196a204de28b78584b356560a8e5a}
-      \field{sortinit}{3}
-      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{abstract}{The use of spatial memory is well-documented in many animal species and has been shown to be critical for the emergence of spatial learning. Adaptive behaviors based on learning can emerge thanks to an interdependence between the acquisition of information over time and movement decisions. The study of how spatio-ecological knowledge is constructed throughout the life of an individual has not been carried out in a quantitative and comprehensive way, hindered by the lack of knowledge of the information an animal already has of its environment at the time monitoring begins. Identifying how animals use memory to make beneficial decisions is fundamental to developing a general theory of animal movement and space use. Here we propose several mobility models based on memory and perform hierarchical Bayesian inference on 11-month trajectories of 21 elk after they were released in a completely new environment. Almost all the observed animals exhibited preferential returns to previously visited patches, such that memory and random exploration phases occurred. Memory decay was mild or negligible over the study period. The fact that individual elk rapidly become used to a relatively small number of patches was consistent with the hypothesis that they seek places with predictable resources and reduced mortality risks such as predation.}
@@ -3434,8 +4080,8 @@
       \strng{editornamehash}{517aa4132703aa015fc0bad7ca12328f}
       \strng{editorfullhash}{517aa4132703aa015fc0bad7ca12328f}
       \strng{editorfullhashraw}{517aa4132703aa015fc0bad7ca12328f}
-      \field{sortinit}{3}
-      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{shorttitle}
       \field{issn}{1461-023X, 1461-0248}
@@ -3499,8 +4145,8 @@
       \strng{authornamehash}{86c4c363cc5268a56fc908a6b25e2901}
       \strng{authorfullhash}{86c4c363cc5268a56fc908a6b25e2901}
       \strng{authorfullhashraw}{86c4c363cc5268a56fc908a6b25e2901}
-      \field{sortinit}{3}
-      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{abstract}{Significance Environmental variation is becoming more frequent and unpredictable as a consequence of climate change, yet we currently lack the tools to evaluate the extent to which organisms may adapt to this phenomenon. Here we develop a model that explores these issues and use it to study how changes in the timescale and predictability of environmental variation may ultimately affect population viability. Our model indicates that, although populations can often cope with fairly large changes in these environmental parameters, on occasion they will collapse abruptly and go extinct. We characterize the conditions under which these evolutionary tipping points occur and discuss how vulnerability to such cryptic threats may depend on the genetic architecture and life history of the organisms involved. , In an era of rapid climate change, there is a pressing need to understand how organisms will cope with faster and less predictable variation in environmental conditions. Here we develop a unifying model that predicts evolutionary responses to environmentally driven fluctuating selection and use this theoretical framework to explore the potential consequences of altered environmental cycles. We first show that the parameter space determined by different combinations of predictability and timescale of environmental variation is partitioned into distinct regions where a single mode of response (reversible phenotypic plasticity, irreversible phenotypic plasticity, bet-hedging, or adaptive tracking) has a clear selective advantage over all others. We then demonstrate that, although significant environmental changes within these regions can be accommodated by evolution, most changes that involve transitions between regions result in rapid population collapse and often extinction. Thus, the boundaries between response mode regions in our model correspond to evolutionary tipping points, where even minor changes in environmental parameters can have dramatic and disproportionate consequences on population viability. Finally, we discuss how different life histories and genetic architectures may influence the location of tipping points in parameter space and the likelihood of extinction during such transitions. These insights can help identify and address some of the cryptic threats to natural populations that are likely to result from any natural or human-induced change in environmental conditions. They also demonstrate the potential value of evolutionary thinking in the study of global climate change.}
@@ -3575,8 +4221,8 @@
       \strng{authornamehash}{c12a72bdd752ab12ccb2ef5d5a172177}
       \strng{authorfullhash}{c12a72bdd752ab12ccb2ef5d5a172177}
       \strng{authorfullhashraw}{c12a72bdd752ab12ccb2ef5d5a172177}
-      \field{sortinit}{3}
-      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{abstract}{{ABSTRACT} The diversity in organismal responses to environmental changes (i.e., response diversity) plays a crucial role in shaping community and ecosystem stability. However, existing measures of response diversity only consider a single environmental variable, whereas natural communities are commonly exposed to changes in multiple environmental variables simultaneously. Thus far, no approach exists to integrate multifarious environmental change and the measurement of response diversity. Here, we show how to consider and quantify response diversity in the context of multifarious environmental change, and in doing so introduce a distinction between response diversity to a defined or anticipated environmental change, and the response capacity to any possible set of (defined or undefined) future environmental changes. First, we describe and illustrate the concepts with empirical data. We reveal the role of the trajectory of environmental change in shaping response diversity when multiple environmental variables fluctuate over time. We show that, when the trajectory of the environmental change is undefined (i.e., there is no information or a priori expectation about how an environmental condition will change in future), we can quantify the response capacity of a community to any possible environmental change scenario. That is, we can estimate the capacity of a system to respond under a range of realistic or extreme environmental changes, with utility for predicting future responses to even multifarious environmental change. Finally, we investigate determinants of response diversity within a multifarious environmental change context. We identify factors such as the diversity of species responses to each environmental variable, the relative influence of different environmental variables and temporal means of environmental variable values as important determinants of response diversity. In doing so, we take an important step towards measuring and understanding the insurance capacity of ecological communities exposed to multifarious environmental change. , Sommario La diversità con cui gli organismi rispondono ai cambiamenti ambientali (ovvero la diversità di risposta) svolge un ruolo cruciale nel determinare la stabilità delle comunità ecologiche e degli ecosistemi. Tuttavia i metodi esistenti per quantificare la diversità di risposta considerano solo una singola variabile ambientale, mentre le comunità naturali sono normalmente esposte a fluttuazioni di più variabili ambientali contemporaneamente. Al momento non esiste un approccio per quantificare la diversità di risposta quando più variabili ambientali fluttuano contemporaneamente. In questo articolo spieghiamo come quantificare la diversità di risposta considerando diverse variabili ambientali. In questo modo introduciamo una distinzione tra la diversità di risposta a un cambiamento ambientale definito o previsto e la capacità di risposta a qualsiasi possibile insieme di cambiamenti ambientali futuri (definiti o non definiti). Per prima cosa descriviamo e illustriamo i concetti con dati empirici. Sottolineiamo il ruolo della traiettoria del cambiamento ambientale nel plasmare la diversità di risposta quando più variabili ambientali fluttuano nel tempo. Mostriamo che, quando la traiettoria del cambiamento ambientale è indefinita (cioè, non ci sono informazioni o previsioni a priori su come le variabili ambientali cambieranno in futuro), possiamo quantificare la capacità di risposta di una comunità a qualsiasi possibile scenario di cambiamento ambientale. In altre parole, possiamo stimare la capacità di un sistema di rispondere a una serie di cambiamenti ambientali realistici o estremi, con la finalità di prevedere le risposte future a cambiamenti ambientali, anche stocastici. Infine, analizziamo i fattori che determinano la diversità di risposta quando più variabili ambientali cambiano nel tempo. Identifichiamo fattori come la diversità delle risposte delle specie a ciascuna variabili ambientali, l'importanza relativa di diverse variabili ambientali nel determinare le risposte delle specie, e la media delle variabili ambientali come importanti fattori che determinano la diversità delle risposte. Con questo studio compiamo un passo importante verso la quantificazione e la comprensione della capacità delle comunità ecologiche di mantenere la loro stabilità anche quando esposte a molteplici cambiamenti ambientali.}
@@ -3640,8 +4286,8 @@
       \strng{authornamehash}{c144cf3858a6f2574656c6771d9221f3}
       \strng{authorfullhash}{c144cf3858a6f2574656c6771d9221f3}
       \strng{authorfullhashraw}{c144cf3858a6f2574656c6771d9221f3}
-      \field{sortinit}{4}
-      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{sortinit}{5}
+      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{day}{21}
@@ -3694,8 +4340,8 @@
       \strng{authornamehash}{600817a699b2c357f7c0149c0af3396c}
       \strng{authorfullhash}{600817a699b2c357f7c0149c0af3396c}
       \strng{authorfullhashraw}{600817a699b2c357f7c0149c0af3396c}
-      \field{sortinit}{4}
-      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{sortinit}{5}
+      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{shorttitle}
       \field{issn}{19183178}
@@ -3768,8 +4414,8 @@
       \strng{editornamehash}{0a07bcad50031f3879e3149805803a44}
       \strng{editorfullhash}{0a07bcad50031f3879e3149805803a44}
       \strng{editorfullhashraw}{0a07bcad50031f3879e3149805803a44}
-      \field{sortinit}{4}
-      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{sortinit}{5}
+      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{abstract}{Abstract The migratory movements of wild animals can promote abundance and support ecosystem functioning. For large herbivores, mounting evidence suggests that migratory behaviour is an individually variable trait, where individuals can easily switch between migrant and resident tactics. The degree of migratory plasticity, including whether and where to migrate, has important implications for the ecology and conservation of large herbivores in a changing world. Mule deer ( Odocoileus hemionus ) are an iconic species of western North America, but are notably absent from the body of literature that suggests large herbivore migrations are highly plastic. We evaluated plasticity of migration in female mule deer using longitudinal {GPS} data collected from 312 individuals across nine populations in the western United States, including 882 animal‐years (801 migrants and 81 residents). We followed both resident and migratory mule deer through time to determine whether individual animals switched migratory behaviours (i.e., whether to migrate) from migratory to residency or vice versa. Additionally, we examined the fidelity of individuals to their migration routes (i.e., where to migrate) to determine whether they used the same routes year after year. We also evaluated whether age and reproductive status affected propensity to migrate or fidelity to migratory routes. Our results indicate that mule deer, unlike other large herbivores, have little or no plasticity in terms of whether or where they migrate. Resident deer remained residents, and migrant deer remained migrants, regardless of age, reproductive status or number of years monitored. Further, migratory individuals showed strong fidelity ({>}80\%) to their migration routes year after year. Our study clearly shows that migration plasticity is not ubiquitous among large herbivores. Because of their rigid migratory behaviour, mule deer may not adapt to changing environmental conditions as readily as large herbivores with more plastic migratory behaviour (e.g., elk). The fixed migratory behaviours of mule deer make clear that conservation efforts aimed at traditional seasonal ranges and migration routes are warranted for sustaining this iconic species that continues to decline across its range.}
@@ -3848,8 +4494,8 @@
       \strng{authornamehash}{7d72458571a02d60da24221e61edfd33}
       \strng{authorfullhash}{463b0787c9c4c5642b07aa1b119f6f08}
       \strng{authorfullhashraw}{463b0787c9c4c5642b07aa1b119f6f08}
-      \field{sortinit}{4}
-      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{sortinit}{5}
+      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{abstract}{Abstract Climate‐induced variation in lake level can affect physicochemical properties of endorheic lakes, but its consequences for phototrophic production and regime shifts are not well understood. Here, we quantified changes in the abundance and community composition of phototrophs in Kenosee and White Bear lakes, two endorheic basins in the parkland Moose Mountain uplands of southeastern Saskatchewan, Canada, which have experienced {>} 8 m declines in water level since {\textasciitilde} 1900. We hypothesized that lower water levels and warmer temperatures should manifest as increased abundance of phytoplankton, particularly cyanobacteria, and possibly trigger a regime shift to turbid conditions due to evaporative concentration of nutrients and solutes. High‐resolution analysis of sedimentary pigments revealed an increase in total phototrophic abundance (as β‐carotene) concurrent with lake‐level decline beginning {\textasciitilde} 1930, but demonstrated little directional change in cyanobacteria. Instead, significant increases in obligately anaerobic purple sulfur bacteria (as okenone) occurred in both lakes during {\textasciitilde} 1930–1950, coeval with alterations to light environments and declines in lake level. The presence of okenone suggests that climate‐induced increases in solute concentrations may have favored the formation of novel bacterial habitats where photic and anoxic zones overlapped. Generalized additive models showed that establishment of this unique habitat was likely preceded by increased temporal variance of sulfur bacteria, but not phytoplankton or cyanobacteria, suggesting that this abrupt change to physical lake structure was unique to deep‐water environments. Such climate‐induced shifts may become more frequent in the region due to hydrological stress on lake levels due to warming temperatures across the Northern Great Plains.}
@@ -3882,78 +4528,6 @@
       \verb https://aslopubs.onlinelibrary.wiley.com/doi/10.1002/lno.12054
       \endverb
     \endentry
-    \entry{chevin_adaptation_2010}{article}{}{}
-      \name{author}{3}{}{%
-        {{hash=b7ccc25acaebff8b284b61e400261428}{%
-           family={Chevin},
-           familyi={C\bibinitperiod},
-           given={Luis-Miguel},
-           giveni={L\bibinithyphendelim M\bibinitperiod}}}%
-        {{hash=af16cb6bcbaa32c0b4b7e188fad0e401}{%
-           family={Lande},
-           familyi={L\bibinitperiod},
-           given={Russell},
-           giveni={R\bibinitperiod}}}%
-        {{hash=99f99a8fffbb3d8671430015f8b3ae91}{%
-           family={Mace},
-           familyi={M\bibinitperiod},
-           given={Georgina\bibnamedelima M.},
-           giveni={G\bibinitperiod\bibinitdelim M\bibinitperiod}}}%
-      }
-      \name{editor}{1}{}{%
-        {{hash=ec80056fbd282c45055040ff57a77811}{%
-           family={Kingsolver},
-           familyi={K\bibinitperiod},
-           given={Joel\bibnamedelima G.},
-           giveni={J\bibinitperiod\bibinitdelim G\bibinitperiod}}}%
-      }
-      \strng{namehash}{e5e3ff733aaac0faeb9e04ea6d2b44fc}
-      \strng{fullhash}{e5e3ff733aaac0faeb9e04ea6d2b44fc}
-      \strng{fullhashraw}{e5e3ff733aaac0faeb9e04ea6d2b44fc}
-      \strng{bibnamehash}{e5e3ff733aaac0faeb9e04ea6d2b44fc}
-      \strng{authorbibnamehash}{e5e3ff733aaac0faeb9e04ea6d2b44fc}
-      \strng{authornamehash}{e5e3ff733aaac0faeb9e04ea6d2b44fc}
-      \strng{authorfullhash}{e5e3ff733aaac0faeb9e04ea6d2b44fc}
-      \strng{authorfullhashraw}{e5e3ff733aaac0faeb9e04ea6d2b44fc}
-      \strng{editorbibnamehash}{ec80056fbd282c45055040ff57a77811}
-      \strng{editornamehash}{ec80056fbd282c45055040ff57a77811}
-      \strng{editorfullhash}{ec80056fbd282c45055040ff57a77811}
-      \strng{editorfullhashraw}{ec80056fbd282c45055040ff57a77811}
-      \field{sortinit}{4}
-      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
-      \field{labelnamesource}{author}
-      \field{labeltitlesource}{shorttitle}
-      \field{day}{27}
-      \field{issn}{1545-7885}
-      \field{journaltitle}{{PLoS} Biology}
-      \field{langid}{english}
-      \field{month}{4}
-      \field{number}{4}
-      \field{shortjournal}{{PLoS} Biol}
-      \field{shorttitle}{Adaptation, Plasticity, and Extinction in a Changing Environment}
-      \field{title}{Adaptation, Plasticity, and Extinction in a Changing Environment: Towards a Predictive Theory}
-      \field{urlday}{11}
-      \field{urlmonth}{11}
-      \field{urlyear}{2020}
-      \field{volume}{8}
-      \field{year}{2010}
-      \field{dateera}{ce}
-      \field{urldateera}{ce}
-      \field{pages}{e1000357}
-      \range{pages}{-1}
-      \verb{doi}
-      \verb 10.1371/journal.pbio.1000357
-      \endverb
-      \verb{file}
-      \verb Full Text:C\:\\Users\\stefa\\Zotero\\storage\\BEPHBCRF\\Chevin et al. - 2010 - Adaptation, Plasticity, and Extinction in a Changi.pdf:application/pdf
-      \endverb
-      \verb{urlraw}
-      \verb https://dx.plos.org/10.1371/journal.pbio.1000357
-      \endverb
-      \verb{url}
-      \verb https://dx.plos.org/10.1371/journal.pbio.1000357
-      \endverb
-    \endentry
     \entry{wolf_flowering_2017}{article}{}{}
       \name{author}{3}{}{%
         {{hash=5f8a00e4f20e197daf5c1bc3f1a4946b}{%
@@ -3980,8 +4554,8 @@
       \strng{authornamehash}{553228d64d71179e61ecb664578fdcb4}
       \strng{authorfullhash}{553228d64d71179e61ecb664578fdcb4}
       \strng{authorfullhashraw}{553228d64d71179e61ecb664578fdcb4}
-      \field{sortinit}{4}
-      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{sortinit}{5}
+      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{abstract}{Observational studies and experimental evidence agree that rising global temperatures have altered plant phenology—the timing of life events, such as flowering, germination, and leaf-out. Other large-scale global environmental changes, such as nitrogen deposition and altered precipitation regimes, have also been linked to changes in flowering times. Despite our increased understanding of how abiotic factors influence plant phenology, we know very little about how biotic interactions can affect flowering times, a significant knowledge gap given ongoing human-caused alteration of biodiversity and plant community structure at the global scale. We experimentally manipulated plant diversity in a California serpentine grassland and found that many plant species flowered earlier in response to reductions in diversity, with peak flowering date advancing an average of 0.6 days per species lost. These changes in phenology were mediated by the effects of plant diversity on soil surface temperature, available soil N, and soil moisture. Peak flowering dates were also more dispersed among species in high-diversity plots than expected based on monocultures. Our findings illustrate that shifts in plant species composition and diversity can alter the timing and distribution of flowering events, and that these changes to phenology are similar in magnitude to effects induced by climate change. Declining diversity could thus contribute to or exacerbate phenological changes attributed to rising global temperatures.}
@@ -4121,8 +4695,8 @@
       \strng{authornamehash}{39860348c723f51f6e586114107bc1db}
       \strng{authorfullhash}{b11b3c1af01d531137418e9970f61bb0}
       \strng{authorfullhashraw}{b11b3c1af01d531137418e9970f61bb0}
-      \field{sortinit}{4}
-      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{sortinit}{5}
+      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{issn}{0028-0836, 1476-4687}
@@ -4177,8 +4751,8 @@
       \strng{authornamehash}{c0099d8d400611922d9deebd5ca28a09}
       \strng{authorfullhash}{c0099d8d400611922d9deebd5ca28a09}
       \strng{authorfullhashraw}{c0099d8d400611922d9deebd5ca28a09}
-      \field{sortinit}{4}
-      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{sortinit}{5}
+      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{issn}{00033472}

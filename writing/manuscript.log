@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.10.22)  23 OCT 2025 17:11
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.10.22)  29 OCT 2025 10:34
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -728,11 +728,11 @@ Package biblatex Info: Reference segment=0 on input line 54.
 [3]
 
 [4]
-<../figures/hexplots-global-test.png, id=175, 867.24pt x 361.35pt>
+<../figures/hexplots-global-test.png, id=204, 867.24pt x 361.35pt>
 File: ../figures/hexplots-global-test.png Graphic file (type png)
 <use ../figures/hexplots-global-test.png>
 Package pdftex.def Info: ../figures/hexplots-global-test.png  used on input lin
-e 165.
+e 163.
 (pdftex.def)             Requested size: 433.62001pt x 180.67456pt.
 
 
@@ -743,7 +743,7 @@ LaTeX Warning: `h' float specifier changed to `ht'.
 [5]
 
 [6 <../figures/hexplots-global-test.png>]
-Overfull \hbox (155.7422pt too wide) in paragraph at lines 217--218
+Overfull \hbox (155.7422pt too wide) in paragraph at lines 215--216
 []\T1/cmr/m/n/10 effects of sud-den deep snow in red desert on proghorn (https:
 //www.sciencedirect.com/science/article/abs/pii/S0960982225002957) 
  []
@@ -782,7 +782,7 @@ doi.org/10.1016/j.tree.2005.05.011
 ]
 
 [14]
-Overfull \hbox (8.42001pt too wide) in paragraph at lines 396--396
+Overfull \hbox (8.42001pt too wide) in paragraph at lines 398--398
 \T1/cmr/m/n/10 of fire-affected re-sources in forested land-scapes. For-est Eco
 l-ogy and Man-age-ment 2021;497:119484. 
  []
@@ -792,22 +792,24 @@ l-ogy and Man-age-ment 2021;497:119484.
 [15]
 
 [16]
-Overfull \hbox (19.27122pt too wide) in paragraph at lines 396--396
+
+[17]
+Overfull \hbox (19.27122pt too wide) in paragraph at lines 398--398
 []\T1/cmr/m/n/10 Steixner-Kumar S and Gläscher J. Strate-gies for nav-i-gat-ing
  a dy-namic world. Sci-ence 2020;369:1056^^U
  []
 
 
 
-[17]
-Overfull \hbox (6.53159pt too wide) in paragraph at lines 396--396
+[18]
+Overfull \hbox (6.53159pt too wide) in paragraph at lines 398--398
 \T1/cmr/m/n/10 avail-abil-ity in re-la-tion to mi-gra-tion in the painted lady 
 but-ter-fly. An-i-mal Be-haviour 2021;172:145^^U
  []
 
 
 
-[18] (manuscript.aux)
+[19] (manuscript.aux)
  ***********
 LaTeX2e <2025-06-01> patch level 1
 L3 programming layer <2025-09-02>
@@ -819,10 +821,10 @@ Package logreq Info: Writing requests to 'manuscript.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 19871 strings out of 468081
- 356535 string characters out of 5425788
- 1190765 words of memory out of 5000000
- 48234 multiletter control sequences out of 15000+600000
+ 19908 strings out of 468081
+ 358258 string characters out of 5425788
+ 1191452 words of memory out of 5000000
+ 48261 multiletter control sequences out of 15000+600000
  644817 words of font info for 74 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  69i,15n,79p,4596b,1528s stack positions out of 10000i,1000n,20000p,200000b,200000s
@@ -851,9 +853,9 @@ rams/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/stefa/AppData/Lo
 cal/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/stefa/App
 Data/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/
 stefa/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb>
-Output written on manuscript.pdf (18 pages, 2646381 bytes).
+Output written on manuscript.pdf (19 pages, 2656161 bytes).
 PDF statistics:
- 850 PDF objects out of 1000 (max. 8388607)
- 108 named destinations out of 1000 (max. 500000)
+ 889 PDF objects out of 1000 (max. 8388607)
+ 118 named destinations out of 1000 (max. 500000)
  126 words of extra memory for PDF output out of 10000 (max. 10000000)
 
