@@ -5,6 +5,7 @@ library('lubridate') # for working with dates
 library('mgcv')      # for Genralized Additive Models
 library('gratia')    # for plotting GAMs
 library('qs')        # for saving R objects quicker than with saveRDS
+library('sf')        # for splitting predictions across groups
 source('analysis/figures/000-default-ggplot-theme.R')
 
 NCORES <- future::availableCores(logical = FALSE) - 2
@@ -12,7 +13,7 @@ t_res <- 4
 s_res <- 4
 
 GROUPS <-
-  sf::st_read('data/ecoregions/groups-polygons.shp', quiet = TRUE) %>%
+  st_read('data/ecoregions/groups-polygons.shp', quiet = TRUE) %>%
   filter(group != 'Antarctic') %>%
   pull(group) %>%
   unique() %>%
@@ -81,52 +82,85 @@ models <-
            return(.m_mu)
          }, .progress = TRUE))
 
+#' *STILL NEED TO CREATE RASTERS OF CLEANED AND AGGREGATED DATA*
 # find pixel-level variance ----
-# model has an identity link function: link = response
-dates <- readRDS('data/avhrr-viirs-ndvi/ndvi-raster-metadata.rds') %>%
-  mutate(julian = julian(date),
-         date_group = as.integer(julian - (julian %% t_res))) %>%
-  # dates and number of rasters for each date_group
-  group_by(date_group) %>%
-  mutate(n_rasters = sum(! is.na(file_name)),
-         start_date = min(date),
-         central_date = mean(date),
-         end_date = max(date),
-         doy = yday(central_date) %>% as.integer(),
-         year = year(central_date) %>% as.integer()) %>%
-  ungroup()
+raw_file_names <-
+  list.files('data/avhrr-viirs-ndvi/raster-files/cleaned-and-aggregated',
+             full.names = TRUE)
 
+group_shp <- read_sf('data/ecoregions/groups-polygons.shp', quiet = TRUE) %>%
+  select(! area_km2) %>%
+  filter(group != 'Antarctic')
 
-
-# d <- mutate(d,
-#             mu_hat = predict(m_mu, newdata = d, type = 'response',
-#                              discrete = FALSE, se.fit = FALSE,
-#                              block.size = 1e6),
-#             e2 = (ndvi_aggr - mu_hat)^2)
-# 
-# qsave(d, paste0('data/bam-var-ndvi-data-', .g, '-t-4-s-4-', DATE, '.qs'),
-#       nthreads = NCORES)
-
-# check pixel-level residuals
-if(FALSE) {
-  z <- d %>%
-    slice(1:2e5) %>%
-    filter(central_date == central_date[1e5])
+#' *CHECK BEFORE RUNNING*
+future_map(raw_file_names, function(.fn) {
+  preds <- rast(.fn) %>%
+    as.data.frame(xy = TRUE, na.rm = TRUE) %>%
+    # add model covariates
+    mutate(.,
+           date =
+             gsub('*.unmodeled-ndvi-', '', .fn) %>%
+             gsub('-t-4-s-4.tif', '', .) %>%
+             as_date(),
+           year = year(date),
+           doy = yday(date),
+           elev_m = extract(r_elev, select(., x, y))[, 2],
+           prop_water = 0,
+           group = select(., x, y) %>%
+             st_as_sf(coords = c('x', 'y')) %>%
+             st_set_crs('EPSG:4326') %>%
+             st_transform(st_crs(group_shp)) %>%
+             mutate(.,
+                    group = st_intersects(., group_shp),
+                    group = as.numeric(group),
+                    group = group_shp$group[group]) %>%
+             pull(group)) %>%
+    nest(group_data = ! group) %>%
+    # add predictions and squared residuals
+    mutate(group_data = map2(group, group_data, function(..g, ..data) {
+      ..model <- models$model[[which(models$group == ..g)]]
+      
+      
+      mutate(..data,
+             mu_hat = predict(m_mu, newdata = d, type = 'response',
+                              discrete = FALSE),
+             e = ndvi_aggr - mu_hat,
+             e2 = (e)^2)
+    })) %>%
+    unnest(group_data)
   
-  z %>%
-    ggplot(aes(x, y, fill = mu_hat)) +
-    geom_raster() +
-    scale_fill_gradientn(colors = ndvi_pal, limits = c(-1, 1))
-  
-  z %>%
-    mutate(mu_hat = predict.bam(m_mu, discrete = FALSE, newdata = z,
-                                type = 'response')) %>%
-    ggplot(aes(x, y, fill = mu_hat)) +
-    geom_raster() +
-    scale_fill_gradientn(colors = ndvi_pal, limits = c(-1, 1))
-  
-  rm(z)
-}
+  preds %>%
+    select(x, y, mu_hat, e, e2) %>%
+    rast() %>%
+    writeRaster(filename = c(
+      gsub('cleaned-and-aggregated/unmodeled-ndvi',
+           'estimated-means/mu-hat', .fn),
+      gsub('cleaned-and-aggregated/unmodeled-ndvi',
+           'residuals/residuals', .fn),
+      gsub('cleaned-and-aggregated/unmodeled-ndvi',
+           'squared-residuals/squared-residuals', .fn)))
+})
+
+#' # check pixel-level residuals *EDIT OR REMOVE*
+# if(FALSE) {
+#   z <- d %>%
+#     slice(1:2e5) %>%
+#     filter(central_date == central_date[1e5])
+#   
+#   z %>%
+#     ggplot(aes(x, y, fill = mu_hat)) +
+#     geom_raster() +
+#     scale_fill_gradientn(colors = ndvi_pal, limits = c(-1, 1))
+#   
+#   z %>%
+#     mutate(mu_hat = predict.bam(m_mu, discrete = FALSE, newdata = z,
+#                                 type = 'response')) %>%
+#     ggplot(aes(x, y, fill = mu_hat)) +
+#     geom_raster() +
+#     scale_fill_gradientn(colors = ndvi_pal, limits = c(-1, 1))
+#   
+#   rm(z)
+# }
 
 # model variance
 models <- models %>%
@@ -164,10 +198,14 @@ models <- models %>%
       control = gam.control(trace = TRUE),
       samfrac = 0.01) # initial guess using only 1% of data (default = 100%)
     
-    qsave(m_s2, paste0('models/global-models/bam-variance-ndvi-', g,
-                       '-', DATE, '.qs'), nthreads = NCORES)
+    qsave(m_s2,
+          paste0('models/global-models/bam-variance-ndvi-', g, '-', DATE,'.qs'),
+          nthreads = NCORES)
     return(m_s2)
   }))
+
+s2_file_names <- gsub('unmodeled-ndvi', 'DENVar', raw_file_names)
+#' *ADD CODE TO SAVE DENVar ESTIMATES*
 
 # save the model summaries and plots
 imap(models$group, function(.i, .g) {

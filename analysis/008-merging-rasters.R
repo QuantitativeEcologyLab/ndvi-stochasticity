@@ -14,8 +14,9 @@ source('functions/is_flagged.R')
 # using a factor of 2 causes the palearctic group to fail because the dataset
 # has too many rows, resulting in the error:
 #' `Long vectors are not yet supported. Requested output size must be less than 2147483647.`
-s_res <- 2 # factor for spatial aggregation
-t_res <- 2 # factor for temporal aggregation
+# using a factor of 3 causes the palearctic model to max out the 2 Tb of RAM
+s_res <- 4 # factor for spatial aggregation
+t_res <- 4 # factor for temporal aggregation
 
 FIRST_100_ONLY <- FALSE # set to TRUE for creating a subset of a few days
 
@@ -452,3 +453,24 @@ if(FALSE) { # for testing
     labs(x = NULL, y = NULL) +
     scale_fill_gradientn('NDVI', colours = ndvi_pal, limits = c(-1, 1))
 }
+
+# import the full cleaned dataset
+full_dataset <- list.files('data/avhrr-viirs-ndvi/group-level-datasets/',
+                           pattern = 't-4-s-4', full.names = TRUE) %>%
+  map(\(.fn) qread(.fn, nthreads = availableCores(logical = FALSE) - 2)) %>%
+  bind_rows() %>%
+  select(central_date, x, y, ndvi_aggr) %>%
+  nest(ndvi_data = ! central_date)
+
+# save each raster to a separate file 
+future_map2(
+  full_dataset$central_date, full_dataset$ndvi_data, function(.day, .data) {
+    
+    .r <- rast(.data, crs = 'EPSG:4326')
+    
+    out_name <-
+      paste0('data/avhrr-viirs-ndvi/raster-files/cleaned-and-aggregated/',
+             'unmodeled-ndvi-', .day, '-t-4-s-4.tif')
+    
+    writeRaster(.r, out_name, overwrite = FALSE)
+  })
