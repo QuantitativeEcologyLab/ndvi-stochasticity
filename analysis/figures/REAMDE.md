@@ -1,1 +1,1 @@
-This folder contains the main `R` scripts for creating the figures for this project. The scripts are numbered in the order as the scripts in the main `anlysis` folder.
+This folder contains the main `R` scripts for creating the figures for this project. The scripts are numbered in the order as the scripts in the main `analysis` folder, such that the script(s) numbered `x` should be ran *after* script `x` from the `analysis` folder.
