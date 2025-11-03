@@ -33,3 +33,11 @@ rasters of DENVar and corresponding mean estimates:
 
 - integrate shiny app into MoveBank? (use MoveApps?)
 - shiny app extracting values from rasters given a date and coordinates?
+
+# for publication
+- add a title in each figure caption
+- update graphical abstract to use static rasters of mean NDVI and DENVar ( https://www.sciencedirect.com/journal/remote-sensing-of-environment/publish/guide-for-authors#toc-27)
+- update grahpical abstract to use robinson projection in panels B and C
+- include a concise, descriptive caption for each supplementary file describing its content
+- Abbreviate journal names according to the List of Title Word Abbreviations (LTWA)?
+- review autor checklist: https://www.sciencedirect.com/journal/remote-sensing-of-environment/publish/guide-for-authors
