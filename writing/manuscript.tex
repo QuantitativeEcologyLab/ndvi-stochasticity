@@ -1,3 +1,4 @@
+% Research articles should be limited to 15,000 words, including references and figure captions.
 % run `biber manuscript` in terminal before knitting after adding any new refs
 
 \documentclass{article}
@@ -17,9 +18,10 @@
 
 %%%%%% Bibliography %%%%%%
 % Replace "sample" in the \addbibresource line below with the name of your .bib file.
-\usepackage[style=nejm, 
+\usepackage[style=nejm,
 citestyle=numeric-comp,
 sorting=none]{biblatex}
+% \usepackage[style=remote-sensing-of-environment]{biblatex}
 \addbibresource{ndvi-stochasticity.bib}
 
 %%%%%% Title %%%%%%
@@ -77,33 +79,34 @@ Previous work suggests that environmental stochasticity can reduce limit species
 
 We present a new measure of environmental stochasticity, which we name the Dynamic Estimate of NDVI Variance (DENVar). We calculate DENVar using 44 years of NDVI data from the AVHRR and VIIRS collection of sensors and GAMs. Although satellites with AVHRR and VIIRS sensors provide data at a coarser spatial resolution (0.05\textdegree) than other satellites (e.g., 250m for MODIS), they are the only sensors to provide data at a daily frequency and and for more than 40 years. Our use of GAMs provides a flexible yet interpretable approach for estimating trends in mean and variance in NDVI without the rigidity of other more traditional methods (e.g., ARIMA) or the opaqueness of machine learning models such as neural networks \cite{simpson_modelling_2018, wood_generalized_2017}. We illustrate the relationships between DENVar and multiple, relevant ecological metrics, and we provide access to a free repository of daily, global estimates of DENVar and the corresponding estimates of mean NDVI.
 
-\section{Materials and Methods}
-
-% do not move methods to SI
+\section{Methods}
 
 \subsection{Choice of color palettes}
 
-We represent NDVI using a modified version of Fabio Crameri's divergent \emph{bukavu} palette \cite{crameri_geodynamic_2018, crameri_misuse_2020}, which has high-contrast for deuteranope and protanope vision. For NDVI values between -0.1 and 1, the colors also have sufficient contrast for the colors to also be distinguishable by strong tritanope and achomatic vision. Fig. A1 contains an approximate representation of how each vision type would perceive each color palettes used. We obtained all color palettes with three or more colors from the \texttt{khroma} package (v. 1.14.0, \cite{frerebeau_khroma_2024}) for \texttt{R} (v. 4.4.1, \cite{r_core_team_r_2024}).
+We represent NDVI using a modified version of Fabio Crameri's divergent \emph{bukavu} palette \cite{crameri_geodynamic_2018, crameri_misuse_2020}, which has high-contrast for deuteranope and protanope vision. For NDVI values between -0.1 and 1, the colors also have sufficient contrast for the colors to also be distinguishable by strong tritanope and achomatic vision. Fig. A.1 contains an approximate representation of how each vision type would perceive each color palettes used. We obtained all color palettes with three or more colors from the \texttt{khroma} package (v. 1.14.0, \cite{frerebeau_khroma_2024}) for \texttt{R} (v. 4.4.0, \cite{r_core_team_r_2024}).
 
-\subsection{Experimental and Technical Design}
+\subsection{Datasets used} \label{m-data}
 
-\begin{itemize}
-\item include a diagram to show the entire experimental design and illustrate the most significant elements: materials, treatments, measurements, data collection, methods of data analysis
-\item This will facilitate the editors and reviewers to understand and follow the whole concept, design, and results.
-\end{itemize}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{flowchart/denvar-flowchart}
+    \caption{\textbf{Flowchart for the analyses used in the manuscript. The curly braces on the right indicate the subsections in the Methods section that detail the dataset collation and cleaning (\ref{m-data}.), and statistical analyses (\ref{m-analyses}).}
+    \label{analysis-diagram}
+\end{figure}
 
-We downloaded NDVI image composites directly from the servers for data from AVHRR sensors (1981-06-24 to 2013-12-31; \href{https://ladsweb.modaps.eosdis.nasa.gov/archive/allData}{https://ladsweb.modaps.eosdis.nasa.gov/archive/allData}; \cite{vermote_noaa_2018}) and VIIRS sensors (2014-01-01 to 2025-06-29; \href{https://ncei.noaa.gov/data}{https://ncei.noaa.gov/data/}; \cite{vermote_noaa_2022}). Fig. A2 shows the availability of rasters over time for both sets of sensors. We removed all pixels labeled as "cloudy" for AVHRR rasters and "probably cloudy" or "confidently cloudy" for VIIRS ratsers. Additionally, we removed pixels with erroneously high NDVI values at high latitudes between September and March using latitudinal cutoffs based on the monthly empirical cumulative distribution function of NDVI across latitude (Fig. B2). We did not remove values at latitudes $< 60^\circ$S since we fully excluded Antarctica from the analyses.
+Fig. \ref{fig:analysis-diagram} illustrates the processes of data collection, cleaning, and modeling used in this project. We downloaded NDVI image composites directly from the servers for data from AVHRR sensors (1981-06-24 to 2013-12-31; \href{https://ladsweb.modaps.eosdis.nasa.gov/archive/allData}{https://ladsweb.modaps.eosdis.nasa.gov/archive/allData}; \cite{vermote_noaa_2018}) and VIIRS sensors (2014-01-01 to 2025-06-29; \href{https://ncei.noaa.gov/data}{https://ncei.noaa.gov/data/}; \cite{vermote_noaa_2022}).
 
-Elevation above sea level was obtained using the \texttt{get\_elev\_raster()} function from the \texttt{elevatr} package for \texttt{R} (v. 0.99.0, \cite{hollister_elevatr_2023}) with an original resolution of 0.076\textdegree (Fig. A6). To remove any biases towards negative NDVI values due to water, we removed all raster cells with > 40\% water cover. We estimated the proportion of water in each cell by rasterizing a shapefile of main water bodies at a resolution of 0.05\textdegree (Fig. A7).
+We removed all pixels labeled as "cloudy" for AVHRR rasters and "probably cloudy" or "confidently cloudy" for VIIRS ratsers. To remove pixels that included large portions of water, we used a shapefile of major water bodies (\cite{garmin_international_inc_world_2025}) to produce a static raster of the percentage of water within each pixel, at the same spatial resolution as the NDVI rasters (0.05\textdegree; Fig. A.2). We removed all pixels with > 40\% water cover.
 
-To ensure the number of rows for each dataset was below the maximum data frame size in \texttt{R} ($3.17 \times 10 ^{10} > 2^{31} - 1 \approx 0.21 \times 10^{10}$), we reduced the dataset size by splitting the dataset across four spatial groups (Fig. A4) and spatiotemporally averaged the (cleaned) rasters by a factor of four. The final dataset thus had one raster every four days with a spatial resolution of $0.05^\circ\times4=0.2^\circ$. Despite the substantial reduction in dataset size, the dataset creation and modeling were still challenging for the machine used, which had 2.2 TB of RAM and two Intel Xeon Platinum 8462Y+ processors (64 cores total).
+Many rasters had horizontal bands of NDVI > 0.9 at unrealistically northern latitudes between September and March, likely due to limited visibility during fall and winter in the Northen hemisphere. We identified and removed problematic pixels using the monthly empirical cumulative distribution functions of NDVI across latitude (Fig. A.3). We did not filter problematic values at latitudes $< 60^\circ$S since we fully excluded Antarctica from the analyses (Fig. A.4).
 
-\subsection{Statistical Analysis}
+To ensure the number of rows for each dataset was below the maximum data frame size in \texttt{R} ($3.17 \times 10 ^{10} > 2^{31} - 1 \approx 0.21 \times 10^{10}$), we reduced the dataset size by splitting it across four spatial groups (Figs. A.4 and A.5) and spatially and temporally aggregated the rasters by a factor of four. The final dataset thus had one raster every four days with a spatial resolution of $0.05^\circ\times4=0.2^\circ$ (Fig. A.6). Finally, we annotated the dataset with columns of day of year (1-366), integer year (1981-2025), percent water cover, and elevation above sea level (m). The digital eleveation model was obtained using the \texttt{get\_elev\_raster()} function from the \texttt{elevatr} package for \texttt{R} (v. 0.99.0, \cite{hollister_elevatr_2023}) with an original resolution of 0.076\textdegree (Fig. A.6). Despite the substantial reduction in dataset size, the dataset creation was still challenging for the machine used, which had 2.2 TB of RAM and two Intel Xeon Platinum 8462Y+ processors (64 cores total).
 
-% If applicable, include a section titled Statistical Analysis that fully describes the statistical methods with enough detail to enable a knowledgeable reader with access to the original data to verify the results.
-% The values for N, P, and the specific statistical test performed for each experiment should be included in the appropriate figure legend or main text.
+\subsection{Statistical Analyses}
 
-We estimated spatiotemporal trends in mean NDVI using Generalized Additive Models (GAMs) via the \texttt{mgcv} package for \texttt{R} (v. 1.9-3, \cite{wood_generalized_2017}). To reduce modeling fitting times with negligible losses to model accuracy, we used the \texttt{bam()} function with fast REstricted Marginal Likelihood (\texttt{method = fREML}) and covariate discretization (\texttt{discrete = TRUE}; \cite{wood_generalized_2015, wood_generalized_2017-1}). Ideally, NDVI should be modeled using beta location-scale models (after the linear transformation $Y^*=\frac{Y + 1}{2}$) to account for the fact that: (1) NDVI is bounded between -1 and 1, and (2) the variance in NDVI is dependent on the mean (and vice-versa), since ecosystems with very low NDVI (e.g., rock, ice, or concrete) or very high NDVI (e.g., dense forest) tend to have lower variance in NDVI. However, preliminary tests showed that fitting times for beta models were prohibitive, especially for beta location-scale models. In contrast, Gaussian models fit substantially faster and provided very similar spatialtemporal estimates of mean NDVI (see Appendix B). For each region shown in Fig. A4, the model for the mean NDVI had the structure below:
+\textcolor{red}{HERE}
+
+We estimated spatiotemporal trends in mean NDVI using Generalized Additive Models (GAMs) via the \texttt{mgcv} package for \texttt{R} (v. 1.9-3, \cite{wood_generalized_2017}). To reduce modeling fitting times with negligible losses to model accuracy, we used the \texttt{bam()} function with fast REstricted Marginal Likelihood (\texttt{method = fREML}) and covariate discretization (\texttt{discrete = TRUE}; \cite{wood_generalized_2015, wood_generalized_2017-1}). Ideally, NDVI should be modeled using beta location-scale models (after the linear transformation $Y^*=\frac{Y + 1}{2}$) to account for the fact that: (1) NDVI is bounded between -1 and 1, and (2) the variance in NDVI is dependent on the mean (and vice-versa), since ecosystems with very low NDVI (e.g., rock, ice, or concrete) or very high NDVI (e.g., dense forest) tend to have lower variance in NDVI. However, preliminary tests showed that fitting times for beta models were prohibitive, especially for beta location-scale models. In contrast, Gaussian models fit substantially faster and provided very similar spatialtemporal estimates of mean NDVI (see Appendix B). For each region shown in Fig. A.4, the model for the mean NDVI had the structure below:
 
 \singlespacing
 
@@ -120,6 +123,8 @@ f_{6T}(\texttt{doy}, \texttt{year}) + f_{7T}(\texttt{doy}, \texttt{lat}, \texttt
 \doublespacing
 
 \noindent where, for a given (aggregated) pixel, \texttt{prop\_water} is the proportion of water within the pixel, \texttt{elev\_m} is elevation above sea level in meters, \texttt{doy} is integer day of year (1-366), \texttt{year} is integer year (1981-2025), and \texttt{lat} and \texttt{long} are latitude and longitude, respectively. $f_{j}(~)$ indicate the $j^{\text{th}}$ marginal smooth functions, while $f_{jT}(~)$ indicate the $j^{\text{th}}$ tensor product interaction terms. Latitude and longitude were modeled using a spline-on-the-sphere basis (\texttt{bs = 'sos'}; \cite{wood_generalized_2017}), while seasonal terms used cyclical cubic splines (\texttt{bs = 'cc'}) with edge knots 0.5 and 366.5.
+
+\textcolor{red}{each model took days to fit}
 
 \textcolor{red}{HERE}
 
