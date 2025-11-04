@@ -55,7 +55,9 @@ knitr::opts_chunk$set(echo = FALSE, out.width = '100%', fig.align = 'center', fi
 library('knitr')
 ```
 
-\noindent Fig. A.1 below illustrates the color palettes used in the main manuscript and this appendix, for each type of vision (trichromatic, deuteranope, protanope, tritanope, and achomatic). The NDVI palette is a modified version of the Bukavu palette by Fabio Crameri [@crameri_geodynamic_2018; @crameri_scientific_2018]. Palette A4 is a modified version of a pallette by Masataka Okabe and Kei Ito [@okabe_color_2008]. All other palettes were created by Fabio Crameri [@crameri_geodynamic_2018; @crameri_scientific_2018]. All original palettes are available via the `khroma` package [@frerebeau_khroma_2024] for `R` [@r_core_team_r_2024]. Figs. A6 and A7 show some of the data used for fitting the models for estimating mean NDVI and the variance around the mean. See the Code Availability statement in the main text for the code used to produce the figures. The shapefile of WWF ecozones and biomes was obtained from the work of @olson_terrestrial_2001.
+\noindent Fig. A.1 below illustrates the color palettes used in the main manuscript and this appendix, for each type of vision (trichromatic, deuteranope, protanope, tritanope, and achomatic). The NDVI palette is a modified version of the Bukavu palette by Fabio Crameri [@crameri_geodynamic_2018; @crameri_scientific_2018].
+
+The palette for Fig. A.4 is a modified version of a pallette by Masataka Okabe and Kei Ito [@okabe_color_2008]. All other palettes were created by Fabio Crameri [@crameri_geodynamic_2018; @crameri_scientific_2018]. All original palettes are available via the `khroma` package [@frerebeau_khroma_2024] for `R` [@r_core_team_r_2024]. See the Code Availability statement in the main text for the code used to produce the figures. The shapefile of WWF ecozones and biomes was obtained from the work of @olson_terrestrial_2001.
 
 \singlespacing
 
@@ -63,32 +65,38 @@ library('knitr')
 include_graphics('../figures/input-data/color-palettes.pdf')
 ```
 
-\clearpage <!-- for cleaner pagination and to keep groups and biomes on the same page-->
+<!-- \clearpage <!-- for cleaner pagination and to keep groups and biomes on the same page-->
 
-```{r n-rasters, fig.cap="Number of days with a raster within each 4-day period used for temporal aggregation of the data.", out.width='85%'}
-include_graphics('../figures/input-data/n-rasters-time.pdf')
+```{r prop-water, fig.cap="Robinson projection of the proportion of water in each pixel. Black lines indicate WWF ecozones."}
+include_graphics('../figures/input-data/proportion-water.pdf')
 ```
+
+<!-- \clearpage -->
 
 ```{r ndvi-ecdf, fig.cap="Monthly empirical cumulative density fuctions of NDVI across latitude. The white lines indicate the 99$^{\\text{th}}$ quantiles of NDVI at each latitude (thinner lines) and floored latitude (thicker lines). The red areas indicate the NDVI values $> 0$ removed in each month. No values at latitudes $< 60^\\circ$S were removed since Antarctica was not included in the analyses."}
 include_graphics('../figures/global-diagnostics/monthly-latitudinal-ecdf.pdf')
 ```
 
-\clearpage
+<!-- \clearpage -->
 
-```{r data-groups, fig.cap="Robinson projection of the groups used to avoid data size limitations in $\\texttt{R}$. Black lines indicate WWF ecozones."}
+```{r data-groups, fig.cap="Robinson projection of the groups used to avoid data size limitations in $\\texttt{R}$. Black lines indicate WWF ecozones. The Antarctic group was excluded from the analyses.", out.width='95%'}
 include_graphics('../figures/input-data/data-groups.pdf')
 ```
+
+<!-- \clearpage -->
 
 ```{r biomes, fig.cap="Robinson projection of WWF biomes. Black lines indicate WWF ecozones."}
 include_graphics('../figures/input-data/biomes.pdf')
 ```
 
-\clearpage
+<!-- \clearpage -->
+
+```{r n-rasters, fig.cap="Number of days with a raster within each 4-day period used for temporal aggregation of the data."}
+include_graphics('../figures/input-data/n-rasters-time.pdf')
+```
+
+<!-- \clearpage -->
 
 ```{r elevation, fig.cap="Robinson projection of elevation above sea level. All elevations below the lowest altitude in the Dead Sea (-432 m) were set to -432 m to remove excessively negative altitudes near coast lines. The $\\texttt{elevatr}$ package for $\\texttt{R}$ did not provide elevations for the southernmost region of Antarctica. Black lines indicate WWF ecozones."}
 include_graphics('../figures/input-data/elev-m.pdf')
-```
-
-```{r prop-water, fig.cap="Robinson projection of the proportion of water in each pixel. Black lines indicate WWF ecozones."}
-include_graphics('../figures/input-data/proportion-water.pdf')
 ```

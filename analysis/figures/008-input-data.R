@@ -193,24 +193,28 @@ plot_pal <- function(pal) {
 
 plot_pal(pal_groups)
 
+# A.1 colors
+# A.2 water
+# A.7 elevation
+
 p_palettes <-
   plot_grid(
       NULL, NULL,
       plot_pal(ndvi_pal),
       plot_pal(rev(color('davos')(1e3))),
       NULL, NULL,
-      plot_pal(rev(color('tokyo')(1e3))), # A2
-      plot_pal(rev(color('bamako')(5))), # A3
+      plot_pal(rev(color('devon')(1e3))), # A.2 prop. water
+      plot_pal(rev(color('tokyo')(1e3))), # A.3 ECDF
       NULL, NULL,
-      plot_pal(pal_groups), # A4
-      plot_pal(color('discreterainbow')(n_biomes)), # A5
+      plot_pal(pal_groups), # A.4 groups
+      plot_pal(color('discreterainbow')(n_biomes)), # A.5 biomes
       NULL, NULL,
-      plot_pal(color('lajolla')(1e3)), # A6
-      plot_pal(rev(color('devon')(1e3))), # A7
+      plot_pal(rev(color('bamako')(5))), # A.6 n rasters
+      plot_pal(color('lajolla')(1e3)), # A.7 elevation
       labels = c('NDVI', 'DENVar', '', '',
-                 c('Fig. A2', 'Fig. A3', '', '',
-                   'Fig. A4', 'Fig. A5', '', '',
-                   'Fig. A6', 'Fig. A7')),
+                 c('Fig. A.2', 'Fig. A.3', '', '',
+                   'Fig. A.4', 'Fig. A.5', '', '',
+                   'Fig. A.6', 'Fig. A.7')),
       label_x = 0.5, hjust = 0.5, rel_heights = rep(c(0.075, 1), 4),
       label_size = 18, ncol = 2)
 
