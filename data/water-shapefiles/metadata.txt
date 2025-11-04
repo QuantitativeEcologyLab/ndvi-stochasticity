@@ -1,0 +1,63 @@
+World Water Bodies
+ISO-19139 Metadata
+
+Metadata Information
+
+Metadata character set: utf8
+Last update:
+  Metadata contact:
+  
+  Scope of the data described by the metadata: dataset
+Scope name: dataset
+Name of the metadata standard used: ISO 19139 Geographic Information - Metadata - Implementation Specification
+Version of the metadata standard: 2007
+Metadata identifier: e750071279bf450cbd510454a80f2e63
+
+Data Identification Information
+
+Resource citation:
+  
+  Title: World Water Bodies
+Date:
+  
+  Reference date - creation: 2011-04-27T20:46:59
+
+Date:
+  
+  Reference date - revision: 2025-04-28T18:58:47
+
+Descriptive keywords:
+  
+  Keyword type not provided
+
+Keywords: layer, polygon, hydrography, lakes, ponds, rivers, dry salt flats, seas, inundated areas, open waters, perennial, intermittent, International Organization for Standardization (ISO) codes, inlandWaters, oceans, World, 2023
+
+Abstract: World Water Bodies provides a detailed basemap layer for the lakes, seas, oceans, large rivers, and dry salt flats of the world. World Water Bodies represents the open water rivers, lakes, dry salt flats, seas, and oceans of the world.For complete hydrographic coverage, use this dataset in conjunction with the World Linear Water dataset.&nbsp;The source of this dataset is Garmin.
+Purpose: World Water Bodies provides a detailed basemap layer for the lakes, seas, oceans, large rivers, and dry salt flats of the world.
+Dataset language:
+  Dataset character set: utf8
+Resource constraints:
+  
+  General constraints:
+  
+  Limitations of use: The datasets included within ArcGIS Data and Maps are subject to varying redistribution rights that have been granted by Esri’s third party data suppliers. Consult the Redistribution Rights document to determine the ways in which Licensee is permitted to use and redistribute each specific dataset and the applicable disclaimers, attribution requirements, and other conditions of use.
+
+Resource extent:
+  
+  Credits: Sources: Esri; Garmin International, Inc.
+
+Reference System Information
+
+Reference system identifier:
+  
+  Value: GCS_WGS_1984
+Code space: EPSG
+
+Distribution Information
+
+Distribution format:
+  
+  Format name: Layer Package
+Format version:
+  
+  
