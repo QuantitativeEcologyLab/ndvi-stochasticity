@@ -98,3 +98,12 @@ data/avhrr-viirs-ndvi/global-diagnostics/monthly-ecdf-summary-10-percent-subset.
 data/precipitation-monthly-mean-m-day.tif
 data/precipitation-yearly-mean-m-day.tif
 *.qs
+writing/manuscript.bbl
+writing/manuscript.bcf
+writing/manuscript.log
+writing/manuscript.run.xml
+writing/manuscript.spl
+writing/manuscript.synctex.gz
+writing/manuscript.xml
+writing/ndvi-stochasticity.blg
+writing/ndvi-stochasticity.bbl

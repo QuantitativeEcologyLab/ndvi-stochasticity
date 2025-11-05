@@ -1,5 +1,0 @@
-[0] Config.pm:328> INFO - This is Biber 2.21
-[0] Config.pm:331> INFO - Logfile is 'ndvi-stochasticity.blg'
-[80] biber-MSWIN64:342> INFO - === 
-[334] Utils.pm:479> ERROR - Cannot find 'ndvi-stochasticity.bcf'!
-[335] Biber.pm:137> INFO - ERRORS: 1
