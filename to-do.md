@@ -14,11 +14,15 @@ qread('data/avhrr-viirs-ndvi/group-level-datasets/aggregated-africa-t-4-s-4-ndvi
 - save daily rasters of DENVar
 - save rasters of `mu_hat` for days that don't have a data raster
 
+- appendices:
+  - A: input data and maps (currently ok)
+  - B: preliminary tests (sardinia, arctic, taiga)
+  - C: global models (code from `010-global-models.R`)
+
 # products
 
 rasters of DENVar and corresponding mean estimates:
 - daily rasters
-- yearly rasters (exclude `s(doy)`, `ti(year,doy)`, and `ti(y,x,doy)`)
 - long-term average rasters (exclude `s(year)`, `s(doy)`, and `ti()` terms)
 
 # data visualization
@@ -37,7 +41,7 @@ rasters of DENVar and corresponding mean estimates:
 # for publication
 - add a title in each figure caption
 - update graphical abstract to use static rasters of mean NDVI and DENVar ( https://www.sciencedirect.com/journal/remote-sensing-of-environment/publish/guide-for-authors#toc-27)
-- update grahpical abstract to use robinson projection in panels B and C
+- update graphical abstract to use robinson projection in panels B and C
 - include a concise, descriptive caption for each supplementary file describing its content
 - Abbreviate journal names according to the List of Title Word Abbreviations (LTWA)?
 - review autor checklist: https://www.sciencedirect.com/journal/remote-sensing-of-environment/publish/guide-for-authors
