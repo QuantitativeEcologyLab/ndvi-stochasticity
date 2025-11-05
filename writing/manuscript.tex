@@ -10,6 +10,7 @@
 \graphicspath{ {../figures/} }
 \usepackage{subcaption}
 \usepackage{amsmath}
+\usepackage{amssymb} % for \mathbb{}
 \usepackage{lineno}
 \linenumbers
 \usepackage[T1]{fontenc} % to avoid issues with special fonts in bib file
@@ -22,19 +23,13 @@
 % \addbibresource{ndvi-stochasticity.bib}
 
 \usepackage{natbib}
-\bibliographystyle{abbrvnat}
+\bibliographystyle{plainnat}
 \setcitestyle{authoryear,open={(},close={)}}
 
 %%%%%% Title %%%%%%
-% Full titles can be a maximum of 100 characters, including spaces. 
-% Title Format: Use title case, capitalizing the first letter of each word, except for certain small words, such as articles and short prepositions
 \title{DENVar: A Global Dynamic Estimate of NDVI Variance}
 
 %%%%%% Authors %%%%%%
-% Authors should be listed in order of contribution to the paper, by first name, then middle initial (if any), followed by last name.
-% Authors should be listed in the order in which they will appear in the published version if the manuscript is accepted. 
-% Use an asterisk (*) to identify the corresponding author, and be sure to include that person’s e-mail address. Use symbols (in this order: †, ‡, §, ||, ¶, #, ††, ‡‡, etc.) for author notes, such as present addresses, “These authors contributed equally to this work” notations, and similar information.
-% You can include group authors, but please include a list of the actual authors (the group members) in the Supplementary Materials.
 \author[1,2]{Stefano Mezzini}
 \author[3]{Gavin L Simpson}
 \author[1,2,4,*]{Michael J Noonan}
@@ -101,30 +96,36 @@ To ensure the number of rows for each dataset was below the maximum data frame s
 
 \subsection{Statistical Analyses} \label{m-analyses}
 
-We estimated spatiotemporal trends in mean and variance in NDVI using Generalized Additive Models (GAMs) via the \texttt{mgcv} package for \texttt{R} \citep[v. 1.9-3][]{wood_generalized_2017}. To reduce modeling fitting times with negligible losses to model accuracy, we used the \texttt{bam()} function with fast REstricted Marginal Likelihood (\texttt{method = fREML}) and covariate discretization \citep[\texttt{discrete = TRUE}][]{wood_generalized_2015,wood_generalized_2017-1}. Ideally, NDVI should be modeled using beta location-scale models (after the linear transformation $Y^*=(Y + 1)/2$) to account for the fact that: (1) NDVI is bounded between -1 and 1, and (2) the variance in NDVI is dependent on the mean (and vice-versa), since ecosystems with very low NDVI (e.g., rock, ice, or concrete) or very high NDVI (e.g., dense forest) tend to have lower variance in NDVI. However, preliminary tests and work by \citep{marcus_planning_2025} showed that beta GAMs and particularly beta location-scale GAMs had prohibitive requirements for both fitting times and memory requirements, since both requirements scale $O(Mnp^2)$, for $M$ smoothing parameters and a model matrix with $n$ rows and $p$ columns \citep{wood_generalized_2015}. In contrast, Gaussian models with fixed scaled parameters (i.e., constant variance) fit substantially faster and provided very similar spatialtemporal estimates of mean and variance in NDVI (Appendix B). Thus, we estimated trends in mean and variance in NDVI using a pair of GAMs for each region shown in Fig. A.4; one for estimating mean NDVI over space and time (assuming a constant variance), and one for estimating the mean squared residual (i.e., variance) in NDVI (again, assuming a constant scale parameter).
+We estimated spatiotemporal trends in mean and variance in NDVI using Generalized Additive Models (GAMs) via the \texttt{mgcv} package for \texttt{R} \citep[v. 1.9-3][]{wood_generalized_2017}. To reduce modeling fitting times with negligible losses to model accuracy, we used the \texttt{bam()} function with fast REstricted Marginal Likelihood (\texttt{method = fREML}) and covariate discretization \citep[\texttt{discrete = TRUE}; ][]{wood_generalized_2015,wood_generalized_2017-1}. Ideally, NDVI should be modeled using beta location-scale models (after the linear transformation $Y^*=(Y + 1)/2$) to account for the fact that: (1) NDVI is bounded between -1 and 1, and (2) the variance in NDVI is dependent on the mean (and vice-versa), since ecosystems with very low NDVI (e.g., rock, ice, or concrete) or very high NDVI (e.g., dense forest) tend to have lower variance in NDVI. However, preliminary tests and work by \citep{marcus_planning_2025} showed that beta GAMs and particularly beta location-scale GAMs had prohibitive requirements for both fitting times and memory requirements, since both requirements scale $O(Mnp^2)$, for $M$ smoothing parameters and a model matrix with $n$ rows and $p$ columns \citep{wood_generalized_2015}. In contrast, Gaussian models with fixed scaled parameters (i.e., constant variance) fit substantially faster and provided very similar spatialtemporal estimates of mean and variance in NDVI (Appendix B). Thus, we estimated trends in mean and variance in NDVI using a pair of GAMs for each region shown in Fig. A.4; one for estimating mean NDVI over space and time (assuming a constant variance), and one for estimating the mean squared residual (i.e., variance) in NDVI (again, assuming a constant scale parameter).
 
-Together, the sets of models for mean NDVI ($\mu$) and and variance in NDVI ($\sigma^2$) had the following structure:
+Together, the sets of models for mean NDVI (i.e., $\mu$) and and variance in NDVI (i.e., $\sigma^2$) had the following structure, with $\nu$ indicating NDVI:
 \begin{equation} \label{eq:model}
 \begin{cases}
-\text{NDVI} \sim \text{Normal}(\mu, \sigma^2) \\
+\nu \sim \text{Normal}(\mu, \sigma^2) \\
+
 \\
-\begin{aligned}
-\mu = \beta_{\mu} + s(\texttt{prop\_water}) + s(\texttt{elev\_m}) + s(\texttt{doy}) + s(\texttt{year}) + s(\texttt{lat}, \texttt{long}) + \\
-t(\texttt{doy}, \texttt{year}) + t(\texttt{doy}, \texttt{lat}, \texttt{long}) + t(\texttt{year}, \texttt{lat}, \texttt{long})
-\end{aligned} \\
+
+\mu = \mathbb E(\nu) \approx \hat {\mathbb E}(\nu) = \hat \mu \\
+
+\begin{split}
+\hat \mu = &\beta_{\mu} + s(\texttt{prop\_water}) + s(\texttt{elev\_m}) + s(\texttt{doy}) + s(\texttt{year}) + s(\texttt{lat}, \texttt{long}) + \\
+&~t(\texttt{doy}, \texttt{year}) + t(\texttt{doy}, \texttt{lat}, \texttt{long}) + t(\texttt{year}, \texttt{lat}, \texttt{long})
+\end{split} \\
+
 \\
-\begin{aligned}
-\sigma^2 = \beta_{\sigma^2} + s(\texttt{prop\_water}) + s(\texttt{elev\_m}) + s(\texttt{doy}) + s(\texttt{year}) + s(\texttt{lat}, \texttt{long}) + \\
-t(\texttt{doy}, \texttt{year}) + t(\texttt{doy}, \texttt{lat}, \texttt{long}) + t(\texttt{year}, \texttt{lat}, \texttt{long}) + s(\mu)
-\end{aligned}
+
+\sigma^2 = \mathbb E\left((\nu - \mu)^2\right) \approx \hat {\mathbb E}\left((\nu - \hat \mu)^2\right) = \hat \sigma^2 \\
+
+\begin{split}
+\hat \sigma^2 = &\beta_{\sigma^2} + s(\texttt{prop\_water}) + s(\texttt{elev\_m}) + s(\texttt{doy}) + s(\texttt{year}) + s(\texttt{lat}, \texttt{long}) + \\
+&~t(\texttt{doy}, \texttt{year}) + t(\texttt{doy}, \texttt{lat}, \texttt{long}) + t(\texttt{year}, \texttt{lat}, \texttt{long}) + s(\hat \mu)
+\end{split}
 \end{cases},
 \end{equation}
 
-\noindent where, for a given (spatiotemporally aggregated) pixel, \texttt{prop\_water} is the proportion of water within the pixel, \texttt{elev\_m} is elevation above sea level in meters, \texttt{doy} is integer day of year (1-366), \texttt{year} is integer year (1981-2025), \texttt{lat} and \texttt{long} are latitude and longitude, respectively. For ease of readability, we omit the pixel-level indices. $s(~)$ indicates marginal smooth functions, while $t(~)$ indicates tensor product interaction terms. Seasonal terms used cyclical cubic splines (\texttt{bs = `cc'}) with edge knots 0.5 and 366.5, while spatial smooths used a basis with second-order spline on the sphere, computed by Wendelberger's \citep{wendelberger_smoothing_1982} method \citep[\texttt{bs = `sos'}; ][]{wood_generalized_2017}. The linear predictors for $\mu$ and $\sigma^2$ have the same structure, other than the $f_{9}(\mu)$ smooth term for $\sigma^2$, but the functions for $\sigma^2$ are independent of those for $\mu$; we use the same in. Despite the data aggregation procedures and faster fitting methods, including parallelizing computation across 60 cores, each of the four models required multiple days to fit.
+\noindent where, for a given (spatiotemporally aggregated) pixel, \texttt{prop\_water} is the proportion of water within the pixel, \texttt{elev\_m} is elevation above sea level in meters, \texttt{doy} is integer day of year (1-366), \texttt{year} is integer year (1981-2025), \texttt{lat} and \texttt{long} are latitude and longitude, respectively. For ease of readability, we omit the pixel-level indices. $s(~)$ indicates marginal smooth functions, while $t(~)$ indicates tensor product interaction terms. Seasonal terms used cyclical cubic splines (\texttt{bs = `cc'}) with edge knots 0.5 and 366.5, while spatial smooths used a basis with second-order spline on the sphere \citep[\texttt{bs = `sos'}; ][]{wood_generalized_2017}. The linear predictors for $\mu$ and $\sigma^2$ have the same structure, other than the $s(\mu)$ smooth term for $\sigma^2$, but the functions for $\sigma^2$ are independent of those for $\mu$. Despite the data aggregation procedures and faster fitting methods, including parallelizing computation across 60 cores, each of the four models required multiple days to fit. Predicting from the models for $\hat \mu$ was also had substnatial time and memory demands, since predictions were calculated without discrete prediction methods (\texttt{discrete = FALSE}). While discrete predictions were orders of magnitude faster, they were excessively spatially coarse. See Appendix C and the code availability statement for additional information.
 
-The residuals from each of the four models served to estimate the spatiotemporal trends in the variance. However, the discretized predictions from models \ref{eq:model} were excessively coarse over space, so predictions were calculated without discrete prediction methods (\texttt{discrete = FALSE}), at the cost of substantially longer computational times. A second set of GAMs estimated the variance as the mean squared residual across time and space using the model structure as above and an additional smooth term of the estimated mean NDVI:
-
-\noindent where smooth terms are defined as with model \ref{eq:model} but are independent from it, and $f_{9}(\mu)$ indicates a smooth term of mean NDVI for a given location in space and date in time. It is worth noting that, since there are no corrections to any bias in residuals from models \ref{eq:model}, the estimates of variance from models \ref{eq:model} may be inflated near areas or periods of rapid and substantial change. Still, the appreciability of this inflation is dependent on the spatiotemporal scale over which changes are perceived \citep{levin_problem_1992,frankham_importance_2004,goodchild_scale_2023,mezzini_how_2025}.
+Since there are no corrections to any bias in residuals from models \ref{eq:model}, the estimates of variance from models \ref{eq:model} may be inflated near areas or periods of rapid and substantial change. Still, the appreciability of this inflation is dependent on the spatiotemporal scale over which changes are perceived \citep{levin_problem_1992,frankham_importance_2004,goodchild_scale_2023,mezzini_how_2025}.
 
 From the two sets of models, we produced daily estimates of (1) the Dynamic Estimate of NDVI Variance (DENVar) and (2) the estimated mean NDVI they are conditional on, at a \textbf{\emph{XXX}}\textdegree spatial scale. The rasters are freely available on GitHub (see code availability statement), along with long-term (1981-2025) averages of both DENVar and the estimated mean NDVI. Since estimates of variance are conditional on the corresponding estimates of the mean, we suggest users always use the corresponding rasters of mean NDVI in their analyses rather than using independent estimates of mean NDVI. 
 
@@ -157,7 +158,7 @@ Figures:
 \begin{figure}[h]
     \centering
     \includegraphics[width=\textwidth]{hexplots-global-test}
-%     \caption{Hex plots of the relationship between the global Dynamic Estimate of NDVI Variance (DENVar) and common ecological metricts. The fill of the hexagonal cells represents the log-10-transformed number of points within the cell. Rowwise, the variables are: mean NDVI (as estimated in this manuscript); the machine-learning Human Footprint Index (ml-HFI) of \citation{keys_machine-learning_2021}; the 2015 cumulative, minimum, and seasonal range in the Dynamic Habitat Index of \citep{radeloff_dynamic_2019}.}
+    \caption{Hex plots of the relationship between the long-term global Dynamic Estimate of NDVI Variance (DENVar) and common ecological metricts. The fill of the hexagonal cells represents the log-10 number of points within the cell. Rowwise, the variables are: long-term mean NDVI (as estimated in this manuscript), the machine-learning Human Footprint Index (ml-HFI) of \citation{keys_machine-learning_2021}, and the 2015 cumulative, minimum, and seasonal range in the Dynamic Habitat Index of \citep{radeloff_dynamic_2019}.}
     \label{hex-plots}
 \end{figure}
 
