@@ -1,23 +1,16 @@
 # PRIORITY
-- warning for non-matching CRSs is due different CRS for precip layer: remove precip from datasets
-```
-qread('data/avhrr-viirs-ndvi/group-level-datasets/aggregated-africa-t-4-s-4-ndvi-data.qs', nthreads=62) %>%
-  select(! precip_m_day) %>%
-  qsave('data/avhrr-viirs-ndvi/group-level-datasets/aggregated-africa-t-4-s-4-ndvi-data.qs',
-        nthreads = 62)
-```
-- finish running mean models
-- save rasters of cleaned and aggregated data 
-- save rasters of `mu_hat` and `e^2` for each cleaned data raster
-- add column of `e^2` to each of the four datasets
-- run variance models (use lognormal if normal gives negative values)
-- save daily rasters of DENVar
-- save rasters of `mu_hat` for days that don't have a data raster
 
-- appendices:
-  - A: input data and maps (currently ok)
-  - B: preliminary tests (sardinia, arctic, taiga)
-  - C: global models (code from `010-global-models.R`)
+after predictions are done for neotropic and nearctic:
+- fit africa, palearctic, then islands, using ~*30 cores* while predicting from other models
+- create raster of long-term mean (exclude temporal smooths)
+- calculate rasters of observed values, `mu_hat`, and `e^2` for other groups
+- fit variance models without `ti(y,x,doy,year)`?
+- save daily rasters of estimated mean and DENVar (save for each model and then sum with `na.rm = TRUE`?)
+
+appendices:
+- A: input data and maps (currently ok)
+- B: preliminary tests (sardinia, arctic, taiga)
+- C: global models (code from `010-global-models.R`) and additional figures
 
 # products
 
