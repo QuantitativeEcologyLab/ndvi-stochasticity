@@ -428,16 +428,16 @@ cowplot::plot_grid(
     facet_wrap(~ model) +
     geom_raster(aes(x, y, fill = mu), preds_1_long) +
     geom_sf(data = sardinia, fill = 'transparent') +
-    scale_fill_viridis_c(expression(hat('\U1D6CE')),
-                         option = 'A') +
+    scale_fill_gradientn(expression(paste(hat('\U1D53C'), '(\U1D6CE)')),
+                         colors = ndvi_pal, limits = c(-1, 1)) +
     labs(title = paste('Predictions for', d$date[1]), x = NULL, y = NULL),
   # plot squared residuals
   ggplot() +
     facet_wrap(~ model) +
     geom_raster(aes(x, y, fill = e2), preds_1_long) +
     geom_sf(data = sardinia, fill = 'transparent') +
-    scale_fill_viridis_c(expression(
-      paste('(', hat('\U1D6CE'), ' - \U1D53C(', hat('\U1D6CE'), '\U00B2)')),
+    scale_fill_viridis_c(expression(paste(hat('\U1D53C'), '(\U1D6CE - ',
+                                          hat('\U1D53C'), '(\U1D6CE)', '\U00B2)')),
       limits = c(0, NA)) +
     labs(title = paste('Squared residuals', d$date[1]), x = NULL, y = NULL),
   labels = 'AUTO', ncol = 1)
@@ -586,13 +586,13 @@ p_d_aggr <-
 plot_grid(
   get_legend(p_d +
                theme(legend.position = 'top', legend.key.width = rel(2))),
-  plot_grid(p_d + theme(legend.position = 'none'),
+  p_d + theme(legend.position = 'none'),
             p_d_aggr + theme(legend.position = 'none'),
-            labels = 'AUTO'),
-  rel_heights = c(1, 15), ncol = 1)
+            labels = c('', 'A', 'B'),
+  rel_heights = c(1, 15, 15), ncol = 1)
 
 ggsave('figures/sardinia-test/example-rasters-aggregation.png',
-       width = 20, height = 8.5, units = 'in', dpi = 600, bg = 'white')
+       width = 10, height = 16.5, units = 'in', dpi = 600, bg = 'white')
 
 summary(d_aggr)
 
@@ -844,7 +844,7 @@ p_comp <-
       facet_grid(. ~ model) +
       geom_raster(aes(x, y, fill = value)) +
       geom_sf(data = sardinia, fill = 'transparent', color = 'black') +
-      scale_fill_viridis_c('NDVI', option = 'A') +
+      scale_fill_gradientn('Mean NDVI', colors = ndvi_pal, limits = c(-1, 1)) +
       labs(x = NULL, y = NULL),
     ggplot(filter(preds_comp_s, param == 'mu', model == 'diff')) +
       geom_raster(aes(x, y, fill = value)) +
@@ -859,18 +859,18 @@ p_comp <-
     # row 2: map of variance in NDVI
     filter(preds_comp_s, param == 's2', model != 'diff') %>%
       group_by(model) %>%
-      mutate(value = value / max(value, na.rm = TRUE)) %>%
+      mutate(value = if_else(value > 0.05, 0.05, value)) %>%
       ggplot() +
       facet_grid(. ~ model) +
       geom_raster(aes(x, y, fill = value)) +
       geom_sf(data = sardinia, fill = 'transparent', color = 'black') +
-      scale_fill_viridis_c(expression(bold(s^'2'))) +
+      scale_fill_viridis_c(expression(bold('s'^'2'))) +
       labs(x = NULL, y = NULL),
     ggplot(filter(preds_comp_s, param == 's2', model == 'diff')) +
       geom_raster(aes(x, y, fill = value)) +
       geom_sf(data = sardinia, fill = 'transparent', color = 'black') +
       scale_fill_distiller(
-        expression(bold(atop('Difference in', 'estimated s'^'2'))),
+        expression(bold(atop('Difference', 'in s'^'2'))),
         type = 'div', palette = 4,
         limits = max(abs(filter(preds_comp_s, model == 'diff',
                                 param == 's2')$value), na.rm = TRUE) *
