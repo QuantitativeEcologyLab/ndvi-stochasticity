@@ -1,1 +1,1 @@
-data filtering was done based on the `QA` (quality assessment) raster layer and the values highlighted in the document called "`CDRP-ATBD-1267 Rev 0 Surface Reflectance & NDVI C-ATBD (01B-20a & 01B-20b) (DSR-1605).pdf`".
+data filtering was done based on the `QA` (quality assessment) raster layer and the values highlighted in the documents in the `data/avhrr-viirs-ndvi/guides` folder called `LTDR_V6_User_Guide_v1.2_May_2023.pdf` (AVHRR) and `CDRP-ATBD-1267 Rev 0 Surface Reflectance & NDVI C-ATBD (01B-20a & 01B-20b) (DSR-1605).pdf` (VIIRS).
