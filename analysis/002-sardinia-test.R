@@ -246,11 +246,7 @@ if(FALSE) {
   plot_grid(
     plot_mrf(.model = m_mrf_0, .terms = c('(Intercept)', 's(cell_id)'),
              .newdata = d_0) +
-      ggtitle('Cell-level MRF'),
-    plot_mrf(.model = m_mrf_0, .terms = c('(Intercept)', 's(cell_id)'),
-             .newdata = d_0, .limits = c(NA, NA),
-             .pal = viridis::viridis(10)) +
-      ggtitle(''),
+      ggtitle(NULL),
     d_0 %>%
       mutate(., mu_hat = predict(m_mrf_0, newdata = .)) %>%
       ggplot(aes(ndvi, mu_hat)) +
@@ -258,13 +254,16 @@ if(FALSE) {
       geom_point(alpha = 0.2) +
       geom_smooth(method = 'gam', formula = y ~ s(x)) +
       geom_abline(intercept = 0, slope = 1, color = 'red') +
-      labs(x = 'Fitted', y = 'Observed'),
+      labs(x = 'Fitted values from MRF model', y = 'Observed values'),
     
-    draw(m_ds_0, dist = 0.02) & coord_sf(crs = 'EPSG:4326'),
-    draw(m_ds_0, dist = 0.02, fun = \(x) x + coef(m_ds_0)['(Intercept)']) &
-      coord_sf(crs = 'EPSG:4326') &
-      # to specify limits manually
-      scale_fill_viridis_c('NDVI', limits = range(fitted(m_mrf_0))),
+    fitted_values(m_ds_0) %>%
+      ggplot(aes(x, y)) +
+      coord_sf(crs = 'EPSG:4326') +
+      geom_raster(aes(fill = .fitted)) +
+      geom_contour(aes(z = .fitted), color = 'black') +
+      scale_fill_gradientn(expression(bold(widehat(NDVI))),
+                           colors = ndvi_pal, limits = c(-1, 1)) +
+      labs(x = NULL, y = NULL, caption = 'Basis: Duchon spline (2d)'),
     d_0 %>%
       mutate(mu_hat = predict(m_ds_0)) %>%
       ggplot(aes(ndvi, mu_hat)) +
@@ -272,11 +271,11 @@ if(FALSE) {
       geom_point(alpha = 0.2) +
       geom_smooth(method = 'gam', formula = y ~ s(x)) +
       geom_abline(intercept = 0, slope = 1, color = 'red') +
-      labs(x = 'Fitted', y = 'Observed'),
-    nrow = 2, rel_widths = c(1, 1, 1.5))
+      labs(x = 'Fitted values from Duchon model', y = 'Observed values'),
+    nrow = 2, rel_widths = c(1, 1.7))
   ggsave(paste0('figures/sardinia-test/duchon-vs-cell-mrf-',
                 unique(d_0$date), '-predictions.png'),
-         width = 12.5, height = 10, units = 'in', dpi = 300, bg = 'white')
+         width = 9, height = 8, units = 'in', dpi = 300, bg = 'white')
 }
 
 # fit a spatially explicit test model with a gaussian family ----
