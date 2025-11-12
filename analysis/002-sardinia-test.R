@@ -14,18 +14,19 @@ library('mgcv')      # for GAMs
 library('ggplot2')   # for fancy plots
 library('cowplot')   # for fancy plots in grids 
 library('gratia')    # for fancy plots of GAMs
+source('analysis/figures/000-robinson-objects.R') # for robinson projection
 source('functions/betals.r') # custom beta location-scale family
-source('functions/scale-ndvi.R')
-source('functions/ndvi-palette.R')
+source('functions/scale-ndvi.R') # to scale NDVI from (-0.1, 1) to (0, 1)
+source('functions/ndvi-palette.R') # custom NDVI palette 
 source('functions/plot_mrf.R') # for plotting markov random field smooths
 source('functions/qr.default_with_LAPACK.R') # for fitting large betals GAM
 source('analysis/figures/000-default-ggplot-theme.R')
-source('functions/get_legend.R')
-source('functions/nbs_from_rast.R')
+source('functions/get_legend.R') # custom version of cowplot::get_legend()
+source('functions/nbs_from_rast.R') # to get a list of neighbors from rast 
 source('functions/is_flagged.R') # to flag bad values based on QA layer
-source('functions/decode_qa.R')
+source('functions/decode_qa.R') # to decode the QA layer of NDVI rasters
 assignInNamespace(x = 'qr.default',   # replace `base::qr.default()`
-                  value = qr.default, # with the local version sourced above
+                  value = qr.default, # with the version sourced above
                   ns = 'base')        # specify the base package
 
 # shapefile of WWF terrestrial ecoregions
@@ -42,6 +43,24 @@ sardinia <- read_sf('data/wwf-ecoregions/wwf_terr_ecos.shp') %>%
   st_cast('POLYGON', warn = FALSE) %>%
   st_geometry() %>%
   st_as_sf()
+
+# make a map of sardinia
+world <- read_sf('data/ecoregions/groups-polygons.shp') %>%
+  st_geometry() %>%
+  st_as_sf() %>%
+  st_union() %>%
+  st_transform(robinson_crs)
+
+ggplot() +
+  geom_sf(data = bounds, fill = 'white') +
+  geom_sf(data = world) +
+  geom_sf(data = st_transform(sardinia, robinson_crs), fill = 'red3') +
+  scale_x_continuous(expand = c(0, 0)) +
+  scale_y_continuous(expand = c(0, 0)) +
+  theme_void()
+
+ggsave('figures/sardinia-test/sardinia-map.png', width = 8, height = 4,
+       units = 'in', dpi = 600, bg = 'white')
 
 # check QA flags
 if(FALSE) {
