@@ -21,34 +21,42 @@ source('functions/plot_mrf.R') # for plotting markov random field smooths
 source('analysis/figures/000-default-ggplot-theme.R')
 source('functions/get_legend.R') # get_legend() from cowplot v. 1.1.3 fails
 source('functions/nbs_from_rast.R') # gives a list of neighboring cells
+source('analysis/figures/000-robinson-objects.R') # for Robinson projection
 
 # pick a northern polygon
-na <- read_sf('data/ecoregions/ecoregions-polygons.shp') %>%
+taiga <- read_sf('data/ecoregions/ecoregions-polygons.shp') %>%
   filter(realm == 'Nearctic') %>%
   # drop islands that have long >> 0
-  st_transform(crs(rast('data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v006/N07_AVH13C1/N07_AVH13C1.A1981175.006.2022270161458.nc'))) %>%
+  st_transform(crs(rast('H:/GitHub/ndvi-stochasticity/data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v006/N07_AVH13C1/N07_AVH13C1.A1981175.006.2022270161458.nc'))) %>%
   filter(st_coordinates(.) %>%
            data.frame() %>%
            group_by(L2) %>%
            summarize(max_x = max(X)) %>%
            pull(max_x) %>%
-           `<`(60))
-
-taiga <- filter(na, ecoregion == 'Northwest Territories taiga' |
+           `<`(60)) %>%
+  filter(ecoregion == 'Northwest Territories taiga' |
                   ecoregion == 'Muskwa-Slave Lake forests') %>%
   st_union() %>%
   st_as_sf()
 
-# some very large NDVI values at the edge of the preliminary cleaning ----
+world <- read_sf('data/ecoregions/groups-polygons.shp') %>%
+  st_geometry() %>%
+  st_as_sf() %>%
+  st_union() %>%
+  st_transform(robinson_crs)
+
 ggplot() +
-  geom_sf(data = st_geometry(na)) +
-  geom_sf(data = taiga, fill = 'red3')
+  geom_sf(data = bounds, fill = 'white') +
+  geom_sf(data = world) +
+  geom_sf(data = st_transform(taiga, robinson_crs), fill = 'red3') +
+  scale_x_continuous(expand = c(0, 0)) +
+  scale_y_continuous(expand = c(0, 0)) +
+  theme_void()
 
-if(! file.exists('figures/taiga-test/taiga-map.png')) {
-  ggsave('figures/taiga-test/taiga-map.png', width = 10, height = 6.4,
-         units = 'in', dpi = 300, bg = 'white')
-}
+ggsave('figures/taiga-test/taiga-map.png', width = 8, height = 4,
+       units = 'in', dpi = 600, bg = 'white')
 
+# some very large NDVI values at the edge of the preliminary cleaning ----
 #' `geom_smooth` of a subset of the first year of data
 #' there are too many NDVI values > 0 in winter
 decode_qa(bit_to_int('0000000000000000'), sensor = 'AVHRR')$cloudy
