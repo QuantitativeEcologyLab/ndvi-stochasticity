@@ -1,0 +1,166 @@
+---
+title: "DENVar: A global Dynamic Estimate of NDVI Variance"
+subtitle: "Appendix B: Senitivity Analyses"
+author:
+  - name: Stefano Mezzini
+    institute: [braes, biol]
+  - name: Gavin L. Simpson
+    institute: [au]
+  - name: Michael J. Noonan
+    email: michael.noonan@ubc.ca
+    institute: [braes, biol, cmps]
+    correspondence: "yes"
+institute:
+  - braes: Okanagan Institute for Biodiversity, Resilience, and Ecosystem Services, The University of British Columbia Okanagan, Kelowna, British Columbia, Canada.
+  - biol: Department of Biology, The University of British Columbia Okanagan, Kelowna, British Columbia, Canada.
+  - au: Department of Animal & Veterinary Sciences, Aarhus University, Denmark.
+  - cmps: Department of Computer Science, Math, Physics, and Statistics, The University of British Columbia Okanagan, Kelowna, British Columbia, Canada.
+bibliography: 'ndvi-stochasticity.bib'
+csl: 'remote-sensing-of-environment.csl'
+suppress-bibliography: true # refs can only be in main text
+urlcolor: cyan
+fontsize: 12pt
+indent: true
+header-includes:
+    - \renewcommand{\figurename}{Figure B.\!\!} # for "Figure Bx."
+    - \usepackage{float} # for fig.pos = '!H'
+    - \usepackage{setspace}\doublespacing # for double-spaced text
+    - \usepackage{indentfirst} # for indenting first line of each paragraph
+    - \usepackage[small]{titlesec} # for smaller font for headings
+    - \usepackage{caption} # for more customization of captions
+    - \captionsetup[figure]{font={scriptsize, doublespacing}, labelfont=bf, aboveskip=4pt, belowskip=-15pt}
+    - \usepackage{hanging} # for hanging indents in references
+    - \usepackage[left]{lineno} # for line numbers
+subparagraph: true # needed for \usepackage[small]{titlesec}
+output:
+  bookdown::pdf_document2:
+    pandoc_args:
+# https://github.com/pandoc/lua-filters/blob/master/author-info-blocks/README.md
+      - '--lua-filter=scholarly-metadata.lua'
+      - '--lua-filter=author-info-blocks.lua'
+    toc: false
+    number_sections: false
+    keep_tex: false # for submitting TeX file
+editor_options:
+  chunk_output_type: console
+---
+
+\clearpage
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, out.width = '100%', fig.align = 'center', fig.pos = '!h')
+```
+
+```{r packages, warning=FALSE}
+library('knitr')
+```
+
+This appendix includes a series of sensitivity analyses performed to reduce computation time without appreciable effects on the estimates of mean NDVI and DENVar. The first set of tests were performed using data from the Mediterranean island of Sardigna (Sardinia; Fig. B.\@ref(fig:sardinia-map)).
+
+```{r sardinia-map, fig.cap="Robinson projection of the world, with the Mediterranean island of Sardigna (Sardinia) in red."}
+include_graphics('../figures/sardinia-test/sardinia-map.png')
+```
+
+The first test compared fitting times and model predictions across different families of distributions. Since NDVI values for the island ranged between -0.1 and 1, values were scaled between 0 and 1 using the linear transformation $Y^*=(Y + 0.1) / 1.1$, and predictions were back-transformed using the transformation $Y = Y^* \times 1.1 - 0.1.$ The models are shown in the code block below. Spatial terms either used using Markov Random Field smooths (MRF; `bs = 'mrf'`) or Duchon splines (`bs = 'ds'`) based on the work of @duchon_splines_1977. See @wood_generalized_2017 for additional information. The Beta model fit in about 14 minutes, while the Gaussian models both fit in less than a minute.
+
+\clearpage
+
+\singlespacing
+
+```{r sardigna-models, eval=FALSE, echo=TRUE}
+m_beta_mrf <- bam(ndvi_scaled ~
+                    s(cell_id, bs = 'mrf', k = 200, xt = list(nb = nbs)) +
+                    s(elev_m, bs = 'cr', k = 5) +
+                    s(year, bs = 'cr', k = 10) +
+                    s(doy, bs = 'cc', k = 10),
+                  family = betar(),
+                  knots = list(doy = c(0.5, 366.5)),
+                  data = d,
+                  method = 'fREML',
+                  discrete = TRUE)
+m_gaus_ds <- bam(ndvi ~
+                   s(x, y, bs = 'ds', k = 200) +
+                   s(elev_m, bs = 'cr', k = 5) +
+                   s(year, bs = 'cr', k = 10) +
+                   s(doy, bs = 'cc', k = 10),
+                 family = gaussian(),
+                 knots = list(doy = c(0.5, 366.5)),
+                 data = d,
+                 method = 'fREML',
+                 discrete = TRUE)
+m_gaus_mrf <- bam(ndvi ~
+                    s(cell_id, bs = 'mrf', k = 200, xt = list(nb = nbs)) +
+                    s(elev_m, bs = 'cr', k = 5) +
+                    s(year, bs = 'cr', k = 10) +
+                    s(doy, bs = 'cc', k = 10),
+                  family = gaussian(),
+                  knots = list(doy = c(0.5, 366.5)),
+                  data = d,
+                  method = 'fREML',
+                  discrete = TRUE)
+```
+
+\doublespacing
+
+An attempt was also made to fit the beta location-scale GAM below [@wood_smoothing_2016] using a custom family provided Dr. Simon Wood (see https://github.com/QuantitativeEcologyLab/ndvi-stochasticity/blob/main/functions/betals.r) and the `gam()` function (since location-scale models cannot currently be fit with `bam()`). However, the model fitting time was prohibitive. The model fitting process was interrupted after more than 6 days of run time with 10 cores on a machine with two Intel Xeon Platinum 8462Y+ processors (64 cores total) and 2 TB of RAM. Within that time, the model had only completed 3 steps using the Newton method described by @wood_generalized_2017-2 while using > 68 GB of RAM. The `gam()` function requires substantially more RAM and computational time than the `bam()` function, particularly since discrete model-fitting procedures are currently not possible with `gam()` [@wood_generalized_2017; @wood_generalized_2015; @wood_generalized_2017-1].
+
+\singlespacing
+
+```{r betals, eval=FALSE, echo=TRUE}
+m_betals <- gam(list(
+  ndvi_scaled ~
+    s(cell_id, bs = 'mrf', k = 200, xt = list(nb = nbs)) +
+    s(elev_m, bs = 'cr', k = 5) +
+    s(year, bs = 'cr', k = 10) +
+    s(doy, bs = 'cc', k = 10),
+  ~ s(cell_id, bs = 'mrf', k = 200, xt = list(nb = nbs)) +
+    s(elev_m, bs = 'cr', k = 5) +
+    s(year, bs = 'cr', k = 10) +
+    s(doy, bs = 'cc', k = 10)),
+  family = betals(),
+  knots = list(doy = c(0.5, 366.5)),
+  data = d,
+  method = 'REML',
+  samfrac = 0.001,
+  control = gam.control(nthreads = 10, trace = TRUE))
+```
+
+\doublespacing
+
+Overall, the Gaussian models produced similar estimates to the beta model (Fig. B.\@ref(fig:sardigna-gaus-beta-hex)). To assess the effects of spatiotemporal data aggregation, a MRF model was fit after spatiotemporally aggregating the data by a factor of 2 (Fig. B.\@ref(fig:sardinia-aggr-example)). The GAM used the same structure as the Gaussian MRF GAM, other than a list of neighboring cells based on the aggregated dataset:
+
+```{r gaus-aggr, eval=FALSE, echo=TRUE}
+m_gaus_mrf_aggr <- bam(
+  ndvi ~
+    s(cell_id, bs = 'mrf', k = 200, xt = list(nb = nbs_aggr)) +
+    s(elev_m, bs = 'cr', k = 5) +
+    s(year, bs = 'cr', k = 10) +
+    s(doy, bs = 'cc', k = 10),
+  family = gaussian(),
+  knots = list(doy = c(0.5, 366.5)),
+  data = filter(d_aggr, ! is.na(cell_id)),
+  method = 'fREML',
+  discrete = TRUE)
+```
+
+```{r sardigna-gaus-beta-hex, fig.cap="Hex plot of the predicted values from the Beta and Gaussian models of NDVI for the island of Sardigna (Sardinia). The red line indicates a one-to-one relationship. The fill indicates the number of observations within each hexagonal cell."}
+include_graphics('../figures/sardinia-test/sardinia-ndvi-model-agreement-mrf.png')
+```
+
+```{r sardinia-aggr-example, out.height='90%', out.width='90%', fig.cap="Comparison of the NDVI rasters for the Mediterranean island of Sardigna (Sardinia) after cloud masking (A) and after cloud masking and spatialtemporal aggregation by a factor of two (B). The excessively low NDVI values in the south and east parts of the island are due to raster misalignment with the shapefile despite reprojecting the shapefile to the each raster's coordinate reference system."}
+include_graphics('../figures/sardinia-test/example-rasters-aggregation.png')
+```
+
+The aggregation process constrained the predicted values towards the overall mean NDVI (i.e., the model intercept; Fig. B.\@ref(fig:sardinia-aggr-hex)). Additionally, the MRF model was more flexible than the Duchon-spline model, but sometimes this flexibility resulted in unruly estimates with the aggregated dataset (see the high NDVI values and excessive variance along coast in Fig. B.\@ref(fig:sardinia-test)A-D). The estimated seasonal terms were similar across all three Gaussian models, but the MRF model based on the full dataset had somewhat high NDVI values than the other two models (Fig. B.\@ref(fig:sardinia-test)E-F)). The mean squared residuals were higher in late fall and throughout winter for all three models, and the aggregated MRF model had slightly higher mean squared residuals throughout the year, although it is worth noting that the residuals were calculated the non-aggregated dataset for all models (Fig. B.\@ref(fig:sardinia-test)G-H). Finally, mean NDVI varied similarly with elevation for all three models despite not being included explicitly in any of them (Fig. B.\@ref(fig:sardinia-test)I-J).
+
+```{r sardinia-aggr-hex, fig.cap="Hex plot of the predicted values from the Gaussian MRF models with the full and aggregated datasets. The red line indicates a one-to-one relationship, while the dark orange indicates the estimated relationship as produced by a $\\texttt{geom\\_smooth(method = `gam', formula = y \\~ s(x, k = 5))}$ layer. The fill indicates the number of observations within each hexagonal cell."}
+include_graphics('../figures/sardinia-test/gaussian-aggr-pred-vs-full-dataset-pred.png')
+```
+
+```{r sardinia-test, out.height='75%', out.width='75%', fig.cap="\\textbf{Model comparisons for estimates of mean NDVI and variance in NDVI using models with beta and normal families of distributions.} (A) Estimated mean NDVI across space as predicted by the GAMs with Duchon-spline spatial smooth, MRF spatial smooth, and MRF spatial smooth using spatiotemporally aggregated data. (B) Difference between the MRF predictions and the MRF predictions with aggregated data. (C) Estimated mean squared residuals ($s^2$) across space from the models in (A), with values > 0.05 set to 0.05 for ease of comparison. (D) Difference in mean squared residuals between the estimates from the MRF model and the MRF model with aggregated data. (E) Estimated mean NDVI over day of year as estimated by each of the models. (F) Difference in the seasonal trends in mean NDVI between the two MRF models. (G) Estimated mean squared residuals over day of year as estimated by each of the models. (H) Difference in the seasonal trends in mean squared residuals between the two MRF models. (I) Estimated mean NDVI over altitude for each of the three models. (J) Difference in the predicted mean NDVI between the two MRF models over altitude."}
+include_graphics('../figures/sardinia-test/model-comparisons.png')
+```
+
+\clearpage
+
+taiga test
