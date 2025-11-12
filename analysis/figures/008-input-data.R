@@ -6,11 +6,10 @@ library('cowplot')   # for fancy plots in grids
 library('tidyterra') # for plotting spatRasters with ggplot2
 library('khroma')    # for colorblind-friendly palettes
 source('analysis/figures/000-default-ggplot-theme.R')
+source('analysis/figures/000-robinson-objects.R')
 color('okabeito')(8)[c(3, 4, 6, 7)]
 pal_groups <- c('#56B4E9', 'grey', '#009E73', '#0072B2', '#D55E00')
 plot_scheme_colorblind(pal_groups[c(1, 2, 4, 3, 5)]) # achromatic view ok
-
-robinson_crs <- '+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs'
 
 shp <- read_sf('data/ecoregions/ecoregions-polygons.shp') %>%
   mutate(biome = factor(biome, levels = c(
@@ -29,13 +28,6 @@ shp <- read_sf('data/ecoregions/ecoregions-polygons.shp') %>%
     'Tropical and Subtropical Grasslands, Savannas and Shrublands',
     'Flooded Grasslands and Savannas',
     'Deserts and Xeric Shrublands'))) %>%
-  st_transform(robinson_crs)
-
-bounds <- tibble(x = c(-180:180, rep(180, 181), 180:-180, rep(-180, 181)),
-                 y = c(rep(-90, 361), -90:90, rep(90, 361), 90:-90)) %>%
-  st_as_sf(coords = c('x', 'y'), crs = 'EPSG:4326') %>%
-  summarise(geometry = st_combine(geometry)) %>%
-  st_cast('POLYGON') %>%
   st_transform(robinson_crs)
 
 if(FALSE) {
@@ -199,24 +191,24 @@ plot_pal(pal_groups)
 
 p_palettes <-
   plot_grid(
-      NULL, NULL,
-      plot_pal(ndvi_pal),
-      plot_pal(rev(color('davos')(1e3))),
-      NULL, NULL,
-      plot_pal(rev(color('devon')(1e3))), # A.2 prop. water
-      plot_pal(rev(color('tokyo')(1e3))), # A.3 ECDF
-      NULL, NULL,
-      plot_pal(pal_groups), # A.4 groups
-      plot_pal(color('discreterainbow')(n_biomes)), # A.5 biomes
-      NULL, NULL,
-      plot_pal(rev(color('bamako')(5))), # A.6 n rasters
-      plot_pal(color('lajolla')(1e3)), # A.7 elevation
-      labels = c('NDVI', 'DENVar', '', '',
-                 c('Fig. A.2', 'Fig. A.3', '', '',
-                   'Fig. A.4', 'Fig. A.5', '', '',
-                   'Fig. A.6', 'Fig. A.7')),
-      label_x = 0.5, hjust = 0.5, rel_heights = rep(c(0.075, 1), 4),
-      label_size = 18, ncol = 2)
+    NULL, NULL,
+    plot_pal(ndvi_pal),
+    plot_pal(rev(color('davos')(1e3))),
+    NULL, NULL,
+    plot_pal(rev(color('devon')(1e3))), # A.2 prop. water
+    plot_pal(rev(color('tokyo')(1e3))), # A.3 ECDF
+    NULL, NULL,
+    plot_pal(pal_groups), # A.4 groups
+    plot_pal(color('discreterainbow')(n_biomes)), # A.5 biomes
+    NULL, NULL,
+    plot_pal(rev(color('bamako')(5))), # A.6 n rasters
+    plot_pal(color('lajolla')(1e3)), # A.7 elevation
+    labels = c('NDVI', 'DENVar', '', '',
+               c('Fig. A.2', 'Fig. A.3', '', '',
+                 'Fig. A.4', 'Fig. A.5', '', '',
+                 'Fig. A.6', 'Fig. A.7')),
+    label_x = 0.5, hjust = 0.5, rel_heights = rep(c(0.075, 1), 4),
+    label_size = 18, ncol = 2)
 
 ggsave('figures/input-data/color-palettes.pdf', p_palettes,
        width = 10, height = 6.67, scale = 2, units = 'in', dpi = 300,
