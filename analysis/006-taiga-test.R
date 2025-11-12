@@ -552,13 +552,13 @@ p_d_both <-
   plot_grid(
     get_legend(p_d +
                  theme(legend.position = 'top', legend.key.width = rel(2))),
-    plot_grid(p_d + theme(legend.position = 'none'),
+    p_d + theme(legend.position = 'none'),
               p_d_aggr + theme(legend.position = 'none'),
-              labels = 'AUTO'),
-    rel_heights = c(1, 10), ncol = 1)
+    labels = c('', 'A', 'B'),
+    rel_heights = c(1, 10, 10), ncol = 1)
 
 ggsave('figures/taiga-test/example-rasters-aggregation.png', p_d_both,
-       width = 20, height = 6.5, units = 'in', dpi = 600, bg = 'white')
+       width = 10, height = 12, units = 'in', dpi = 600, bg = 'white')
 
 if(file.exists('models/taiga-test/gaussian-gam-sos-aggr.rds')) {
   m_gaus_aggr <- readRDS('models/taiga-test/gaussian-gam-sos-aggr.rds')
