@@ -231,12 +231,12 @@ if(FALSE) {
   
   ggplot() +
     coord_equal() +
-    geom_point(aes(predict(m_mrf_0, newdata = d_0),
-                   predict(m_ds_0, newdata = d_0)),
+    geom_point(aes(predict(m_ds_0, newdata = d_0),
+                   predict(m_mrf_0, newdata = d_0)),
                alpha = 0.2) +
     geom_abline(intercept = 0, slope = 1, color = 'red') +
-    labs(x = 'Fitted values from the cell-level MRF GAM',
-         y = 'Fitted values from Duchon-spline GAM')
+    labs(x = 'Fitted values (Duchon-spline Gaussian GAM)',
+         y = 'Fitted values (cell-level MRF Gaussian GAM)')
   
   ggsave(paste0('figures/sardinia-test/duchon-vs-cell-mrf-',
                 unique(d_0$date), '.png'),
@@ -396,7 +396,7 @@ if(FALSE) {
   )
 }
 
-# plots of predicted means and squared residuals for day 1 ----
+# plots of predicted means and squared residuals for a specific day ----
 preds_1 <- d %>%
   filter(date == max(date) - 5) %>%
   mutate(mu_gaus = predict(m_gaus_mrf, newdata = .),
@@ -427,21 +427,22 @@ cowplot::plot_grid(
     facet_wrap(~ model) +
     geom_raster(aes(x, y, fill = mu), preds_1_long) +
     geom_sf(data = sardinia, fill = 'transparent') +
-    scale_fill_gradientn(expression(paste(hat('\U1D53C'), '(\U1D6CE)')),
+    scale_fill_gradientn(expression(bold(widehat('NDVI'))),
                          colors = ndvi_pal, limits = c(-1, 1)) +
-    labs(title = paste('Predictions for', d$date[1]), x = NULL, y = NULL),
+    labs(title = paste('Predictions for', unique(preds_1$date)),
+         x = NULL, y = NULL),
   # plot squared residuals
   ggplot() +
     facet_wrap(~ model) +
     geom_raster(aes(x, y, fill = e2), preds_1_long) +
     geom_sf(data = sardinia, fill = 'transparent') +
-    scale_fill_viridis_c(expression(paste(hat('\U1D53C'), '(\U1D6CE - ',
-                                          hat('\U1D53C'), '(\U1D6CE)', '\U00B2)')),
-      limits = c(0, NA)) +
-    labs(title = paste('Squared residuals', d$date[1]), x = NULL, y = NULL),
+    scale_fill_viridis_c('Squared\nresiduals', limits = c(0, NA)) +
+    labs(title = paste('Squared residuals for', unique(preds_1$date)),
+         x = NULL, y = NULL),
   labels = 'AUTO', ncol = 1)
 
-ggsave('sardinia-ndvi-mrf-model-agreement-gaussian-beta-predictions.png',
+ggsave(paste0('sardinia-ndvi-mrf-model-agreement-gaussian-beta-predictions-',
+              unique(preds_1$date), '.png'),
        path = 'figures/sardinia-test', height = 12, width = 8, bg = 'white')
 
 # check agreement with other models
@@ -453,10 +454,10 @@ p_fits_mrf <-
   filter(! is.na(cell_id)) %>% #' drop 4% with `NA` `cell_id`
   ggplot() +
   geom_point(aes(x, x), data = tibble(x = 0:1), color = 'transparent') +
-  geom_hex(aes(gaus, beta), bins = 75) +
+  geom_hex(aes(beta, gaus), bins = 75) +
   geom_abline(intercept = 0, slope = 1, color = 'red') +
-  labs(x = 'NDVI predicted by Gaussian model (with MRF smooth)',
-       y = 'NDVI predicted by Beta model (with MRF smooth)') +
+  labs(x = 'NDVI predicted by Beta model (with MRF smooth)',
+       y = 'NDVI predicted by Gaussian model (with MRF smooth)') +
   scale_fill_lapaz(name = 'Count', reverse = TRUE)
 
 ggsave('sardinia-ndvi-model-agreement-mrf.png', plot = p_fits_mrf,
@@ -586,8 +587,8 @@ plot_grid(
   get_legend(p_d +
                theme(legend.position = 'top', legend.key.width = rel(2))),
   p_d + theme(legend.position = 'none'),
-            p_d_aggr + theme(legend.position = 'none'),
-            labels = c('', 'A', 'B'),
+  p_d_aggr + theme(legend.position = 'none'),
+  labels = c('', 'A', 'B'),
   rel_heights = c(1, 15, 15), ncol = 1)
 
 ggsave('figures/sardinia-test/example-rasters-aggregation.png',
@@ -957,12 +958,12 @@ pred_vs_pred <- tibble(
 ggplot(pred_vs_pred, aes(mrf, mrf_aggr)) +
   geom_hex(bins = 75) +
   geom_smooth(method = 'gam', formula = y ~ s(x, k = 5),
-              color = 'cornflowerblue') +
+              color = 'darkorange') +
   geom_abline(intercept = 0, slope = 1, color = 'red') +
-  labs(x = 'MRF model with full dataset',
-       y = 'MRF model with aggregated dataset') +
+  labs(x = 'Gaussian MRF model with full dataset',
+       y = 'Gaussian MRF model with aggregated dataset') +
   scale_fill_lapaz(name = 'Count', reverse = TRUE) +
   theme(legend.position = 'inside', legend.position.inside = c(0.1, 0.85))
 
-ggsave('figures/sardinia-test/pred-vs-pred.png', width = 8, height = 6,
-       units = 'in', dpi = 300, bg = 'white')
+ggsave('figures/sardinia-test/gaussian-aggr-pred-vs-full-dataset-pred.png',
+       width = 8, height = 6, units = 'in', dpi = 300, bg = 'white')
