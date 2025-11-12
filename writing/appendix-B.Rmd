@@ -163,4 +163,20 @@ include_graphics('../figures/sardinia-test/model-comparisons.png')
 
 \clearpage
 
-taiga test
+The second set of tests presented here use data from a large taiga ecozone (Fig. B.\@ref(fig:taiga-map)). Fig. B.\@ref(fig:taiga-aggr-example) shows the first few rasters before and after spatiotemporal aggregation by a factor of 2.
+
+```{r taiga-map, fig.cap="Robinson projection of the world, with the taiga ecozone used in the second set of tests in red."}
+include_graphics('../figures/taiga-test/taiga-map.png')
+```
+
+```{r taiga-aggr-example, fig.cap="Comparison of the NDVI rasters for the taiga ecozone after cloud masking (A) and after cloud masking and spatialtemporal aggregation by a factor of two (B)."}
+include_graphics('../figures/taiga-test/example-rasters-aggregation.png')
+```
+
+\clearpage
+
+add figures:
+
+* model-comparisons.png
+* prop-water-distr.png
+* prop-water-estimates.png
