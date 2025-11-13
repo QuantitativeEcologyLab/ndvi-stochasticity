@@ -25,19 +25,12 @@ source('analysis/figures/000-robinson-objects.R') # for Robinson projection
 
 # pick a northern polygon
 taiga <- read_sf('data/ecoregions/ecoregions-polygons.shp') %>%
-  filter(realm == 'Nearctic') %>%
-  # drop islands that have long >> 0
-  st_transform(crs(rast('H:/GitHub/ndvi-stochasticity/data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v006/N07_AVH13C1/N07_AVH13C1.A1981175.006.2022270161458.nc'))) %>%
-  filter(st_coordinates(.) %>%
-           data.frame() %>%
-           group_by(L2) %>%
-           summarize(max_x = max(X)) %>%
-           pull(max_x) %>%
-           `<`(60)) %>%
   filter(ecoregion == 'Northwest Territories taiga' |
                   ecoregion == 'Muskwa-Slave Lake forests') %>%
   st_union() %>%
-  st_as_sf()
+  st_as_sf() %>%
+  # drop islands that have long >> 0
+  st_transform(crs(rast('H:/GitHub/ndvi-stochasticity/data/avhrr-viirs-ndvi/raster-files/AVHRR-Land_v006/N07_AVH13C1/N07_AVH13C1.A1981175.006.2022270161458.nc')))
 
 world <- read_sf('data/ecoregions/groups-polygons.shp') %>%
   st_geometry() %>%
@@ -48,7 +41,8 @@ world <- read_sf('data/ecoregions/groups-polygons.shp') %>%
 ggplot() +
   geom_sf(data = bounds, fill = 'white') +
   geom_sf(data = world) +
-  geom_sf(data = st_transform(taiga, robinson_crs), fill = 'red3') +
+  geom_sf(data = st_transform(taiga, robinson_crs), fill = 'red',
+          color = 'red4') +
   scale_x_continuous(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) +
   theme_void()

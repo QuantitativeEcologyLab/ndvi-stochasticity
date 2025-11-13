@@ -54,7 +54,8 @@ world <- read_sf('data/ecoregions/groups-polygons.shp') %>%
 ggplot() +
   geom_sf(data = bounds, fill = 'white') +
   geom_sf(data = world) +
-  geom_sf(data = st_transform(sardinia, robinson_crs), fill = 'red3') +
+  geom_sf(data = st_transform(sardinia, robinson_crs), fill = 'red',
+          color = 'red4') +
   scale_x_continuous(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) +
   theme_void()
