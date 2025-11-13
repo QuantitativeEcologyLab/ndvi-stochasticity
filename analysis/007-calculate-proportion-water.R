@@ -150,28 +150,34 @@ ggsave('figures/taiga-test/prop-water-distr.png', width = 6, height = 8,
        dpi = 600, bg = 'white')
 
 # using 0.4 because 0.5 results in excessive bias, and data loss is minimal
-mean(d$prop_water > 0.4) # 0.03519987
+mean(d$prop_water > 0.4) # 0.03538772
+mean(d$prop_water > 0.4 & d$prop_water < 0.5) # 0.009616731
 d <- filter(d, prop_water < 0.4)
 
 # fits in ~ 5 minutes
-m <- bam(
-  ndvi ~
-    s(y, x, bs = 'sos', k = 200) +
-    s(elev_m, bs = 'cr', k = 5) +
-    s(year, bs = 'cr', k = 10) +
-    s(doy, bs = 'cc', k = 10) +
-    s(prop_water, bs = 'cr', k = 5),
-  family = gaussian(),
-  knots = list(doy = c(0.5, 366.5)),
-  data = d,
-  method = 'fREML',
-  discrete = TRUE,
-  nthreads = 10,
-  control = gam.control(trace = TRUE))
-
-draw(m, rug = FALSE, nrow = 3)
-ggsave('figures/taiga-test/taiga-ndvi-gaussian-sos-aggr-terms-prop-water.png',
-       width = 9, height = 9, units = 'in', dpi = 300, bg = 'white')
+if(file.exists('models/taiga-test/gaussian-gam-sos-aggr-prop-water.rds')) {
+  m <- readRDS('models/taiga-test/gaussian-gam-sos-aggr-prop-water.rds')
+} else {
+  m <- bam(
+    ndvi ~
+      s(y, x, bs = 'sos', k = 200) +
+      s(elev_m, bs = 'cr', k = 5) +
+      s(year, bs = 'cr', k = 10) +
+      s(doy, bs = 'cc', k = 10) +
+      s(prop_water, bs = 'cr', k = 5),
+    family = gaussian(),
+    knots = list(doy = c(0.5, 366.5)),
+    data = d,
+    method = 'fREML',
+    discrete = TRUE,
+    nthreads = 10,
+    control = gam.control(trace = TRUE))
+  saveRDS(m, 'models/taiga-test/gaussian-gam-sos-aggr-prop-water.rds')
+  
+  draw(m, rug = FALSE, nrow = 3)
+  ggsave('figures/taiga-test/taiga-ndvi-gaussian-sos-aggr-terms-prop-water.png',
+         width = 9, height = 9, units = 'in', dpi = 300, bg = 'white')
+}
 
 # make maps of mean and var ----
 taiga <- read_sf('data/ecoregions/ecoregions-polygons.shp') %>%
@@ -218,7 +224,8 @@ plot_grid(
   ggplot(preds_mu) +
     geom_raster(aes(x, y, fill = mu)) +
     geom_sf(data = taiga, fill = 'transparent', color = 'black') +
-    scale_fill_viridis_c('NDVI', option = 'A') +
+    scale_fill_gradientn(expression(bold(widehat('NDVI'))),
+                         colors = ndvi_pal, limits = c(-1, 1)) +
     labs(x = NULL, y = NULL),
   preds_s2 %>%
     mutate(s2 = if_else(s2 > 0.04, 0.04, s2)) %>%

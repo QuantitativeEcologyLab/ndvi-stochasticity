@@ -747,7 +747,8 @@ p_comp <-
       facet_grid(. ~ model) +
       geom_raster(aes(x, y, fill = value)) +
       geom_sf(data = taiga, fill = 'transparent', color = 'black') +
-      scale_fill_viridis_c('NDVI', option = 'A') +
+      scale_fill_gradientn(expression(bold(widehat('NDVI'))),
+                           colors = ndvi_pal, limits = c(-1, 1)) +
       labs(x = NULL, y = NULL),
     ggplot(filter(preds_comp_s, param == 'mu', model == 'diff')) +
       geom_raster(aes(x, y, fill = value)) +
