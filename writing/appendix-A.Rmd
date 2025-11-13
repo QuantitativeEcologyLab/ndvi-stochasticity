@@ -100,3 +100,8 @@ include_graphics('../figures/input-data/n-rasters-time.pdf')
 ```{r elevation, fig.cap="Robinson projection of elevation above sea level. All elevations below the lowest altitude in the Dead Sea (-432 m) were set to -432 m to remove excessively negative altitudes near coast lines. The $\\texttt{elevatr}$ package for $\\texttt{R}$ did not provide elevations for the southernmost region of Antarctica. Black lines indicate WWF ecozones."}
 include_graphics('../figures/input-data/elev-m.pdf')
 ```
+
+\clearpage <!-- refs on separate page -->
+
+# References {-}
+
