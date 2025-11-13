@@ -9,7 +9,7 @@ after predictions are done for neotropic and nearctic:
 
 appendices:
 - A: input data and maps (currently ok)
-- B: preliminary tests (sardinia, arctic, taiga)
+- B: preliminary tests (sardinia, taiga)
 - C: global models (code from `010-global-models.R`) and additional figures
 
 # products
