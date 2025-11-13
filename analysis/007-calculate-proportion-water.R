@@ -145,8 +145,8 @@ plot_grid(
     geom_vline(xintercept = c(0.4, 0.5), color = 'grey', lty = 'dashed') +
     labs(x = 'Proportion of pixel covered by water', y = 'ECDF') +
     scale_x_continuous(expand = c(0.02, 0)),
-  labels = 'AUTO', ncol = 1)
-ggsave('figures/taiga-test/prop-water-distr.png', width = 6, height = 8,
+  labels = 'AUTO', nrow = 1)
+ggsave('figures/taiga-test/prop-water-distr.png', width = 12, height = 4,
        dpi = 600, bg = 'white')
 
 # using 0.4 because 0.5 results in excessive bias, and data loss is minimal
