@@ -17,7 +17,7 @@ institute:
   - cmps: Department of Computer Science, Math, Physics, and Statistics, The University of British Columbia Okanagan, Kelowna, British Columbia, Canada.
 bibliography: 'ndvi-stochasticity.bib'
 csl: 'remote-sensing-of-environment.csl'
-suppress-bibliography: true # refs can only be in main text
+suppress-bibliography: false # if refs can only be in main text
 urlcolor: cyan
 fontsize: 12pt
 indent: true
