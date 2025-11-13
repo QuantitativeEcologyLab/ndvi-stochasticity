@@ -586,7 +586,7 @@ if(file.exists('models/taiga-test/gaussian-gam-sos-aggr.rds')) {
          bg = 'white')
 }
 
-# make a figure comparing ds gam, mrf gam, and mrf_aggr gam ----
+# make a figure comparing gams with full and aggregated datasets ----
 elevs <- d %>%
   filter(date == first(date)) %>%
   select(x, y) %>%
@@ -738,8 +738,6 @@ preds_comp_s %>%
   filter(model != 'diff', param == 's2') %>%
   summarize(q99 = quantile(value, 0.99, na.rm = TRUE), .by = model)
 
-preds_comp_s_0 <- preds_comp_s
-
 p_comp <-
   plot_grid(
     ncol = 2, labels = 'AUTO', rel_widths = c(2, 1.25),
@@ -764,13 +762,12 @@ p_comp <-
     # row 2: map of variance in NDVI
     filter(preds_comp_s, param == 's2', model != 'diff') %>%
       group_by(model) %>%
-      mutate(value = value / quantile(value, 0.975, na.rm = TRUE),
-             value = if_else(value > 1, 1, value)) %>%
+      mutate(value = if_else(value > 0.05, 0.05, value)) %>%
       ggplot() +
       facet_grid(. ~ model) +
       geom_raster(aes(x, y, fill = value)) +
       geom_sf(data = taiga, fill = 'transparent', color = 'black') +
-      scale_fill_viridis_c(expression(bold(s^'2')), limits = c(0, 1)) +
+      scale_fill_viridis_c(expression(bold(s^'2'))) +
       labs(x = NULL, y = NULL),
     filter(preds_comp_s, param == 's2', model == 'diff') %>%
       mutate(max_value = quantile(abs(value), 0.975, na.rm = TRUE),
