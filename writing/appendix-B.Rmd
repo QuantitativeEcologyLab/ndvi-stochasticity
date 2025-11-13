@@ -17,7 +17,7 @@ institute:
   - cmps: Department of Computer Science, Math, Physics, and Statistics, The University of British Columbia Okanagan, Kelowna, British Columbia, Canada.
 bibliography: 'ndvi-stochasticity.bib'
 csl: 'remote-sensing-of-environment.csl'
-suppress-bibliography: true # refs can only be in main text
+suppress-bibliography: false # if refs can only be in main text
 urlcolor: cyan
 fontsize: 12pt
 indent: true
@@ -55,13 +55,13 @@ knitr::opts_chunk$set(echo = FALSE, out.width = '100%', fig.align = 'center', fi
 library('knitr')
 ```
 
-This appendix includes a series of sensitivity analyses performed to reduce computation time without appreciable effects on the estimates of mean NDVI and DENVar. The first set of tests were performed using data from the Mediterranean island of Sardigna (Sardinia; Fig. B.\@ref(fig:sardinia-map)).
+This appendix includes a series of sensitivity analyses performed to reduce computation time without appreciable effects on the estimates of mean NDVI and DENVar. The first set of tests were performed using data from the Mediterranean island of Sardigna (Sardinia; Fig. B.\@ref(fig:sardigna-map)).
 
-```{r sardinia-map, fig.cap="Robinson projection of the world, with the Mediterranean island of Sardigna (Sardinia) in red."}
+```{r sardigna-map, fig.cap="Robinson projection of the world, with the Mediterranean island of Sardigna (Sardinia) in red."}
 include_graphics('../figures/sardinia-test/sardinia-map.png')
 ```
 
-The first test compared fitting times and model predictions across different families of distributions. Since NDVI values for the island ranged between -0.1 and 1, values were scaled between 0 and 1 using the linear transformation $Y^*=(Y + 0.1) / 1.1$, and predictions were back-transformed using the transformation $Y = Y^* \times 1.1 - 0.1.$ The models are shown in the code block below. Spatial terms either used using Markov Random Field smooths (MRF; `bs = 'mrf'`) or Duchon splines (`bs = 'ds'`) based on the work of @duchon_splines_1977. See @wood_generalized_2017 for additional information. The Beta model fit in about 14 minutes, while the Gaussian models both fit in less than a minute.
+The first test compared fitting times and model predictions across different families of distributions. Since NDVI values for the island ranged between -0.1 and 1, values were scaled between 0 and 1 using the linear transformation $Y^*=(Y + 0.1) / 1.1$, and predictions were back-transformed using the transformation $Y = Y^* \times 1.1 - 0.1.$ The models are shown in the code block below. Spatial terms either used discrete-space Markov Random Field smooths (MRF; `bs = 'mrf'`) or continuous-space Duchon (`bs = 'ds'`) based on the work of @duchon_splines_1977. See @wood_generalized_2017 for additional information. The Beta model fit in about 14 minutes, while the Gaussian models both fit in less than a minute.
 
 \clearpage
 
@@ -127,7 +127,9 @@ m_betals <- gam(list(
 
 \doublespacing
 
-Overall, the Gaussian models produced similar estimates to the beta model (Fig. B.\@ref(fig:sardigna-gaus-beta-hex)). To assess the effects of spatiotemporal data aggregation, a MRF model was fit after spatiotemporally aggregating the data by a factor of 2 (Fig. B.\@ref(fig:sardinia-aggr-example)). The GAM used the same structure as the Gaussian MRF GAM, other than a list of neighboring cells based on the aggregated dataset:
+Overall, the Gaussian models produced similar estimates to the beta model (Fig. B.\@ref(fig:sardigna-gaus-beta-hex)). To assess the effects of spatiotemporal data aggregation, a MRF model was fit after spatiotemporally aggregating the data by a factor of 2 (Fig. B.\@ref(fig:sardigna-aggr-example)). The GAM used the same structure as the Gaussian MRF GAM, other than a list of neighboring cells based on the aggregated dataset:
+
+\singlespacing
 
 ```{r gaus-aggr, eval=FALSE, echo=TRUE}
 m_gaus_mrf_aggr <- bam(
@@ -143,27 +145,29 @@ m_gaus_mrf_aggr <- bam(
   discrete = TRUE)
 ```
 
+\doublespacing
+
 ```{r sardigna-gaus-beta-hex, fig.cap="Hex plot of the predicted values from the Beta and Gaussian models of NDVI for the island of Sardigna (Sardinia). The red line indicates a one-to-one relationship. The fill indicates the number of observations within each hexagonal cell."}
 include_graphics('../figures/sardinia-test/sardinia-ndvi-model-agreement-mrf.png')
 ```
 
-```{r sardinia-aggr-example, out.height='90%', out.width='90%', fig.cap="Comparison of the NDVI rasters for the Mediterranean island of Sardigna (Sardinia) after cloud masking (A) and after cloud masking and spatialtemporal aggregation by a factor of two (B). The excessively low NDVI values in the south and east parts of the island are due to raster misalignment with the shapefile despite reprojecting the shapefile to the each raster's coordinate reference system."}
+```{r sardigna-aggr-example, out.height='90%', out.width='90%', fig.cap="Comparison of the NDVI rasters for the Mediterranean island of Sardigna (Sardinia) after cloud masking (A) and after cloud masking and spatialtemporal aggregation by a factor of two (B). The excessively low NDVI values in the south and east parts of the island are due to raster misalignment with the shapefile despite reprojecting the shapefile to the each raster's coordinate reference system."}
 include_graphics('../figures/sardinia-test/example-rasters-aggregation.png')
 ```
 
-The aggregation process constrained the predicted values towards the overall mean NDVI (i.e., the model intercept; Fig. B.\@ref(fig:sardinia-aggr-hex)). Additionally, the MRF model was more flexible than the Duchon-spline model, but sometimes this flexibility resulted in unruly estimates with the aggregated dataset (see the high NDVI values and excessive variance along coast in Fig. B.\@ref(fig:sardinia-test)A-D). The estimated seasonal terms were similar across all three Gaussian models, but the MRF model based on the full dataset had somewhat high NDVI values than the other two models (Fig. B.\@ref(fig:sardinia-test)E-F)). The mean squared residuals were higher in late fall and throughout winter for all three models, and the aggregated MRF model had slightly higher mean squared residuals throughout the year, although it is worth noting that the residuals were calculated the non-aggregated dataset for all models (Fig. B.\@ref(fig:sardinia-test)G-H). Finally, mean NDVI varied similarly with elevation for all three models despite not being included explicitly in any of them (Fig. B.\@ref(fig:sardinia-test)I-J).
+The aggregation process constrained the predicted values towards the overall mean NDVI (i.e., the model intercept; Fig. B.\@ref(fig:sardigna-aggr-hex)). Additionally, the MRF model was more flexible than the Duchon-spline model, but sometimes this flexibility resulted in unruly estimates with the aggregated dataset (see the high NDVI values and excessive variance along coast in Fig. B.\@ref(fig:sardigna-test)A-D). The estimated seasonal terms were similar across all three Gaussian models, but the MRF model based on the full dataset had somewhat high NDVI values than the other two models (Fig. B.\@ref(fig:sardigna-test)E-F)). The mean squared residuals were higher in late fall and throughout winter for all three models, and the aggregated MRF model had slightly higher mean squared residuals throughout the year, although it is worth noting that the residuals were calculated the non-aggregated dataset for all models (Fig. B.\@ref(fig:sardigna-test)G-H). Finally, mean NDVI varied similarly with elevation for all three models despite not being included explicitly in any of them (Fig. B.\@ref(fig:sardigna-test)I-J).
 
-```{r sardinia-aggr-hex, fig.cap="Hex plot of the predicted values from the Gaussian MRF models with the full and aggregated datasets. The red line indicates a one-to-one relationship, while the dark orange indicates the estimated relationship as produced by a $\\texttt{geom\\_smooth(method = `gam', formula = y \\~ s(x, k = 5))}$ layer. The fill indicates the number of observations within each hexagonal cell."}
+```{r sardigna-aggr-hex, fig.cap="Hex plot of the predicted values from the Gaussian MRF models with the full and aggregated datasets. The red line indicates a one-to-one relationship, while the dark orange indicates the estimated relationship as produced by a $\\texttt{geom\\_smooth(method = `gam', formula = y \\~ s(x, k = 5))}$ layer. The fill indicates the number of observations within each hexagonal cell."}
 include_graphics('../figures/sardinia-test/gaussian-aggr-pred-vs-full-dataset-pred.png')
 ```
 
-```{r sardinia-test, out.height='75%', out.width='75%', fig.cap="\\textbf{Model comparisons for estimates of mean NDVI and variance in NDVI using models with beta and normal families of distributions.} (A) Estimated mean NDVI across space as predicted by the GAMs with Duchon-spline spatial smooth, MRF spatial smooth, and MRF spatial smooth using spatiotemporally aggregated data. (B) Difference between the MRF predictions and the MRF predictions with aggregated data. (C) Estimated mean squared residuals ($s^2$) across space from the models in (A), with values > 0.05 set to 0.05 for ease of comparison. (D) Difference in mean squared residuals between the estimates from the MRF model and the MRF model with aggregated data. (E) Estimated mean NDVI over day of year as estimated by each of the models. (F) Difference in the seasonal trends in mean NDVI between the two MRF models. (G) Estimated mean squared residuals over day of year as estimated by each of the models. (H) Difference in the seasonal trends in mean squared residuals between the two MRF models. (I) Estimated mean NDVI over altitude for each of the three models. (J) Difference in the predicted mean NDVI between the two MRF models over altitude."}
+```{r sardigna-test, out.height='75%', out.width='75%', fig.cap="Model comparisons for estimates of mean NDVI and variance in NDVI in the island of Sardigna using models with Beta and Gaussian families of distributions. (A) Estimated mean NDVI across space as predicted by the GAMs with Duchon-spline spatial smooth, MRF spatial smooth, and MRF spatial smooth using spatiotemporally aggregated data. (B) Difference between the MRF predictions and the MRF predictions with aggregated data. (C) Estimated mean squared residuals ($s^2$) across space from the models in (A), with values > 0.05 set to 0.05 for ease of comparison. (D) Difference in mean squared residuals between the estimates from the MRF model and the MRF model with aggregated data. (E) Estimated mean NDVI over day of year as estimated by each of the models. (F) Difference in the seasonal trends in mean NDVI between the two MRF models. (G) Estimated mean squared residuals over day of year as estimated by each of the models. (H) Difference in the seasonal trends in mean squared residuals between the two MRF models. (I) Estimated mean NDVI over altitude for each of the three models. (J) Difference in the predicted mean NDVI between the two MRF models over altitude."}
 include_graphics('../figures/sardinia-test/model-comparisons.png')
 ```
 
 \clearpage
 
-The second set of tests presented here use data from a large taiga ecozone (Fig. B.\@ref(fig:taiga-map)). Fig. B.\@ref(fig:taiga-aggr-example) shows the first few rasters before and after spatiotemporal aggregation by a factor of 2.
+The second set of tests presented here use data from a large taiga ecozone shown in Fig. B.\@ref(fig:taiga-map). Fig. B.\@ref(fig:taiga-aggr-example) shows the first few rasters before and after spatiotemporal aggregation by a factor of 2.
 
 ```{r taiga-map, fig.cap="Robinson projection of the world, with the taiga ecozone used in the second set of tests in red."}
 include_graphics('../figures/taiga-test/taiga-map.png')
@@ -175,8 +179,44 @@ include_graphics('../figures/taiga-test/example-rasters-aggregation.png')
 
 \clearpage
 
-add figures:
+The MRF model for the taiga ecozone was interrupted after running for 24 hours, at which point it still had to finish setting up the bases for a single day of data. All subsequent tests and analyses only used Gaussian models with continuous spline-on-the-sphere bases for space [`bs = 'sos'`$;$ @wood_generalized_2017]. Such bases are best for spatial data that extend over relatively large parts of the globe or a wide range of latitudes. Fig. B.\@ref(fig:taiga-test) compares the estimated mean NDVI and variance in NDVI for the Gaussian models fit to the full and aggregated datasets. Other than using different datasets, the two models had the same code, which is shown below. The model fit to the full dataset fit in 10-15 minutes, while the model fit to the aggregated dataset fit in 6 minutes.
 
-* model-comparisons.png
-* prop-water-distr.png
-* prop-water-estimates.png
+\singlespacing
+
+```{r taiga-models, eval=FALSE, echo=TRUE}
+m_gaus <- bam(
+    ndvi ~
+      s(y, x, bs = 'sos', k = 200) +
+      s(elev_m, bs = 'cr', k = 5) +
+      s(year, bs = 'cr', k = 10) +
+      s(doy, bs = 'cc', k = 10),
+    family = gaussian(),
+    knots = list(doy = c(0.5, 366.5)),
+    data = d,
+    method = 'fREML',
+    discrete = TRUE,
+    nthreads = 10,
+    control = gam.control(trace = TRUE))
+```
+
+\doublespacing
+
+```{r taiga-test, out.height='75%', out.width='75%', fig.cap="Model comparisons for estimates of mean NDVI and variance in NDVI using Gaussian models fit to the full and aggregated datasets in the taiga ecozone. The large gap in the north-eastern area corresponds to Great Bear Lake. (A) Estimated mean NDVI across space. (B) Difference between the predictions with aggregated data. (C) Estimated mean squared residuals ($s^2$) across space from the models in (A); . (D) Difference in mean squared residuals between the estimates from the MRF model and the MRF model with aggregated data. (E) Estimated mean NDVI over day of year as estimated by each of the models. (F) Difference in the seasonal trends in mean NDVI between the two MRF models. (G) Estimated mean squared residuals over day of year as estimated by each of the models. (H) Difference in the seasonal trends in mean squared residuals between the two MRF models. (I) Estimated mean NDVI over altitude for each of the three models. (J) Difference in the predicted mean NDVI between the two MRF models over altitude."}
+include_graphics('../figures/taiga-test/model-comparisons.png')
+```
+
+The models fit to the full and aggregated datasets showed strong agreement in their estimates of both mean and variance in NDVI (Fig. B.\@ref(fig:taiga-test)). Differences were relatively negligible over both space (Fig. B.\@ref(fig:taiga-test)A-D) and time (Fig. B.\@ref(fig:taiga-test)E-H), and mean NDVI varied similarly with altitude in both models. The widespread negative difference over space (Fig. B.\@ref(fig:taiga-test)B, J) balanced with a positive difference over day of year (Fig. B.\@ref(fig:taiga-test)F).
+
+The temporally static raster of mean squared residuals showed multiple small patches of high NDVI variance that corresponded to small lakes or the coast of Great Bear Lake (the north-eastern gap in the ecozone). Consequently, pixels with > 40% of water coverage (Fig. A.2) were removed from the dataset (Fig. B.\@ref(fig:prop-water-ecdf)), and another model was fit with a smooth term of the proportion of water within each pixel to account for the negative bias caused by water. Cells with 40-50% water were removed because they were relatively rare (0.96%) and still resulted in patches of inflated variance estimates. The temporally static, spatial estimates for mean and variance in NDVI from this last model are shown in Fig. B\@ref(fig:prop-water-estimates).
+
+```{r prop-water-ecdf, fig.cap = "Histogram (A) and Empirical Cumulative Distribution Function (ECDF; B) of the estimated proportion of water within each pixel within the taiga ecozone. Vertical dashed lines in panel (B) indicate the cutoffs for cells with 40% and 50% water. Cells with $\\ge 50$% water were assumed not to be useful for estimating terrestrial NDVI, but including cells with more than 40% water still resulted in inflated variance estimates."}
+include_graphics('../figures/taiga-test/prop-water-distr.png')
+```
+
+```{r prop-water-estimates, fig.cap = "Spatial estimates of mean NDVI (A) and mean squared residuals (B) after removing pixels with > 40% water cover and accounting for water cover in the model. Note the lower variance estimates, relative to Fig. B.8."}
+include_graphics('../figures/taiga-test/prop-water-estimates.png')
+```
+
+\clearpage
+
+# References {-}
