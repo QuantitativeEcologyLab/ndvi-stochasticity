@@ -96,7 +96,7 @@ To ensure the number of rows for each dataset was below the maximum data frame s
 
 \subsection{Statistical Analyses} \label{m-analyses}
 
-We estimated spatiotemporal trends in mean and variance in NDVI using Generalized Additive Models (GAMs) via the \texttt{mgcv} package for \texttt{R} \citep[v. 1.9-3][]{wood_generalized_2017}. To reduce modeling fitting times with negligible losses to model accuracy, we used the \texttt{bam()} function with fast REstricted Marginal Likelihood (\texttt{method = fREML}) and covariate discretization \citep[\texttt{discrete = TRUE}; ][]{wood_generalized_2015,wood_generalized_2017-1}. Ideally, NDVI should be modeled using beta location-scale models (after the linear transformation $Y^*=(Y + 1)/2$) to account for the fact that: (1) NDVI is bounded between -1 and 1, and (2) the variance in NDVI is dependent on the mean (and vice-versa), since ecosystems with very low NDVI (e.g., rock, ice, or concrete) or very high NDVI (e.g., dense forest) tend to have lower variance in NDVI. However, preliminary tests and work by \citep{marcus_planning_2025} showed that beta GAMs and particularly beta location-scale GAMs had prohibitive requirements for both fitting times and memory requirements, since both requirements scale $O(Mnp^2)$, for $M$ smoothing parameters and a model matrix with $n$ rows and $p$ columns \citep{wood_generalized_2015}. In contrast, Gaussian models with fixed scaled parameters (i.e., constant variance) fit substantially faster and provided very similar spatialtemporal estimates of mean and variance in NDVI (Appendix B). Thus, we estimated trends in mean and variance in NDVI using a pair of GAMs for each region shown in Fig. A.4; one for estimating mean NDVI over space and time (assuming a constant variance), and one for estimating the mean squared residual (i.e., variance) in NDVI (again, assuming a constant scale parameter).
+We estimated spatiotemporal trends in mean and variance in NDVI using Generalized Additive Models (GAMs) via the \texttt{mgcv} package for \texttt{R} \citep[v. 1.9-3][]{wood_generalized_2017}. To reduce modeling fitting times with negligible losses to model accuracy, we used the \texttt{bam()} function with fast REstricted Marginal Likelihood (\texttt{method = fREML}) and covariate discretization \citep[\texttt{discrete = TRUE}; ][]{wood_generalized_2015,wood_generalized_2017-1}. Ideally, NDVI should be modeled using beta location-scale models (after the linear transformation $Y^*=(Y + 1)/2$) to account for the fact that: (1) NDVI is bounded between -1 and 1, and (2) the variance in NDVI is dependent on the mean (and vice-versa), since ecosystems with very low NDVI (e.g., rock, ice, or concrete) or very high NDVI (e.g., dense forest) tend to have lower variance in NDVI. However, preliminary tests and work by \citep{marcus_planning_2025} showed that beta GAMs and particularly beta location-scale GAMs had prohibitive requirements for both fitting times and memory requirements, since both requirements scale $O(Mnp^2)$, for $M$ smoothing parameters and a model matrix with $n$ rows and $p$ columns \citep{wood_generalized_2015}. A beta location-scale model for only the island of Sardigna (24,000 km$^2$; Appendix B) was interrupted after 144 hours, during which the model had only completed three steps using the Newton method described by \citet{wood_generalized_2017-2}. In contrast, Gaussian models with fixed scaled parameters (i.e., constant variance) fit substantially faster and provided very similar spatialtemporal estimates of mean and variance in NDVI (Appendix B). Thus, we estimated trends in mean and variance in NDVI using a pair of GAMs for each region shown in Fig. A.4; one for estimating mean NDVI over space and time (assuming a constant variance), and one for estimating the mean squared residual (i.e., variance) in NDVI (again, assuming a constant scale parameter).
 
 Together, the sets of models for mean NDVI (i.e., $\mu$) and and variance in NDVI (i.e., $\sigma^2$) had the following structure, with $\nu$ indicating NDVI:
 \begin{equation} \label{eq:model}
@@ -131,17 +131,21 @@ From the two sets of models, we produced daily estimates of (1) the Dynamic Esti
 
 \section{Results}
 
-Figures:
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{fig-1}
+    \caption{Estimated mean NDVI (A) and DENVar (B) for 2003-07-02. \textcolor{red}{CHANGE TO LONG-TERM MEAN?}}
+    \label{estimates}
+\end{figure}
 
-\begin{itemize}
-\item two Robinson projections of the world: long-term mean NDVI and DENVar on spring solstice OR the world with ecozone shapefiles to see if fill matches ecozone boundaries (two columns)
-\item hex plots of pred vs obs for mean and var (one column)
-\item surface plots of year (x) and latitude (y) for mean NDVI and DENVar (to detect trends over space and time; two columns)
-\item hex plots of DENVAr with other variables (add temperature, annual precip, extreme weather event, fires, invasive species, max body size, disease occurrence, ...; two columns)
-\item supplementary material -- appendix C (outputs): histograms of mean around flat map of biomes (already created, but change colors?)
-\end{itemize}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{fig-2}
+    \caption{Surface plots of mean NDVI (A) and DENVar (B) over time and latitudes.}
+    \label{surface-plots}
+\end{figure}
 
-\subsection{Correlations with other metrics}
+Other variables to potentially add to hexplots:
 
 \begin{itemize}
 \item temperature
@@ -150,17 +154,34 @@ Figures:
 \item seasonal temperature range
 \item spp diversity
 \item gross primary productivity
-\item max animal weight
+\item max body size
 \item https://silvis.forest.wisc.edu/globalwui/
 \item https://silvis.forest.wisc.edu/data/dhis/: NDVI16 (Normalized Difference Vegetation Index), EVI16 (Enhanced Vegetation Index), FPAR8 (Fraction absorbed Photosynthetically Active Radiation), LAI8 (Leaf Area Index), GPP8 (Gross Primary Productivity)
+\item extreme weather event
+\item invasive species
+\item disease occurrence?
 \end{itemize}
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=\textwidth]{hexplots-global-test}
+    \includegraphics[width=\textwidth]{fig-3}
     \caption{Hex plots of the relationship between the long-term global Dynamic Estimate of NDVI Variance (DENVar) and common ecological metricts. The fill of the hexagonal cells represents the log-10 number of points within the cell. Rowwise, the variables are: long-term mean NDVI (as estimated in this manuscript), the machine-learning Human Footprint Index (ml-HFI) of \citation{keys_machine-learning_2021}, and the 2015 cumulative, minimum, and seasonal range in the Dynamic Habitat Index of \citep{radeloff_dynamic_2019}.}
     \label{hex-plots}
 \end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{/global-models/biomes-histograms.png}
+    \caption{Map of terrestrial biomes along with hex plots of mean NDVI and DENVar  for each biome. \textcolor{red}{UPDATE FIGURE TO HEXPLOTS.}}
+    \label{hex-plot-map}
+\end{figure}
+
+% \begin{figure}[h]
+%     \centering
+%     \includegraphics[width=\textwidth]{fig-X}
+%     \caption{Caption.}
+%     \label{label}
+% \end{figure}
 
 \subsection{Obtaining the data}
 
@@ -170,8 +191,6 @@ Figures:
 \end{itemize}
 
 \section{Discussion}
-
-% There should be a paragraph outlining the limitations of your results and interpretation, as well as a discussion of the steps that need to be taken for the findings to be applied. Please avoid claims of priority.
 
 We have presented a new spatiotemporally dynamic metric of environmental stochasticity, which we have called the Dynamic Estimate of NDVI Variance, DENVar. In this section, we discuss the interpretation of DENVar in greater depth, and we argue the advantages and limitations of the statistical methods used. We conclude by suggsting some use cases of DENVar within animal movement ecology, landscape ecology, and phenology, but we invite readers to consider how DENVar may be of use in their field and adjacent disciplines.
 
@@ -193,7 +212,19 @@ smoothness of mean impacts smoothness and size of variance: depends on scale of 
 
 DENVar is a good metric as long as the spatiotemporal scale of interest is similar or larger to that of DENVar. May not work well for small-scale processes such as the movement dynamics of a small rodent, the phenology of a small orchard when spatiotemporal heterogeneity is finer than DENVar's resolution
 
-\subsection{Environmental stochasticity and animal movement ecology}
+\subsection{Practical applications}
+
+Convert the subsections to a single subsection:
+
+\begin{itemize}
+\item spatial ecology
+\item movement behavior: \citep{mezzini_how_2025}
+\item conservation \citep{marcus_planning_2025}, etc.
+\item anthropology (navigating paper)
+\item industry (agriculture)
+\end{itemize}
+
+\subsection*{Environmental stochasticity and animal movement ecology}
 
 The field of animal movement ecology has long shown that animals alter their movement in response to resource abundance or availability \citep{burt_territoriality_1943,southwood_habitat_1977,charnov_optimal_1976,broekman_environmental_2024}. More recently, movement ecologists have started focusing more on resource stochasticity \citep{stephens_optimal_1982,rizzuto_forage_2021,marcus_changing_2023}, but it is worth distinguishing between resource stochasticity and seasonality \citep{nilsen_can_2005}. Seasonality is generally best interpreted as a cyclical change in the mean that many animals can learn to predict, as in the case of green-wave surfing \citep{middleton_green-wave_2018,geremia_migrating_2019}. In contrast, environmental stochasticity refers to unpredictable changes, such as forest fires \textcolor{red}{ref}, sudden snow storms \citep{aikens_pronghorn_2025}, and unusual phenology \textcolor{red}{ref}. Animals also respond to stochastic changes \citep{mezzini_how_2025}, but their ability to adapt depends on behavioral plasticity \citep{steixner-kumar_strategies_2020,rickbeil_plasticity_2019}, and memory \citep{polansky_elucidating_2015,abrahms_memory_2019,riotte-lambert_environmental_2020,falcon-cortes_hierarchical_2021,ranc_memory_2022}.
 
@@ -215,7 +246,7 @@ extreme events, black swans \citep{anderson_black-swan_2017,logares_black_2012}
 \item detecting regime shifts (in lakes: \citep{bjorndahl_abrupt_2022})
 \end{itemize}
 
-\subsection{Environmental stochasticity and population dynamics}
+\subsection*{Environmental stochasticity and population dynamics}
 
 read lande\_risks\_1993
 
@@ -232,10 +263,6 @@ read lande\_risks\_1993
 \end{itemize}
 
 \clearpage
-
-\subsection{Environmental stochasticity and fire ecology}
-
-\subsection{Environmental stochasticity and phenology}
 
 \section{Other useful references}
 
@@ -265,130 +292,30 @@ read lande\_risks\_1993
 \end{itemize}
 
 \section*{Acknowledgments}
-Anyone who made a contribution to the research or manuscript, but who is not a listed author, should be acknowledged (with their permission). Types of acknowledgements include:
 
-\subsection*{General}
-Thank others for any contributions, whether it be direct technical help or indirect assistance
+The authors would like to thank Dr. Simon Wood for writing the custom Beta location-scale family even though it was not used in the final models.
 
 \subsection*{Author Contributions}
-Describe contributions of each author to the paper, using the first initial and full last name.
-
-\medskip Examples:
-
-``S. Zhang conceived the idea and designed the experiments.''
-
-``E. F. Mustermann and J. F. Smith conducted the experiments.''
-
-``All authors contributed equally to the writing of the manuscript.''
+% Describe contributions of each author to the paper, using the first initial and full last name.
 
 \subsection*{Funding}
-Name financially supporting bodies (written out in full), followed by the funding awardee and associated grant numbers (if applicable) in square brackets.
-
-\medskip Example:
-
-``This work was supported by the Engineering and Physical Sciences Research Council {grant numbers xxxx, yyyy}; the National Science Foundation {grant number zzzz}; and a Leverhulme Trust Research Project Grant.''
-
-\medskip
-If the research did not receive specific funding, but was performed as part of the employment of the authors, please name this employer. If the funder was involved in the manuscript writing, editing, approval, or decision to publish, please declare this.
+% Name financially supporting bodies (written out in full), followed by the funding awardee and associated grant numbers (if applicable) in square brackets.
 
 \subsection*{Conflicts of Interest}
-Conflicts of interest (COIs, also known as ``competing interests'') occur when issues outside research could be reasonably perceived to affect the neutrality or objectivity of the work or its assessment.
 
-Authors must declare all potential interests – whether or not they actually had an influence – in a ‘Conflicts of Interest’ section, which should explain why the interest may be a conflict. Authors must declare current or recent funding (including for Article Processing Charges) and other payments, goods or services that might influence the work. All funding, whether a conflict or not, must be declared in a ``Funding Statement.'' The involvement of anyone other than the authors who 1) has an interest in the outcome of the work; 2) is affiliated to an organization with such an interest; or 3) was employed or paid by a funder, in the commissioning, conception, planning, design, conduct, or analysis of the work, the preparation or editing of the manuscript, or the decision to publish must be declared.
+The authors declare that there is no conflict of interest regarding the publication of this article.
 
-If there are none, the authors should state ``The author(s) declare(s) that there is no conflict of interest regarding the publication of this article.'' Submitting authors are responsible for coauthors declaring their interests. Declared conflicts of interest will be considered by the editor and reviewers and included in the published article.
+\subsection*{Code and Data Availability}
 
-\subsection*{Data Availability}
-A data availability statement is compulsory for all research articles. This statement describes whether and how others can access the data supporting the findings of the paper, including 1) what the nature of the data is, 2) where the data can be accessed, and 3) any restrictions on data access and why.
-
-If data are in an archive, include the accession number or a placeholder for it. Also include any materials that must be obtained through a Material Transfer Agreements (MTA).
+All code is available on GitHub at \href{https://github.com/QuantitativeEcologyLab/ndvi-stochasticity}{https://github.com/QuantitativeEcologyLab/ndvi-stochasticity}, including code for downloading the original NDVI rasters directly from the servers they are housed in. Most data are not included due to GitHub's size limitations, but all objects can be created using the code provided.
 
 \section*{Supplementary Materials}
-Describe any supplementary materials submitted with the manuscript (e.g., audio files, video clips or datasets).
 
-Please group supplementary materials in the following order: materials and methods, figures, tables, and other files (such as movies, data, interactive images, or database files).
-
-\medskip Example:
-Fig. S1. Title of the first supplementary figure.
-
-Fig. S2. Title of the second supplementary figure.
-
-Table S1. Title of the first supplementary table.
-
-Data file S1. Title of the first supplementary data file.
-
-Movie S1. Title of the first supplementary movie.
-
-\medskip
-Be sure to submit all supplementary materials with the manuscript and remember to reference the supplementary materials at appropriate points within the manuscript. We recommend citing specific items, rather than referring to the supplementary materials in general, for example: ``See Figures S1-S10 in the Supplementary Material for comprehensive image analysis.''
-
-A link to access the supplementary materials will be provided in the published article.
-
-Supplementary Materials may include additional author notes—for example, a list of group authors.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%% ADDITIONAL GUIDELINES AND EXAMPLES OF FIGURES AND TABLES %%
-
-%%%%%% Figures %%%%%%
-
-% All figure titles should be either a phrase or a sentence; do not mix the two styles.
-% If a figure consists of multiple panels, they should be ordered logically and labelled with roman letters (i.e., A, B, C, etc.). All labels should be explained in the legend. See Figure \ref{fig:2} for example.
-% Upon acceptance, authors will be asked to provide the figures as separate electronic files. At that stage, figures should be supplied as Adobe Portable Document Format (PDF), PostScript (PS), or Encapsulated PostScript (EPS) for illustrations or diagrams; Tagged Image File Format (TIFF), JPEG, PNG, PhotoShop (PSD), EPS, or PDF for photography or microscopy. Bitmap (BMP) images should be of at least 300 dpi resolution, unless due to the limited resolution of a scientific instrument. If a bitmap image has labels, the image and labels should be embedded in separate layers.
-
-%% FIGURE EXAMPLES %%
-
-% \begin{figure}[h}
-%     \centering
-%     \includegraphics[width=0.5\textwidth}{fig 1}
-%     \caption{This is an example figure.}
-%     \label{fig:1}
-% \end{figure}
-
-% \begin{figure}[h}
-%     \centering
-%     \begin{subfigure}{0.4\textwidth}
-%         \includegraphics[width=0.9\textwidth, height=2in}{fig 1}
-%         \caption{\label{fig:2a}}
-%     \end{subfigure}
-%     \begin{subfigure}{0.4\textwidth}
-%         \includegraphics[width=0.9\textwidth, height=2in}{fig 2}
-%         \caption{\label{fig:2b}}
-%     \end{subfigure}
-%     \caption{This is an example of a figure consisting of multiple panels.     (\subref{fig:2a}) This is the first panel. (\subref{fig:2b}) This is the second panel.}
-%     \label{fig:2}
-% \end{figure}
-
-%%%%%% Tables %%%%%%
-
-% If numerical measurements are given, the units should be included in the column heading. Every vertical column should have a heading, followed by a unit of measure (if any) in parentheses. Vertical rules should not be used.
-
-% Centered headings of the body of the table can be used to break the entries into groups. Do not use footnotes in column heads; include any such details in sentence form in the table legend. Footnotes should contain information relevant to specific cells of the table; use lowercase letters in alphabetical order, as needed: a, b, c, etc.
-
-% \begin{table}[b}
-%     \caption{This is an example table.}
-%     \centering
-%     \begin{tabular}{ccc}
-%             \hline
-%             Column 1 & Column 2 & Column 3 \\
-%             \hline
-%             Cell 1 & Cell 2 & Cell 3\\
-%             Cell 4 & Cell 5 & Cell 6 \\
-%             \hline
-%             \end{tabular}
-% 
-%     \label{tab:1}
-% \end{table}
-
-%%%%%% Guidelines for References %%%%%%
-
-% There is only one reference list for all sources cited in the main text, figure and table legends, and Supplementary Materials. Do not include a second reference list in the Supplementary Materials section. Include references cited only in the Supplementary Materials at the end of the reference section of the main text; reference numbering should continue as if the Supplementary Materials are a continuation of the main text. References cited only in the Supplementary Materials section are not counted toward length guidelines.
-
-% Authors are responsible for ensuring that the information in each reference is complete and accurate.
-
-% DOIs, if available, should be included for each reference.
-
-% Please do not include any extraneous language such as explanatory notes as part of a reference to a given source. The Journal of Remote Sensing prefers that manuscripts do not include end notes; if information is important enough to include, please put into main text.  If you need to include notes, please explain why they are needed in your cover letter to the editor.
+\begin{itemize}
+\item Appendix A: Color palettes used and input data.
+\item Appendix B: Sensitivity analyses.
+\item Appendix C: Code for fitting the models, along with supporting supplementary figures.
+\end{itemize}
 
 \clearpage
 
