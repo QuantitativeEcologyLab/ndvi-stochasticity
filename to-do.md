@@ -1,16 +1,13 @@
 # PRIORITY
 
 after predictions are done for neotropic and nearctic:
+- cannot predict on lab linux because the NA/SA model alone takes up ~300 GB of RAM
 - fit africa, palearctic, then islands, using ~*30 cores* while predicting from other models
 - create raster of long-term mean (exclude temporal smooths)
 - calculate rasters of observed values, `mu_hat`, and `e^2` for other groups
 - fit variance models without `ti(y,x,doy,year)`?
 - save daily rasters of estimated mean and DENVar (save for each model and then sum with `na.rm = TRUE`?)
-
-appendices:
-- A: input data and maps (currently ok)
-- B: preliminary tests (sardinia, taiga)
-- C: global models (code from `010-global-models.R`) and additional figures
+- crete appendix C: global models (code from `010-global-models.R`) and additional figures
 
 # products
 
@@ -32,9 +29,8 @@ rasters of DENVar and corresponding mean estimates:
 - shiny app extracting values from rasters given a date and coordinates?
 
 # for publication
-- add a title in each figure caption
-- update graphical abstract to use static rasters of mean NDVI and DENVar ( https://www.sciencedirect.com/journal/remote-sensing-of-environment/publish/guide-for-authors#toc-27)
-- update graphical abstract to use robinson projection in panels B and C
+
+- update graphical abstract to use fig 1 (Robinson proj) ( https://www.sciencedirect.com/journal/remote-sensing-of-environment/publish/guide-for-authors#toc-27)
 - include a concise, descriptive caption for each supplementary file describing its content
 - Abbreviate journal names according to the List of Title Word Abbreviations (LTWA)?
 - review autor checklist: https://www.sciencedirect.com/journal/remote-sensing-of-environment/publish/guide-for-authors
