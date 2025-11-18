@@ -8,9 +8,7 @@ source('analysis/figures/000-default-ggplot-theme.R')
 source('functions/get_legend.R')
 
 r_s2 <- rast('data/output/var-ndvi-raster-mod-5-no-res-2025-04-21-THINNED-50.tif')
-ecoregions <- read_sf('data/world-ecosystems/data/commondata/data0/tnc_terr_ecoregions.shp') %>%
-  # drop polygons not in data
-  filter(poly_id %in% names(readRDS('data/ecoregions/poly-nbs-global.rds'))) %>%
+ecoregions <- read_sf('data/ecoregions/groups-polygons.shp') %>%
   vect() %>% # convert to spatVect
   project(crs(r_s2))
 r_s2 <- crop(r_s2, ecoregions, mask = TRUE)
@@ -74,19 +72,6 @@ d <- as.data.frame(r_mu, xy = TRUE) %>%
   as_tibble()
 d
 
-if(FALSE) {
-  d %>%
-    filter(is.na(hfi)) %>%
-    plot(y ~ x, .)
-}
-
-ggplot(d, aes(s2_hat)) +
-  geom_histogram(fill = 'grey', color = 'black', binwidth = 0.005,
-                 center = 0.0025) +
-  labs(x = 'DENVar', y = 'Count')
-ggsave('figures/denvar-hist-global-test.png',
-       width = 5, height = 3, units = 'in', dpi = 600, bg = 'white')
-
 d %>%
   filter(mu_hat > -0.25) %>% #' *remove: there were 4 points mean < -0.25*
   tidyr::pivot_longer(- c(x, y, s2_hat), names_to = 'variable',
@@ -103,7 +88,7 @@ d %>%
   facet_wrap(~ lab, scales = 'free_y', strip.position = 'left', nrow = 2) +
   geom_hex(aes(s2_hat, value, fill = log10(after_stat(count))),
            color = 'black', bins = 50, linewidth = 0.1, na.rm = TRUE) +
-  scale_fill_iridescent(
+  scale_fill_lapaz(
     name = expression(paste(bold('Count (log'), bold(''['10']),
                             bold(' scale)'))), range = c(0, 1),
     reverse = FALSE, labels = \(.x) 10^.x) +
