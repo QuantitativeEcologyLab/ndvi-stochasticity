@@ -123,20 +123,22 @@ Together, the sets of models for mean NDVI (i.e., $\mu$) and and variance in NDV
 \end{cases},
 \end{equation}
 
-\noindent where, for a given (spatiotemporally aggregated) pixel, \texttt{prop\_water} is the proportion of water within the pixel, \texttt{elev\_m} is elevation above sea level in meters, \texttt{doy} is integer day of year (1-366), \texttt{year} is integer year (1981-2025), \texttt{lat} and \texttt{long} are latitude and longitude, respectively. For ease of readability, we omit the pixel-level indices. $s(~)$ indicates marginal smooth functions, while $t(~)$ indicates tensor product interaction terms. Seasonal terms used cyclical cubic splines (\texttt{bs = `cc'}) with edge knots 0.5 and 366.5, while spatial smooths used a basis with second-order spline on the sphere \citep[\texttt{bs = `sos'}; ][]{wood_generalized_2017}. The linear predictors for $\mu$ and $\sigma^2$ have the same structure, other than the $s(\mu)$ smooth term for $\sigma^2$, but the functions for $\sigma^2$ are independent of those for $\mu$. Despite the data aggregation procedures and faster fitting methods, including parallelizing computation across 60 cores, each of the four models required multiple days to fit. Predicting from the models for $\hat \mu$ was also had substnatial time and memory demands, since predictions were calculated without discrete prediction methods (\texttt{discrete = FALSE}). While discrete predictions were orders of magnitude faster, they were excessively spatially coarse. See Appendix C and the code availability statement for additional information.
+\noindent where $\beta_\mu$ and $\beta_{\sigma^2}$ are model intercepts, and, for a given (spatiotemporally aggregated) pixel: \texttt{prop\_water} is the proportion of water within the pixel, \texttt{elev\_m} is elevation above sea level in meters, \texttt{doy} is integer day of year (1-366), \texttt{year} is integer year (1981-2025), and \texttt{lat} and \texttt{long} are latitude and longitude, respectively. We omit the pixel-level indices for ease of readability. $s(~)$ indicates marginal smooth functions, while $t(~)$ indicates tensor product interaction terms. Seasonal terms used cyclical cubic splines (\texttt{bs = `cc'}) with edge knots 0.5 and 366.5, while spatial smooths used a basis with second-order spline on the sphere \citep[\texttt{bs = `sos'}; ][]{wood_generalized_2017}. The linear predictors for $\mu$ and $\sigma^2$ have the same structure, other than the $s(\mu)$ smooth term for $\sigma^2$, but the functions for $\sigma^2$ are independent of those for $\mu$. Despite the data aggregation procedures and faster fitting methods, including parallelizing computation across 60 cores, each of the four models required multiple days to fit. Predicting from the models for $\hat \mu$ was also had substnatial time and memory demands, since predictions were calculated without discrete prediction methods (\texttt{discrete = FALSE}). While discrete predictions were orders of magnitude faster, they were excessively spatially coarse. Predicting fitted values required over \textcolor{red}{27 days} of fitting time despite consistently using > 1 TB of RAM. See Appendix C and the code availability statement for additional information.
 
-Since there are no corrections to any bias in residuals from models \ref{eq:model}, the estimates of variance from models \ref{eq:model} may be inflated near areas or periods of rapid and substantial change. Still, the appreciability of this inflation is dependent on the spatiotemporal scale over which changes are perceived \citep{levin_problem_1992,frankham_importance_2004,goodchild_scale_2023,mezzini_how_2025}.
-
-From the two sets of models, we produced daily estimates of (1) the Dynamic Estimate of NDVI Variance (DENVar) and (2) the estimated mean NDVI they are conditional on, at a \textbf{\emph{XXX}}\textdegree spatial scale. The rasters are freely available on GitHub (see code availability statement), along with long-term (1981-2025) averages of both DENVar and the estimated mean NDVI. Since estimates of variance are conditional on the corresponding estimates of the mean, we suggest users always use the corresponding rasters of mean NDVI in their analyses rather than using independent estimates of mean NDVI. 
+From the two sets of models, we produced daily estimates of (1) the Dynamic Estimate of NDVI Variance (DENVar) and (2) the estimated mean NDVI they are conditional on, at a \textbf{\emph{XXX}}\textdegree spatial scale. The rasters are freely available on GitHub (see code availability statement), along with long-term (1981-2025) averages of both DENVar and the estimated mean NDVI. Since there are no corrections to any bias of $\hat {\mathbb E}\left((\nu - \hat \mu)^2\right)$, the estimates of $\sigma^2$ may be inflated near areas or periods of rapid and substantial change. Still, the appreciability of this inflation depends on the spatiotemporal scale over which changes are perceived \citep{levin_problem_1992,frankham_importance_2004,goodchild_scale_2023,mezzini_how_2025}. Since estimates of variance are conditional on the corresponding estimates of the mean, we suggest users always use the corresponding rasters of mean NDVI in their analyses rather than using independent estimates of mean NDVI. \textcolor{red}{DATA CAN BE DOWNLOADED VIA XXX.}
 
 \section{Results}
+
+The estimates of mean NDVI ($\hat \mu$) and DENVar ($\hat \sigma^2$) were spatially smooth but still captured large-scale trends (Fig. \ref{estimates}). The models for mean NDVI and DENVar explained \textcolor{red}{XXX}\% and \textcolor{red}{XXX}\% of the deviance, respectively. For both models, predictions were unreliable in areas with very scarce data (e.g., rock and ice biomes in the Arctic; see Fig. A.5), so such areas were excluded when producing figures and estimates of mean NDVI and DENVar.
 
 \begin{figure}[h]
     \centering
     \includegraphics[width=\textwidth]{fig-1}
-    \caption{Estimated mean NDVI (A) and DENVar (B) for 2003-07-02. \textcolor{red}{CHANGE TO LONG-TERM MEAN?}}
+    \caption{Estimated long-term mean NDVI (A) and DENVar (B).}
     \label{estimates}
 \end{figure}
+
+\textcolor{red}{PARAGRAPH DESCRIBING TRENDS IN MEAN AND VARIANCE OVER TIME} (Fig. \ref{surface-plots})
 
 \begin{figure}[h]
     \centering
@@ -145,22 +147,7 @@ From the two sets of models, we produced daily estimates of (1) the Dynamic Esti
     \label{surface-plots}
 \end{figure}
 
-Other variables to potentially add to hexplots:
-
-\begin{itemize}
-\item temperature
-\item seasonal temperature range
-\item precip
-\item seasonal temperature range
-\item spp diversity
-\item gross primary productivity
-\item max body size
-\item https://silvis.forest.wisc.edu/globalwui/
-\item https://silvis.forest.wisc.edu/data/dhis/: NDVI16 (Normalized Difference Vegetation Index), EVI16 (Enhanced Vegetation Index), FPAR8 (Fraction absorbed Photosynthetically Active Radiation), LAI8 (Leaf Area Index), GPP8 (Gross Primary Productivity)
-\item extreme weather event
-\item invasive species
-\item disease occurrence?
-\end{itemize}
+\textcolor{red}{PARAGRAPH DESCRIBING TRENDS IN MEAN AND VARIANCE OVER TIME} (Fig. \ref{hex-plots}). Highly stochastic environments tended to have low: mean NDVI, human presence, species richness, annual area burned, annual precipitation, and ... . But it's hard with these plots to be able to tell if it's just because of mean NDVI being low. Additionally, the plots use old versions of the rasters that included the excessively high values in the arctic.
 
 \begin{figure}[h]
     \centering
@@ -168,6 +155,8 @@ Other variables to potentially add to hexplots:
     \caption{Hex plots of the relationship between the long-term global Dynamic Estimate of NDVI Variance (DENVar) and common ecological metricts. The fill of the hexagonal cells represents the log-10 number of points within the cell. Rowwise, the variables are: long-term mean NDVI (as estimated in this manuscript), the machine-learning Human Footprint Index (ml-HFI) of \citation{keys_machine-learning_2021}, and the 2015 cumulative, minimum, and seasonal range in the Dynamic Habitat Index of \citep{radeloff_dynamic_2019}.}
     \label{hex-plots}
 \end{figure}
+
+\textcolor{red}{PARAGRAPH DESCRIBING TRENDS IN MEAN AND VARIANCE OVER TIME} (Fig. \ref{hex-plot-map})
 
 \begin{figure}[h]
     \centering
@@ -183,22 +172,15 @@ Other variables to potentially add to hexplots:
 %     \label{label}
 % \end{figure}
 
-\subsection{Obtaining the data}
-
-\begin{itemize}
-\item Data should be available as daily rasters on a github repo?
-\item make an app for data annotation?
-\end{itemize}
-
 \section{Discussion}
 
-We have presented a new spatiotemporally dynamic metric of environmental stochasticity, which we have called the Dynamic Estimate of NDVI Variance, DENVar. In this section, we discuss the interpretation of DENVar in greater depth, and we argue the advantages and limitations of the statistical methods used. We conclude by suggsting some use cases of DENVar within animal movement ecology, landscape ecology, and phenology, but we invite readers to consider how DENVar may be of use in their field and adjacent disciplines.
+We have presented a new spatiotemporally dynamic metric of environmental stochasticity, which we have called the Dynamic Estimate of NDVI Variance, DENVar. In this section, we discuss the interpretation of DENVar as well as the advantages and limitations of the statistical methods used.
 
 %% keeping for thesis
 
 % \subsection{Advantages of GAMs over of machine learning}
 
-% Admittedly, the title of this section is misleading for two reasons. Firstly, some may argue that Generalized Additive Models are a form of machine-learning (here abbreviated as ML), but we intend to contrast GAMs with more "black-box" types of machine learning, such as neural networks and random forests. The second reason for which the title is misleading is that it implies that machine learning is not complicated, or at least that it is less complicated than the models we used. However, we argue that while traditional statistical models may seem more intimidating to some, their complexity is what allows analysts to produce interpretable results and measures of uncertainty \citep{wood_generalized_2017}. And while the theoretical basis for GAMs can discouraging for those who do not a strong background in mathematics or statistics, outputs from GAMs can be presented in an accessible manner even to those without a strong quantitative background through the use of well-designed figures, especially in a Bayesian context (when the aim is to estimate a parameter). In contrast, while ML methods will often give understandable results, it may not be possible to discern \emph{why} such results were "chosen" by the model. Instead, GAMs produce flexible yet interpretable estimated effects that can be represented with relatively simple figures, even if the mathematical formula(e) for the model may be complicated.
+% Admittedly, the title of this section is misleading for two reasons. Firstly, Generalized Additive Models are arguably a form of machine-learning (here abbreviated as ML), but we intend to contrast GAMs with more "black-box" types of machine learning, such as neural networks, random forests, and large language models. The second reason for which the title is misleading is that it implies that machine learning is not complicated, or at least that it is less complicated than the models we used. However, we argue that while traditional statistical models may seem more intimidating to some, their complexity is what allows analysts to produce interpretable results and measures of uncertainty \citep{wood_generalized_2017}. And while the theoretical basis for GAMs can discouraging for those who do not a strong background in mathematics or statistics, outputs from GAMs can be presented in an accessible manner even to those without a strong quantitative background through the use of well-designed figures, especially in a Bayesian context (when the aim is to estimate a parameter). In contrast, while ML methods will often give understandable results, it may not be possible to discern \emph{why} such results were "chosen" by the model. Instead, GAMs produce flexible yet interpretable estimated effects that can be represented with relatively simple figures, even if the mathematical formula(e) for the model may be complicated.
 
 % Ideally, a model should estimate or explore the relationships among variables such that results can be interpreted in a transparent and unambiguous manner, such that readers can scrutinize the underlying assumptions, methods, and decisions. We recognize that the assessing GAMs requires a certain level of expertise, but we hope the readers can appreciate the option to assess the GAMs more easily than a series of consecutive, weighted regressions (as in the case of neural networks). In contrast, GAMs learn from data with no initial starting assumptions other than user-imposed limitations of wiggliness, which are clearly outlined in each basis size of the models' terms. The structure and wuggliness of GAMS can thus be grossly designed based on the system's complexity and structure while allowing the data to inform the model trends, wiggliness, and coefficient size.
 
