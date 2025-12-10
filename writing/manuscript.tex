@@ -129,7 +129,7 @@ From the two sets of models, we produced daily estimates of (1) the Dynamic Esti
 
 \section{Results}
 
-The estimates of mean NDVI ($\hat \mu$) and DENVar ($\hat \sigma^2$) were spatially smooth but still captured large-scale trends (Fig. \ref{estimates}). The models for mean NDVI and DENVar explained \textcolor{red}{XXX}\% and \textcolor{red}{XXX}\% of the deviance, respectively. For both models, predictions were unreliable in areas with very scarce data (e.g., rock and ice biomes in the Arctic; see Fig. A.5), so such areas were excluded when producing figures and estimates of mean NDVI and DENVar.
+The estimates of mean NDVI ($\hat \mu$) and DENVar ($\hat \sigma^2$) were spatially smooth but still captured large-scale trends (Fig. \ref{estimates}). The models for mean NDVI explained \textcolor{red}{> XXX}\% of the deviance, while the models for DENVar explained \textcolor{red}{XXX-XXX\%} of the deviance (Table \@ref{dev-expl-table}). For both models, predictions were unreliable in areas with very scarce data (e.g., rock and ice biomes in the Arctic; see Fig. A.5), so such areas were excluded when producing figures and estimates of mean NDVI and DENVar.
 
 \begin{figure}[h]
     \centering
@@ -137,6 +137,22 @@ The estimates of mean NDVI ($\hat \mu$) and DENVar ($\hat \sigma^2$) were spatia
     \caption{Estimated long-term mean NDVI (A) and DENVar (B).}
     \label{estimates}
 \end{figure}
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l r r|} 
+ \hline
+ Region & Dev. expl. (Mean NDVI, \%) & Dev. expl. (DENVar, \%) \\ [0.5ex] 
+ \hline
+ Africa & \textcolor{red}{XXX} & \textcolor{red}{XXX} \\ 
+ Indo-Malay, Oceania, Australasia & \textcolor{red}{XXX} & \textcolor{red}{XXX} \\
+ Neotropic, Nearctic & \textcolor{red}{XXX} & \textcolor{red}{XXX} \\
+ Palearctic & \textcolor{red}{XXX} & \textcolor{red}{XXX} \\ [1ex] 
+ \hline
+\end{tabular}
+\caption{Percent deviance explained by the models for mean NDVI and DENVar for each of the four regions shown in Fig. A.4.}
+\label{table:1}
+\end{table}
 
 \textcolor{red}{PARAGRAPH DESCRIBING TRENDS IN MEAN AND VARIANCE OVER TIME} (Fig. \ref{surface-plots})
 
@@ -147,7 +163,7 @@ The estimates of mean NDVI ($\hat \mu$) and DENVar ($\hat \sigma^2$) were spatia
     \label{surface-plots}
 \end{figure}
 
-\textcolor{red}{PARAGRAPH DESCRIBING TRENDS IN MEAN AND VARIANCE OVER TIME} (Fig. \ref{hex-plots}). Highly stochastic environments tended to have low: mean NDVI, human presence, species richness, annual area burned, annual precipitation, and ... . But it's hard with these plots to be able to tell if it's just because of mean NDVI being low. Additionally, the plots use old versions of the rasters that included the excessively high values in the arctic.
+\textcolor{red}{PARAGRAPH DESCRIBING TRENDS IN DENVar WITH OTHER VARIABLES.} (Fig. \ref{hex-plots}). Highly stochastic environments tended to have low: mean NDVI, human presence, species richness, annual area burned, annual precipitation, and ... . But it's hard with these plots to be able to tell if it's just because of mean NDVI being low. Additionally, the plots use old versions of the rasters that included the excessively high values in the arctic.
 
 \begin{figure}[h]
     \centering
@@ -156,7 +172,7 @@ The estimates of mean NDVI ($\hat \mu$) and DENVar ($\hat \sigma^2$) were spatia
     \label{hex-plots}
 \end{figure}
 
-\textcolor{red}{PARAGRAPH DESCRIBING TRENDS IN MEAN AND VARIANCE OVER TIME} (Fig. \ref{hex-plot-map})
+\textcolor{red}{PARAGRAPH DESCRIBING TRENDS IN MEAN AND VARIANCE ACROSS SPACE AND BIOMES.} (Fig. \ref{hex-plot-map})
 
 \begin{figure}[h]
     \centering
@@ -164,13 +180,6 @@ The estimates of mean NDVI ($\hat \mu$) and DENVar ($\hat \sigma^2$) were spatia
     \caption{Map of terrestrial biomes along with hex plots of mean NDVI and DENVar  for each biome. \textcolor{red}{UPDATE FIGURE TO HEXPLOTS.}}
     \label{hex-plot-map}
 \end{figure}
-
-% \begin{figure}[h]
-%     \centering
-%     \includegraphics[width=\textwidth]{fig-X}
-%     \caption{Caption.}
-%     \label{label}
-% \end{figure}
 
 \section{Discussion}
 
