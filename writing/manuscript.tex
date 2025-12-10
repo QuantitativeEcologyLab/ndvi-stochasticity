@@ -183,7 +183,17 @@ The estimates of mean NDVI ($\hat \mu$) and DENVar ($\hat \sigma^2$) were spatia
 
 \section{Discussion}
 
-We have presented a new spatiotemporally dynamic metric of environmental stochasticity, which we have called the Dynamic Estimate of NDVI Variance, DENVar. In this section, we discuss the interpretation of DENVar as well as the advantages and limitations of the statistical methods used.
+We have presented a new spatiotemporally dynamic metric of environmental stochasticity, which we have called the Dynamic Estimate of NDVI Variance, DENVar. We have shown that DENVar has a strong, nonlinear relationship with with multiple crucial indices, including species diversity, proportion of area burned, and anthropogenic alteration of the enviroment. Yet, environmental stochasticity is rarely accounted for in conservation research \citep{marcus_changing_2023}, although recent work has started drawing more attention to how environmental stochasticity shapes ecosystems and evolution \citep{anderson_black-swan_2017,logares_black_2012}.
+
+Importantly, environmental stochasticity should not be confused with seasonality. Seasonality is generally best interpreted as a (cyclical) change in mean conditions that many organisms can learn to predict, as in the case of green-wave surfing \citep{middleton_green-wave_2018,geremia_migrating_2019}. In contrast, environmental stochasticity refers to unpredictable changes, such as forest fires \textcolor{red}{ref}, sudden snow storms \citep{aikens_pronghorn_2025}, and unusual seasonal phenology \citep{torstenson_strength_2025}. \citet{riotte-lambert_environmental_2020} and \citet{mezzini_how_2025} provide a theoretical framework for how and why resource stochasticity increases organisms' range sizes \citep[also see][]{stephens_optimal_1982, rizzuto_forage_2021}. Highly unpredictable enviroments tend to have lower energetic balances and carrying capacities \citep{chevin_adaptation_2010} and higher extinction risk \citep{lande_risks_1993, fung_quantifying_2018}, since communities cannot rely on stable conditions. Instead, stochastic environments reduce species' ability to respond to change and specialize, favoring generalist and flexible adaptations instead \citep{levins_evolution_1974}. In memory is often crucial for navigating highly stochastic environments \citep{steixner-kumar_strategies_2020}, including locating dependable waterholes during droughts \citep{polansky_elucidating_2015}, avoiding ecological traps \citep{abrahms_memory_2019}, and the development of home ranges \citep{falcon-cortes_hierarchical_2021, ranc_memory_2022} and migration \citep{bracis_memory_2017}.
+
+Failing to account for environmental stochasticity when designating protected areas can result limit the strategies' effectiveness. Stochastic environments cause animals to require larger ranges \citep{mezzini_how_2025} and alter the timing and path of their migration \citep{ortega_migrating_2023, aikens_drought_2020}. Therefore, environmental stochasticity should be accounted for when evaluating current protected areas and designating new ones, but lack of research on environmental stochasticity in conservation suggests that protected areas may have have similar levels of environmental stochasticity to unprotected areas. \citet{marcus_planning_2025} supports this speculation and also shows that that more stochastic environments tended to have lower species diversity and a greater frequency of months extreme mean temperatures. Their findings are particularly concerning given the ubiquitously rapid rate of climate change \citep{loarie_velocity_2009, diffenbaugh_changes_2013, ipcc_climate_2023}, icluding the increased frequency and severity of extreme events \citep{ipcc_climate_2023}, and the increasing anthropogenic pressure on wildlife \citep{tucker_moving_2018, weststrate_how_2024}. Each of these threats is then amplified by the difficulty in responding to multifarious change \citep[i.e., concurrent change across in multiple variables; ][]{polazzo_measuring_2024}, especially for species with strong site fidelity \citep{merkle_site_2022}. For example, \citet{aikens_industrial_2022} found that industrial activity reduced the ability of mule deer (\emph{Odocoileus hemionus}) to migrate following forage availability, while \citep{sawyer_migratory_2019} showed that mule deer's strong site fidelity prevents them from adapting to changing environments. In contrast, \citet{ortega_migrating_2023} demonstrated that mule deer adapt their migration to changes in phenology, suggesting that adaptability is likely population-dependent.
+
+\textcolor{red}{HERE}
+
+Quantifying trends in variance can also be helpful for detecting ecological transitions and regime shifts \citep{carpenter_rising_2006, bjorndahl_abrupt_2022}. Increases in stochasticity may push systems into an alternative stable state, whether such systems be habitats \citep{hastings_effects_2021} or species undergoing evolutionary tipping points \citep{botero_evolutionary_2015}.
+
+Accounting for environmental stochasticity is also be relevant for variety of industries, including agriculture \citep{} bhatti\_field\_2024 uses NDVI
 
 %% keeping for thesis
 
@@ -193,7 +203,7 @@ We have presented a new spatiotemporally dynamic metric of environmental stochas
 
 % Ideally, a model should estimate or explore the relationships among variables such that results can be interpreted in a transparent and unambiguous manner, such that readers can scrutinize the underlying assumptions, methods, and decisions. We recognize that the assessing GAMs requires a certain level of expertise, but we hope the readers can appreciate the option to assess the GAMs more easily than a series of consecutive, weighted regressions (as in the case of neural networks). In contrast, GAMs learn from data with no initial starting assumptions other than user-imposed limitations of wiggliness, which are clearly outlined in each basis size of the models' terms. The structure and wuggliness of GAMS can thus be grossly designed based on the system's complexity and structure while allowing the data to inform the model trends, wiggliness, and coefficient size.
 
-\subsection{Interpreting DENVar: the importance of scale}
+\subsection{second-last paragraph: Interpreting DENVar: the importance of scale}
 
 difficulties in estimating variance
 
@@ -203,55 +213,9 @@ smoothness of mean impacts smoothness and size of variance: depends on scale of 
 
 DENVar is a good metric as long as the spatiotemporal scale of interest is similar or larger to that of DENVar. May not work well for small-scale processes such as the movement dynamics of a small rodent, the phenology of a small orchard when spatiotemporal heterogeneity is finer than DENVar's resolution
 
-\subsection{Practical applications}
+Calling the metric DENVar is more than just branding: it highlights the importance of using mean and variance estimates at the same spatiotemporal scale.
 
-Convert the subsections to a single subsection:
-
-\begin{itemize}
-\item spatial ecology
-\item movement behavior: \citep{mezzini_how_2025}
-\item conservation \citep{marcus_planning_2025}, etc.
-\item anthropology (navigating paper)
-\item industry (agriculture)
-\end{itemize}
-
-\subsection*{Environmental stochasticity and animal movement ecology}
-
-The field of animal movement ecology has long shown that animals alter their movement in response to resource abundance or availability \citep{burt_territoriality_1943,southwood_habitat_1977,charnov_optimal_1976,broekman_environmental_2024}. More recently, movement ecologists have started focusing more on resource stochasticity \citep{stephens_optimal_1982,rizzuto_forage_2021,marcus_changing_2023}, but it is worth distinguishing between resource stochasticity and seasonality \citep{nilsen_can_2005}. Seasonality is generally best interpreted as a cyclical change in the mean that many animals can learn to predict, as in the case of green-wave surfing \citep{middleton_green-wave_2018,geremia_migrating_2019}. In contrast, environmental stochasticity refers to unpredictable changes, such as forest fires \textcolor{red}{ref}, sudden snow storms \citep{aikens_pronghorn_2025}, and unusual phenology \textcolor{red}{ref}. Animals also respond to stochastic changes \citep{mezzini_how_2025}, but their ability to adapt depends on behavioral plasticity \citep{steixner-kumar_strategies_2020,rickbeil_plasticity_2019}, and memory \citep{polansky_elucidating_2015,abrahms_memory_2019,riotte-lambert_environmental_2020,falcon-cortes_hierarchical_2021,ranc_memory_2022}.
-
-evolutionary tipping points \citep{botero_evolutionary_2015}
-
-multifarious change \citep{polazzo_measuring_2024}
-
-extreme events, black swans \citep{anderson_black-swan_2017,logares_black_2012}
-
-\begin{itemize}
-\item migration routes are key habitat (Ortega et al., in prep), especially in stochastic environments
-\item can fail to adapt to changes in conditions \citep{sawyer_migratory_2019}
-\item https://www.sciencedirect.com/science/article/pii/S0960982220308484
-\item https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.15169
-\item industrial development affects animals' ability to respond to both predictable and unpredictable change (https://www.nature.com/articles/s41559-022-01887-9)
-\item effects of sudden deep snow in red desert on proghorn (https://www.sciencedirect.com/science/article/abs/pii/S0960982225002957)
-\item https://www.nature.com/articles/s41467-023-37750-z
-\item https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/ecy.4238
-\item detecting regime shifts (in lakes: \citep{bjorndahl_abrupt_2022})
-\end{itemize}
-
-\subsection*{Environmental stochasticity and population dynamics}
-
-read lande\_risks\_1993
-
-\noindent Environmental stochasticity reduces habitats' energetic balance and carrying capacity \citep{chevin_adaptation_2010} as individuals struggle to rely on unpredictable resources and increase the instability of populations and communities \citep{lande_risks_1993}. Additionally, stochastic environments reduce the ability of specialist species to adapt and evolve while selecting for more generalist species \citep{levins_evolution_1974}. Consequently, stochastic environments tend to have lower species diversity \citep{marcus_planning_2025}.
-
-\noindent Recent work by Devries has suggested that NDVI stochasticity is an important metric for evaluating forest recovery after large fires, while Collinson has suggested that variance in NDVI is an important predictor of the occurrence of lightning-induced forest fires.
-
-\begin{itemize}
-\item jonzen\_rapid\_2006
-\item effects can be compounded by cumulative effects (e.g., loss of species diversity; \citep{wolf_flowering_2017})
-\item climate change affects plant phenology, but changes in situ may not match experimental estimates \citep{wolkovich_warming_2012}
-\item reproduction of painted lady butterfly \citep{stefanescu_timing_2021}
-\item wessling\_seasonal\_2018
-\end{itemize}
+\textcolor{red}{write a concluding paragraph recalling the uses of DENVar and how it can be quite useful to many}
 
 \clearpage
 
@@ -259,8 +223,7 @@ read lande\_risks\_1993
 
 \begin{itemize}
 \item \textcolor{red}{READ}: Methods for Detecting Early Warnings of Critical Transitions in Time Series Illustrated Using Simulated Ecological Data (https://doi.org/10.1371/journal.pone.0041010)
-\item \textcolor{red}{READ}: https://doi.org/10.1029/2024GL109298
-\item \textcolor{red}{READ}: Site fidelity as a maladaptive behavior in the Anthropocene: https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/fee.2456
+\item \textcolor{red}{READ}: Human Impacts Dominate Global Loss of Lake Ecosystem Resilience (https://doi.org/10.1029/2024GL109298)
 \item \textcolor{red}{READ}: Pettorelli N., Vik J.O., Mysterud A., Gaillard J.-M., Tucker C.J. \& Stenseth N.Chr. (2005). Using the satellite-derived NDVI to assess ecological responses to environmental change. Trends in Ecology \& Evolution 20, 503–510. https://doi.org/10.1016/j.tree.2005.05.011
 \item Ecological and evolutionary consequences of changing seasonality: https://www.science.org/doi/10.1126/science.ads4880
 \item increase in variance before eutrophication in lakes: https://doi.org/10.1002/lno.10355
@@ -271,7 +234,6 @@ read lande\_risks\_1993
 \item rickbeil\_plasticity\_2019
 \item mueller\_search\_2008
 \item pettorelli\_using\_2005
-\item nilsen\_can\_2005
 \item merkle\_large\_2016
 \item tian\_evaluating\_2015
 \item huang\_commentary\_2021
