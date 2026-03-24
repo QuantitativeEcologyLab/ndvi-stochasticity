@@ -113,3 +113,5 @@ par(mfrow = c(2, 1))
 plot(rasters)
 
 writeRaster(rasters, paste0('output/long-term-preds.tif'))
+
+plot(rast('output/long-term-preds-africa.tif'))
