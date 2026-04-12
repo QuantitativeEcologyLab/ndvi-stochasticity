@@ -33,12 +33,9 @@ d_ndvi <- purrr::map2(files, dates, function(.file, .date) {
   bind_rows() %>%
   rename(ndvi = NDVI)
 
-#' *SUBSTITUTE RASTERS OF LONG-TERM MEAN AND VARIANCE*
-d_sum <- summarize(d_ndvi,
-                   mu = mean(ndvi, na.rm = TRUE),
-                   s2 = var(ndvi, na.rm = TRUE),
-                   .by = c(x, y)) %>%
-  mutate(s2 = if_else(s2 > 0.05, 0.05, s2))
+d_est <- rast('output/long-term-preds.tif') %>%
+  as.data.frame(xy = TRUE) %>%
+  as_tibble()
 
 p_a <-
   ggplot() +
@@ -53,20 +50,20 @@ p_a <-
 p_b <-
   ggplot() +
   geom_sf(data = shp, fill = 'grey') +
-  geom_raster(aes(x, y, fill = mu), d_sum) +
+  geom_raster(aes(x, y, fill = mu_hat), d_est) +
   scale_x_continuous(NULL, breaks = NULL, expand = c(0, 0)) +
   scale_y_continuous(NULL, breaks = NULL, expand = c(0, 0)) +
   scale_fill_gradientn('Mean NDVI', colors = ndvi_pal, limits = c(-1, 1)) +
-  theme(legend.position = 'right')
+  theme(legend.position = 'left')
 
 p_c <-
   ggplot() +
   geom_sf(data = shp, fill = 'grey') +
-  geom_raster(aes(x, y, fill = s2), d_sum) +
+  geom_raster(aes(x, y, fill = s2_hat), d_est) +
   scale_x_continuous(NULL, breaks = NULL, expand = c(0, 0)) +
   scale_y_continuous(NULL, breaks = NULL, expand = c(0, 0)) +
-  scale_fill_davos(name = 'DENVar', limits = c(0, NA), reverse = TRUE) +
-  theme(legend.position = 'right')
+  scale_fill_davos(name = 'DENVar     ', limits = c(0, NA), reverse = TRUE) +
+  theme(legend.position = 'left')
 
 p <- plot_grid(p_a, plot_grid(p_b, p_c, labels = c('B', 'C'), ncol = 1),
                labels = c('A', ''), nrow = 1, rel_widths = c(1, 1.2))
@@ -76,5 +73,3 @@ W <- 1328 * 5
 
 ggsave('figures/graphical-abstract.png', plot = p, width = W, height = H,
        dpi = 600, units = 'px', bg = 'white')
-ggsave('figures/graphical-abstract.pdf', plot = p, width = W, height = H,
-       units = 'px', bg = 'white')

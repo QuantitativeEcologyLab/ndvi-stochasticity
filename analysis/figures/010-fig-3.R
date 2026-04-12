@@ -7,15 +7,13 @@ library('cowplot') # for ggplot plots in grids
 source('analysis/figures/000-default-ggplot-theme.R')
 source('functions/get_legend.R')
 
-r_s2 <- rast('data/output/var-ndvi-raster-mod-5-no-res-2025-04-21-THINNED-50.tif') %>%
-  ifel(. > 0.05, 0.05, .)
+r_s2 <- rast('output/long-term-preds.tif')[[2]]
 ecoregions <- read_sf('data/ecoregions/groups-polygons.shp') %>%
   vect() %>% # convert to spatVect
   project(crs(r_s2))
 r_s2 <- crop(r_s2, ecoregions, mask = TRUE)
-r_mu <- rast('data/output/mean-ndvi-raster-mod-5-no-res-2025-04-21-THINNED-50.tif')
+r_mu <- rast('output/long-term-preds.tif')[[1]]
 r_dhi <- rast('data/other-rasters/dhi-data/dhi_ndvi_2015.tif') %>%
-  aggregate(4) %>%
   project(r_s2)
 #' **USING THE KEYS ONE FOR TESTS BECAUSE IT'S FASTER**
 r_hfi <- rast('data/other-rasters/hfi-layers/ml_hfi_v1_2019.nc') %>%
@@ -92,12 +90,9 @@ d <- as.data.frame(r_mu, xy = TRUE) %>%
   as_tibble()
 d
 
-#' no `geom_smooth()` because the computation is too slow
 fig_3 <-
   d %>%
   mutate(precip_m_year = if_else(precip_m_year > 5, 5, precip_m_year)) %>%
-  #' *remove: there were 4 points mean < -0.25*----------------------------
-  filter(mu_hat > -0.25) %>%
   tidyr::pivot_longer(- c(x, y, s2_hat), names_to = 'variable',
                       values_to = 'value') %>%
   mutate(lab = case_when(
@@ -113,7 +108,7 @@ fig_3 <-
   ggplot() +
   facet_wrap(~ lab, scales = 'free_y', strip.position = 'left', nrow = 2) +
   geom_hex(aes(s2_hat, value, fill = log10(after_stat(count))),
-           color = 'black', bins = 50, linewidth = 0.1, na.rm = TRUE) +
+           color = 'black', bins = 30, linewidth = 0.1, na.rm = TRUE) +
   scale_fill_lapaz(
     name = expression(paste(bold('Count (log'), bold(''['10']),
                             bold(' scale)'))), range = c(0, 1),

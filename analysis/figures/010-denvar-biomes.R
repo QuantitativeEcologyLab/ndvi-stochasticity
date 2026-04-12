@@ -7,22 +7,24 @@ library('cowplot') # for fancy plots in grids
 source('analysis/figures/000-default-ggplot-theme.R')
 source('analysis/figures/000-robinson-objects.R')
 
-mu <- rast('data/output/mean-ndvi-raster-mod-5-no-res-2025-04-21-THINNED-50.tif') %>%
+mu <- rast('output/long-term-preds.tif')[[1]] %>%
   project(robinson_crs)
-denvar <- rast('data/output/var-ndvi-raster-mod-5-no-res-2025-04-21-THINNED-50.tif') %>%
+denvar <- rast('output/long-term-preds.tif')[[2]] %>%
   project(robinson_crs)
 biomes_sf <- read_sf('data/ecoregions/ecoregions-polygons.shp') %>%
   st_transform(robinson_crs)
 biomes <- rasterize(biomes_sf, mu, field = 'biome', touches = TRUE)
-plot(biomes)
 
+plot(biomes)
 unique(biomes_sf$biome)
+plot(mu)
 plot(denvar)
 
-d <- as.data.frame(mu, xy = TRUE) %>%
-  mutate(.,
-         s2_hat = as.data.frame(denvar)[[1]],
-         biome = extract(biomes, select(., x, y))[, 2]) %>%
+d <- 
+  list(mu, denvar, biomes) %>%
+  rast() %>%
+  as.data.frame(xy = TRUE) %>%
+  as_tibble() %>%
   filter(biome != 'Inland Water') %>%
   mutate(biome = factor(biome, levels = c(
     'Rock and Ice',
@@ -40,9 +42,7 @@ d <- as.data.frame(mu, xy = TRUE) %>%
     'Tropical and Subtropical Grasslands, Savannas and Shrublands',
     'Flooded Grasslands and Savannas',
     'Deserts and Xeric Shrublands'))) %>%
-  as_tibble() %>%
-  #' **REMOVE**************************************************************
-  filter(s2_hat < 0.04)
+  as_tibble()
 
 biomes_sf <- biomes_sf %>%
   filter(biome != 'Inland Water') %>%
@@ -108,7 +108,7 @@ Savannas and Shrublands',
       labs(x = 'Mean NDVI', y = 'DENVar') +
       scale_y_continuous(limits = range(d$s2_hat),
                          breaks = c(0, 0.02, 0.04, 0.06)) +
-      scale_fill_lapaz(labels = sci_notation, reverse = TRUE) +
+      scale_fill_lapaz(reverse = TRUE) +
       small_theme
   } else {
     if(var_only) {
@@ -133,7 +133,7 @@ Savannas and Shrublands',
             geom_histogram(aes(mu_hat), binwidth = 0.02, center = 0.01,
                            fill = .fill, color = 'transparent', na.rm = TRUE) +
             labs(x = 'Mean NDVI', y = NULL) +
-            scale_x_continuous(limits = c(-0.1, 0.45),
+            scale_x_continuous(limits = c(-0.1, max(d$mu_hat, na.rm = TRUE)),
                                breaks = seq(0, 1, by = 0.2)) +
             scale_y_continuous(labels = sci_notation) +
             scale_fill_discreterainbow(breaks = levels(d$biome)) +
@@ -155,7 +155,7 @@ Savannas and Shrublands',
   p <- plot_grid(
     ggdraw() +
       draw_label(.title, fontface = 'bold', x = 0.2,
-                 hjust = 0, size = 5, vjust = 0.3),
+                 hjust = -0.2, size = 5, vjust = 0.3),
     p, ncol = 1, rel_heights = c(1, 10))
   
   if(! hex & ! var_only) {
