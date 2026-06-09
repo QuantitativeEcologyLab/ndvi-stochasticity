@@ -29,9 +29,17 @@ d_rob <-
   project(robinson_crs) %>%
   as.data.frame(xy = TRUE) %>%
   as_tibble() %>%
-  mutate(s2_hat = if_else(s2_hat < 0, 0, s2_hat),
-         s2_hat = if_else(s2_hat > 0.05, 0.05, s2_hat),
-         biome = extract(project(r_eco, robinson_crs), tibble(x, y))[, 2])
+  mutate(biome = extract(project(r_eco, robinson_crs), tibble(x, y))[, 2])
+
+mean(d_rob$mu_hat < -0.1) # 0.0001040277
+mean(d_rob$mu_hat > 1)
+mean(d_rob$s2_hat < 0) # 0.01803713, all in deserts or mountains
+mean(d_rob$s2_hat > 0.05) # 0.002551106
+
+d_rob <- d_rob %>%
+  mutate(mu_hat = if_else(mu_hat < -0.1, -0.1, mu_hat),
+         s2_hat = if_else(s2_hat < 0, 0, s2_hat),
+         s2_hat = if_else(s2_hat > 0.05, 0.05, s2_hat))
 
 # Robinson projections of long-term mean NDVI and DENVar
 fig_2 <- plot_grid(
