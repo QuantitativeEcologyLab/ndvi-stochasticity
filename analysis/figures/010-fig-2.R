@@ -23,7 +23,6 @@ shp <- read_sf('data/ecoregions/groups-polygons.shp') %>%
   st_geometry() %>%
   st_union() %>%
   st_as_sf()
-plot(shp, col = 'darkgreen')
 
 d_rob <-
   rast('output/long-term-estimates.tif') %>%
