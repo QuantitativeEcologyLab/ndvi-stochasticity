@@ -1,5 +1,6 @@
 library('ggplot2') # for fancy figures
 library('khroma')  # for colorblind-friendly palettes
+library('dplyr')   #'for `%>%`  
 
 .PLOT_PALETTES <- FALSE
 
@@ -10,7 +11,10 @@ theme_set(theme_bw() +
 # custom NDVI color palette
 ndvi_pal <- color('bukavu')(100) # wrong order
 if(.PLOT_PALETTES) plot_scheme(ndvi_pal)
-ndvi_pal <- ndvi_pal[c(1:30, seq(31, 50, by = 2), 100:51)]
+ndvi_pal <- c(ndvi_pal[c(seq(1, 40, length.out = (-0.1 + 1) * 10),
+                       seq(100, 71, length.out = (0.2 + 0.1) * 10),
+                       seq(70, 51, length.out = (0.9 - 0.2) * 10))],
+              '#112A12')
 if(.PLOT_PALETTES) plot_scheme(ndvi_pal)
 create_ndvi_pal <- colorRampPalette(ndvi_pal)
 ndvi_pal <- create_ndvi_pal(1e3)
