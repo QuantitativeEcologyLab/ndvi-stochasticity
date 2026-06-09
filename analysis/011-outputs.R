@@ -86,7 +86,7 @@ d <-
                  as.data.frame(xy = TRUE)
              }, .progress = TRUE) %>%
   bind_rows() %>%
-  filter(y <= 70) %>%
+  filter(y <= 70) %>% # already filtered for prop_water < 0.4
   as_tibble()
 
 d %>%
@@ -94,6 +94,7 @@ d %>%
   `crs<-`(crs(rast('data/elev-raster.tif'))) %>%
   writeRaster('output/long-term-estimates.tif')
 
+hist(rast('output/long-term-estimates.tif'))
 plot(rast('output/long-term-estimates.tif'))
 
 ggplot(d, aes(x, y, fill = mu_hat)) +
