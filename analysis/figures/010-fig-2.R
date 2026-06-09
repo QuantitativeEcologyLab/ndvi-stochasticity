@@ -41,6 +41,8 @@ d_rob <- d_rob %>%
          s2_hat = if_else(s2_hat < 0, 0, s2_hat),
          s2_hat = if_else(s2_hat > 0.05, 0.05, s2_hat))
 
+saveRDS(d_rob, file = "output/d_rob.rds")
+
 # Robinson projections of long-term mean NDVI and DENVar
 fig_2 <- plot_grid(
   ggplot() +

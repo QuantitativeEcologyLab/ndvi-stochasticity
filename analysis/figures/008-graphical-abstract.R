@@ -9,11 +9,12 @@ source('analysis/figures/000-default-ggplot-theme.R')
 
 # shapefile of land masses 
 shp <- read_sf('data/ecoregions/groups-polygons.shp') %>%
-  filter(group != 'Antarctic') %>%
   st_geometry() %>%
   st_as_sf() %>%
   st_union() %>%
   st_as_sf()
+
+shp_rob <- st_transform(shp, robinson_crs)
 
 files <- list.files(paste0('H:/GitHub/ndvi-stochasticity/data/avhrr-viirs-ndvi/',
                            'raster-files/AVHRR-Land_v006/N07_AVH13C1'),
@@ -33,9 +34,7 @@ d_ndvi <- purrr::map2(files, dates, function(.file, .date) {
   bind_rows() %>%
   rename(ndvi = NDVI)
 
-d_est <- rast('output/long-term-preds.tif') %>%
-  as.data.frame(xy = TRUE) %>%
-  as_tibble()
+d_rob <- readRDS('output/d_rob.rds')
 
 p_a <-
   ggplot() +
@@ -49,21 +48,27 @@ p_a <-
 
 p_b <-
   ggplot() +
-  geom_sf(data = shp, fill = 'grey') +
-  geom_raster(aes(x, y, fill = mu_hat), d_est) +
+  geom_sf(data = bounds, fill = 'white', color = 'black') +
+  geom_sf(data = shp_rob, fill = 'grey') +
+  geom_raster(aes(x, y, fill = mu_hat), d_rob) +
+  geom_sf(data = shp_rob, fill = 'transparent', color = 'black') +
   scale_x_continuous(NULL, breaks = NULL, expand = c(0, 0)) +
   scale_y_continuous(NULL, breaks = NULL, expand = c(0, 0)) +
   scale_fill_gradientn('Mean NDVI', colors = ndvi_pal, limits = c(-1, 1)) +
-  theme(legend.position = 'left')
+  theme_void() +
+  theme(legend.position = 'left', text = element_text(face = 'bold'))
 
 p_c <-
   ggplot() +
-  geom_sf(data = shp, fill = 'grey') +
-  geom_raster(aes(x, y, fill = s2_hat), d_est) +
+  geom_sf(data = bounds, fill = 'white', color = 'black') +
+  geom_sf(data = shp_rob, fill = 'grey') +
+  geom_raster(aes(x, y, fill = s2_hat), d_rob) +
+  geom_sf(data = shp_rob, fill = 'transparent', color = 'black') +
   scale_x_continuous(NULL, breaks = NULL, expand = c(0, 0)) +
   scale_y_continuous(NULL, breaks = NULL, expand = c(0, 0)) +
   scale_fill_davos(name = 'DENVar     ', limits = c(0, NA), reverse = TRUE) +
-  theme(legend.position = 'left')
+  theme_void() +
+  theme(legend.position = 'left', text = element_text(face = 'bold'))
 
 p <- plot_grid(p_a, plot_grid(p_b, p_c, labels = c('B', 'C'), ncol = 1),
                labels = c('A', ''), nrow = 1, rel_widths = c(1, 1.2))
