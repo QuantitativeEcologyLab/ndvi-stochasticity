@@ -1,118 +1,109 @@
-library('sf')     # for shapefiles
-library('mgcv')   # for predicting from models
-library('gratia') # for selecting model terms
-library('terra')  # for working with rasters
-library('dplyr')  # for data wrangling
-library('purrr')  # for functional programming
-library('tidyr')  # for data wrangling
+library('sf')      # for shapefiles
+library('dplyr')   # for data wrangling
+library('mgcv')    # for predicting from models
+library('gratia')  # for selecting model terms
+library('terra')   # for working with rasters
+library('ggplot2') # for fancy plots
+library('qs')      # for importing models quickly
+source('analysis/figures/000-default-ggplot-theme.R')
 
-GROUPS <- c('neotropic-nearctic', 'africa',
-            'indo-malay-oceania-australasia', 'palearctic')
+GROUPS <- read_sf('data/ecoregions/groups-polygons.shp') %>%
+  filter(group != 'Antarctic') %>%
+  pull(group)
 
-for(GROUP in GROUPS) {
+for (g in GROUPS) {
+  cat(paste0('Importing ', g, '...\n'))
+  formatted_g <- gsub(',', '', gsub(' ', '-', tolower(g)))
+  
+  m_mu <- paste0('bam-mean-ndvi-', formatted_g) %>%
+    list.files(., path = 'models/global-models', full.names = TRUE) %>%
+    qread(nthreads = 40)
+  
+  m_s2 <- paste0('bam-variance-ndvi-', formatted_g) %>%
+    list.files(., path = 'models/global-models', full.names = TRUE) %>%
+    qread(nthreads = 40)
+  
   shp <- read_sf('data/ecoregions/groups-polygons.shp') %>%
-    mutate(group = tolower(gsub(' ', '-', group))) %>%
-    filter(group == GROUP) %>%
-    select(group)
+    filter(group == g) %>%
+    st_geometry() %>%
+    st_as_sf()
   
   r_prop_water <- rast('data/water-body-raster.tif') %>%
     ifel(. > 0.4, NA, .) %>%
     crop(st_transform(shp, crs = crs(.)), mask = TRUE) %>%
     aggregate(4, na.rm = TRUE)
   
-  
   r_elev <- rast('data/elev-raster.tif') %>%
-    crop(st_transform(shp, crs = crs(.)), mask = TRUE) %>%
-    project(shp)
+    project(r_prop_water) %>%
+    crop(st_transform(shp, crs = crs(.)), mask = TRUE)
   
-  layout(1:2)
   plot(r_prop_water)
   plot(r_elev)
-  layout(1)
   
-  m_mu <- qread(list.files(path = 'models/global-models',
-                           pattern = paste0('bam-mean-ndvi-', GROUP),
-                           full.names = TRUE),
-                nthreads = NCORES)
-  m_s2 <- qread(list.files(path = 'models/global-models',
-                           pattern = paste0('bam-variance-ndvi-', GROUP),
-                           full.names = TRUE),
-                nthreads = NCORES)
-  
-  #' exclude all terms with `year` or `doy`:
-  #' `(Intercept)`: included
-  #' `s(prop_water)`: included
-  #' `s(y,x)`: included
-  #' `s(year)`: excluded
-  #' `s(doy)`: excluded
-  #' `s(elev_m)`: included
-  #' `s(mu_hat)`: included, not present in mean model
-  #' `ti(year,doy)`: excluded
-  #' `ti(year,y,x)`: excluded
-  #' `ti(doy,y,x)`: excluded
-  #' `ti(year,doy,y,x)`: excluded
-  EXCLUDE <- smooths(m_s2)[grepl('year', smooths(m_s2)) |
-                             grepl('doy', smooths(m_s2))]
-  
-  # runs within ~10 minutes per group
-  preds <- 
-    list(r_prop_water, project(r_elev, r_prop_water)) %>%
-    rast() %>%
-    as.data.frame(xy = TRUE, na.rm = TRUE) %>%
+  EXCLUDE <- smooths(m_mu)[grepl('year', smooths(m_mu)) |
+                             grepl('doy', smooths(m_mu))]
+  preds <- as.data.frame(r_prop_water, xy = TRUE, na.rm = TRUE) %>%
     as_tibble() %>%
-    rename(prop_water = layer,
-           elev_m = file37905ccd4e9d) %>%
-    mutate(year = 0, doy = 0) %>% # excluded, so values don't matter
-    mutate(mu_hat = predict(m_mu, newdata = ., discrete = FALSE,
-                            type = 'response', se.fit = FALSE,
-                            exclude = EXCLUDE)) %>%
-    # estimated mean is necessary for the estimated variance
-    mutate(s2_hat = predict.bam(m_s2, newdata = ., discrete = FALSE,
-                                type = 'response', se.fit = FALSE,
-                                exclude = EXCLUDE))
+    rename(prop_water = layer) %>%
+    mutate(elev_m = extract(r_elev, tibble(x, y))[, 2],
+           year = 1e3, doy = 1e3) %>% # irrelevant since excluded
+    mutate(mu_hat = predict(m_mu, newdata = ., type = 'response',
+                            se.fit = FALSE, discrete = FALSE,
+                            exclude = EXCLUDE) %>%
+             as.numeric()) %>%
+    mutate(s2_hat = predict(m_s2, newdata = ., type = 'response',
+                            se.fit = FALSE, discrete = FALSE,
+                            exclude = EXCLUDE) %>%
+             as.numeric())
   preds
   
-  saveRDS(preds, paste0('output/long-term-preds-', GROUP, '.rds'))
+  readr::write_csv(preds, paste0('output/long-term-estimates-',
+                                 formatted_g,'.csv'))
   
-  rm(preds, m_mu, m_s2, r_prop_water, r_elev, shp)
-  gc()
+  ggplot(preds, aes(x, y, fill = mu_hat)) +
+    coord_sf(crs = 'EPSG:4326') +
+    geom_raster() +
+    labs(x = NULL, y = NULL) +
+    scale_fill_gradientn('NDVI', colors = ndvi_pal, limits = c(-1, 1))
+  
+  ggplot(preds, aes(x, y, fill = s2_hat)) +
+    coord_sf(crs = 'EPSG:4326') +
+    geom_raster() +
+    labs(x = NULL, y = NULL) +
+    scale_fill_davos('DENVar')
 }
 
-# EME linux has issues with saving the rasters
-# (probably a GDAL installation issue after the last update)
-extent <- read_sf('data/ecoregions/ecoregions-polygons-edited.shp') %>%
-  filter(group != 'Antarctic') %>%
-  filter(biome != 'Rock and Ice') %>%
-  # predictions for Kalaallit Nunaat are poor because of data scarcity
-  filter(! grepl('Kalaallit Nunaat', ecoregion))
+d <-
+  purrr::map(list.files('output', 'long-term-estimates',
+                        full.names=TRUE) %>%
+               setdiff(., 'output/long-term-estimates.tif'),
+             function(.fn) {
+               readr::read_csv(.fn, show_col_types = FALSE) %>%
+                 select(x, y, mu_hat, s2_hat) %>%
+                 rast() %>%
+                 terra::`crs<-`(crs(rast('data/elev-raster.tif'))) %>%
+                 project(rast('data/elev-raster.tif')) %>%
+                 as.data.frame(xy = TRUE)
+             }, .progress = TRUE) %>%
+  bind_rows() %>%
+  filter(y <= 70) %>%
+  as_tibble()
 
-rasters <-
-  tibble(file_name = list.files(path = 'H:/GitHub/ndvi-stochasticity/output',
-                                pattern = 'long-term-preds-.*.rds',
-                                full.names = TRUE),
-         group = gsub('.*-preds-', '', file_name)) %>%
-  mutate(group = gsub('.rds', '', group),
-         est = map2(file_name, group, function(.fn, .g) {
-           readRDS(.fn) %>%
-             select(x, y, mu_hat, s2_hat) %>%
-             mutate(mu_hat = if_else(mu_hat < -1, -1, mu_hat),
-                    s2_hat = if_else(s2_hat < 0, 0, s2_hat)) %>%
-             rast() %>%
-             `crs<-`('EPSG:4326') %>%
-             crop(st_transform(extent, st_crs(.))) %>%
-             project(r_prop_water)
-         })) %>%
-  pull(est) %>%
-  sds() %>%
-  app(fun = 'sum', na.rm = TRUE) %>%
-  mask(st_transform(extent, st_crs(.))) %>%
-  ifel(init(., 'y') < 70, ., NA) %>%
-  ifel(project(rast('data/water-body-raster.tif'), .) <= 0.4, ., NA_real_) %>%
-  `names<-`(c('mu_hat', 's2_hat'))
-
-par(mfrow = c(2, 1))
-plot(rasters)
-
-writeRaster(rasters, 'output/long-term-estimates.tif')
+d %>%
+  rast() %>%
+  `crs<-`(crs(rast('data/elev-raster.tif'))) %>%
+  writeRaster('output/long-term-estimates.tif')
 
 plot(rast('output/long-term-estimates.tif'))
+
+ggplot(d, aes(x, y, fill = mu_hat)) +
+  coord_sf(crs = 'EPSG:4326') +
+  geom_raster() +
+  labs(x = NULL, y = NULL) +
+  scale_fill_gradientn('NDVI', colors = ndvi_pal, limits = c(-1, 1))
+
+ggplot(d, aes(x, y, fill = s2_hat)) +
+  coord_sf(crs = 'EPSG:4326') +
+  geom_raster() +
+  labs(x = NULL, y = NULL) +
+  scale_fill_davos(name = 'DENVar', limits = c(NA_real_, 0.05))
