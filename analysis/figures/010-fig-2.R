@@ -10,7 +10,6 @@ source('analysis/figures/000-default-ggplot-theme.R')
 source('analysis/figures/000-robinson-objects.R')
 
 r_eco <- read_sf('data/ecoregions/ecoregions-polygons-edited.shp') %>%
-  filter(group == 'Neotropic, Nearctic') %>%
   vect() %>%
   rasterize(rast('data/water-body-raster.tif'), field = 'biome')
 
@@ -27,22 +26,15 @@ shp <- read_sf('data/ecoregions/groups-polygons.shp') %>%
 plot(shp, col = 'darkgreen')
 
 d_rob <-
-  rast('output/long-term-preds.tif') %>%
-    mask(st_transform(shp, crs(.))) %>%
-    as.data.frame(xy = TRUE) %>%
-    as_tibble() %>%
-    mutate(prop_water = extract(rast('data/water-body-raster.tif'),
-                                tibble(x, y))[, 2],
-           elev_m = extract(rast('data/elev-raster.tif'),
-                            tibble(x, y))[, 2]) %>%
-    filter(prop_water < 0.4)
-
-d_rob <- d %>%
-  rast(crs = crs(rast('output/long-term-preds.tif'))) %>%
+  rast('output/long-term-estimates.tif') %>%
+  mask(., project(rast('data/water-body-raster.tif'), .) <= 0.4 &
+         init(., 'y') <= 70) %>%
   project(robinson_crs) %>%
   as.data.frame(xy = TRUE) %>%
   as_tibble() %>%
-  mutate(biome = extract(project(r_eco, robinson_crs), tibble(x, y))[, 2])
+  mutate(s2_hat = if_else(s2_hat < 0, 0, s2_hat),
+         s2_hat = if_else(s2_hat > 0.05, 0.05, s2_hat),
+         biome = extract(project(r_eco, robinson_crs), tibble(x, y))[, 2])
 
 # Robinson projections of long-term mean NDVI and DENVar
 fig_2 <- plot_grid(
@@ -73,17 +65,3 @@ fig_2 <- plot_grid(
 
 ggsave('figures/fig-2.png', fig_2, width = 8.5, height = 10, dpi = 600,
        bg = 'white')
-
-ggplot() +
-  geom_sf(data = bounds, fill = 'white', color = 'black') +
-  geom_sf(data = shp_0, color = 'transparent', fill = 'grey') +
-  geom_raster(aes(x, y, fill = biome == 'Rock and Ice' & ! is.na(biome)),
-              d_rob) +
-  geom_sf(data = shp_0, color = 'black', fill = 'transparent',
-          lwd = 0.05) +
-  scale_x_continuous(expand = c(0, 0)) +
-  scale_fill_manual('Rock and Ice', values = c('grey30', 'cornflowerblue'),
-                    labels = c('No', 'Yes')) +
-  theme_void() +
-  theme(legend.position = 'top', panel.grid = element_blank(),
-        text = element_text(face = 'bold'), legend.key.width = rel(2))
