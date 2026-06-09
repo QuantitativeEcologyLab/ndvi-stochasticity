@@ -7,25 +7,15 @@ library('cowplot') # for fancy plots in grids
 source('analysis/figures/000-default-ggplot-theme.R')
 source('analysis/figures/000-robinson-objects.R')
 
-mu <- rast('output/long-term-preds.tif')[[1]] %>%
-  project(robinson_crs)
-denvar <- rast('output/long-term-preds.tif')[[2]] %>%
-  project(robinson_crs)
+d <- readRDS('output/d_rob.rds')
+
 biomes_sf <- read_sf('data/ecoregions/ecoregions-polygons.shp') %>%
   st_transform(robinson_crs)
-biomes <- rasterize(biomes_sf, mu, field = 'biome', touches = TRUE)
+biomes <- rasterize(biomes_sf, rast(d), field = 'biome', touches = TRUE)
 
 plot(biomes)
-unique(biomes_sf$biome)
-plot(mu)
-plot(denvar)
 
-d <- 
-  list(mu, denvar, biomes) %>%
-  rast() %>%
-  as.data.frame(xy = TRUE) %>%
-  as_tibble() %>%
-  filter(biome != 'Inland Water') %>%
+d <- d %>%
   mutate(biome = factor(biome, levels = c(
     'Rock and Ice',
     'Tundra',
