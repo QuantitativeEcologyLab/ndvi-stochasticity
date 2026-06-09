@@ -107,11 +107,12 @@ rasters <-
   app(fun = 'sum', na.rm = TRUE) %>%
   mask(st_transform(extent, st_crs(.))) %>%
   ifel(init(., 'y') < 70, ., NA) %>%
+  ifel(project(rast('data/water-body-raster.tif'), .) <= 0.4, ., NA_real_) %>%
   `names<-`(c('mu_hat', 's2_hat'))
 
 par(mfrow = c(2, 1))
 plot(rasters)
 
-writeRaster(rasters, paste0('output/long-term-preds.tif'))
+writeRaster(rasters, 'output/long-term-estimates.tif')
 
-plot(rast('output/long-term-preds-africa.tif'))
+plot(rast('output/long-term-estimates.tif'))

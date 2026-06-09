@@ -27,8 +27,6 @@ plot(shp, col = 'darkgreen')
 
 d_rob <-
   rast('output/long-term-estimates.tif') %>%
-  mask(., project(rast('data/water-body-raster.tif'), .) <= 0.4 &
-         init(., 'y') <= 70) %>%
   project(robinson_crs) %>%
   as.data.frame(xy = TRUE) %>%
   as_tibble() %>%
