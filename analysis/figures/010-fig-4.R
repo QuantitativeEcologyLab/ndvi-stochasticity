@@ -7,15 +7,14 @@ library('cowplot') # for ggplot plots in grids
 source('analysis/figures/000-default-ggplot-theme.R')
 source('functions/get_legend.R')
 
-r_s2 <- rast('output/long-term-preds.tif')[[2]]
+r_mu <- rast('output/long-term-estimates.tif')[[1]]
+r_s2 <- rast('output/long-term-estimates.tif')[[2]]
 ecoregions <- read_sf('data/ecoregions/groups-polygons.shp') %>%
   vect() %>% # convert to spatVect
   project(crs(r_s2))
-r_s2 <- crop(r_s2, ecoregions, mask = TRUE)
-r_mu <- rast('output/long-term-preds.tif')[[1]]
 r_dhi <- rast('data/other-rasters/dhi-data/dhi_ndvi_2015.tif') %>%
   project(r_s2)
-#' **USING THE KEYS ONE FOR TESTS BECAUSE IT'S FASTER**
+# using Keys HFI raster because it's faster; other one has different CRS
 r_hfi <- rast('data/other-rasters/hfi-layers/ml_hfi_v1_2019.nc') %>%
   project(r_s2)
 # r_hfi <- rast('H:/GitHub/ndvi-stochasticity/data/other-rasters/hfp_2021_100m_v1-2_cog.tif')
@@ -45,11 +44,6 @@ r_precip <- rast('data/precipitation-yearly-mean-m-day.tif') %>%
 #' - invasive species (can't find a raster)
 #' - disease occurrence? (can't find a raster)
 
-# some have a difference CRS, but reprojecting the HFI layer takes too long
-tibble(raster = c('r_s2', 'r_mu', 'r_dhi', 'r_hfi', 'r_rich', 'r_burn'),
-       crs = sapply(raster, \(x) crs(get(x), proj = TRUE)),
-       same_crs = crs == crs[1])
-
 # check rasters
 if(FALSE) {
   plot(r_s2)
@@ -73,7 +67,7 @@ get_values <- function(rst, pts) {
 d <- as.data.frame(r_mu, xy = TRUE) %>%
   mutate(.,
          s2_hat = get_values(r_s2, .),
-         hfi = get_values(r_hfi, .) / 1e3, # scale back to [0, 50]
+         hfi = get_values(r_hfi, .), # ranges [0, 1]
          richness = get_values(r_rich, .),
          burned = get_values(r_burn, .),
          precip_m_year = get_values(r_precip, .) * 365) %>%
@@ -92,7 +86,11 @@ d
 
 fig_4 <-
   d %>%
-  mutate(precip_m_year = if_else(precip_m_year > 5, 5, precip_m_year)) %>%
+  select(! c(dhi_cumulative, dhi_min)) %>%
+  mutate(mu_hat = if_else(mu_hat < -0.1, -0.1, mu_hat),
+         s2_hat = if_else(s2_hat < 0, 0, s2_hat),
+         s2_hat = if_else(s2_hat > 0.05, 0.05, s2_hat),
+         precip_m_year = if_else(precip_m_year > 5, 5, precip_m_year)) %>%
   tidyr::pivot_longer(- c(x, y, s2_hat), names_to = 'variable',
                       values_to = 'value') %>%
   mutate(lab = case_when(
@@ -113,7 +111,8 @@ fig_4 <-
     name = expression(paste(bold('Count (log'), bold(''['10']),
                             bold(' scale)'))), range = c(0, 1),
     reverse = FALSE, labels = \(.x) 10^.x) +
-  labs(y = NULL, x = 'DENVar') +
+  labs(y = NULL) +
+  scale_x_continuous('DENVar', transform = 'sqrt') +
   theme(strip.background = element_blank(), strip.placement = 'outside',
         legend.position = 'top', legend.key.width = rel(2),
         strip.text = element_text(size = rel(1)))
