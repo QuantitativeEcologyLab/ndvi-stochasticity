@@ -104,18 +104,18 @@ fig_4 <-
     variable == 'precip_m_year' ~ 'Annual precipitation (m)') %>%
       factor(., levels = unique(.))) %>%
   ggplot() +
-  facet_wrap(~ lab, scales = 'free_y', strip.position = 'left', nrow = 2) +
-  geom_hex(aes(s2_hat, value, fill = log10(after_stat(count))),
+  facet_wrap(~ lab, scales = 'free_x', strip.position = 'bottom', nrow = 2) +
+  geom_hex(aes(value, s2_hat, fill = log10(after_stat(count))),
            color = 'black', bins = 30, linewidth = 0.1, na.rm = TRUE) +
   scale_fill_lapaz(
     name = expression(paste(bold('Count (log'), bold(''['10']),
                             bold(' scale)'))), range = c(0, 1),
     reverse = FALSE, labels = \(.x) 10^.x) +
-  labs(y = NULL) +
-  scale_x_continuous('DENVar', transform = 'sqrt') +
+  labs(x = NULL) +
+  scale_y_continuous('DENVar') +
   theme(strip.background = element_blank(), strip.placement = 'outside',
         legend.position = 'top', legend.key.width = rel(2),
         strip.text = element_text(size = rel(1)))
 
 ggsave('figures/fig-4.png', fig_4,
-       width = 12, height = 5, units = 'in', dpi = 600, bg = 'white')
+       width = 12, height = 7, units = 'in', dpi = 600, bg = 'white')
