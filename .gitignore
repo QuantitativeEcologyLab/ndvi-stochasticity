@@ -110,3 +110,4 @@ data/avhrr-viirs-ndvi/global-diagnostics/monthly-ecdf-summary-10-percent-subset.
 data/precipitation-monthly-mean-m-day.tif
 data/precipitation-yearly-mean-m-day.tif
 *.qs
+.positai
