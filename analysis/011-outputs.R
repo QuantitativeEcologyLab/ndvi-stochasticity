@@ -5,6 +5,7 @@ library('gratia')  # for selecting model terms
 library('terra')   # for working with rasters
 library('ggplot2') # for fancy plots
 library('qs')      # for importing models quickly
+library('tidyr')   # for nesting data
 source('analysis/figures/000-default-ggplot-theme.R')
 
 GROUPS <- read_sf('data/ecoregions/groups-polygons.shp') %>%
@@ -143,7 +144,7 @@ for (g in GROUPS) {
   preds <- as.data.frame(r_prop_water, xy = TRUE, na.rm = TRUE) %>%
     as_tibble() %>%
     rename(prop_water = layer) %>%
-    tidyr::expand_grid(year = 1981:2025) %>%
+    expand_grid(year = 1981:2025) %>%
     mutate(elev_m = extract(r_elev, tibble(x, y))[, 2],
            doy = 1e3) %>% # irrelevant since excluded
     mutate(mu_hat = predict(m_mu, newdata = ., type = 'response',
@@ -163,17 +164,22 @@ for (g in GROUPS) {
 d <-
   purrr::map(list.files('output', 'yearly-estimates',
                         full.names=TRUE) %>%
-               setdiff(., 'output/yearly-estimates.tif'),
+               setdiff(., 'output/yearly-estimates.csv'),
              function(.fn) {
                readr::read_csv(.fn, show_col_types = FALSE) %>%
-                 select(x, y, mu_hat, s2_hat) %>%
-                 rast() %>%
-                 terra::`crs<-`(crs(rast('data/elev-raster.tif'))) %>%
-                 project(rast('data/elev-raster.tif')) %>%
-                 as.data.frame(xy = TRUE)
+                 select(x, y, mu_hat, s2_hat, year) %>%
+                 nest(y_data = ! year) %>%
+                 mutate(y_data = purrr::map(y_data, \(.d) {
+                   rast(.d) %>%
+                     terra::`crs<-`(crs(rast('data/elev-raster.tif'))) %>%
+                     project(rast('data/elev-raster.tif')) %>%
+                     as.data.frame(xy = TRUE) %>%
+                     filter(y <= 70) # already filtered for prop_water < 0.4
+                 })) %>%
+                 unnest(y_data)
              }, .progress = TRUE) %>%
   bind_rows() %>%
-  filter(y <= 70) %>% # already filtered for prop_water < 0.4
   as_tibble()
 
-readr::write_csv(d, 'output/yearly-term-estimates.csv', num_threads = 10)
+readr::write_csv(d, 'output/yearly-estimates.csv', num_threads = 10)
+
