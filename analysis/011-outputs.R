@@ -181,5 +181,32 @@ d <-
   bind_rows() %>%
   as_tibble()
 
-readr::write_csv(d, 'output/yearly-estimates.csv', num_threads = 10)
+readr::write_csv(d, 'output/yearly-estimates.csv')
+range(readr::read_csv('output/yearly-estimates.csv', num_threads = 10)$year) ==
+  c(1981, 2025)
 
+d %>%
+  group_by(year) %>%
+  nest(y_data = ! year) %>%
+  mutate(y_data = purrr::map(y_data, function(.d) {
+    .d %>%
+      select(x, y, mu_hat) %>%
+      rast()
+  })) %>%
+  pull(y_data) %>%
+  `names<-`(1981:2025) %>%
+  rast() %>%
+  writeRaster("output/yearly-estimates-mean-ndvi.tif", overwrite = TRUE)
+
+d %>%
+  group_by(year) %>%
+  nest(y_data = ! year) %>%
+  mutate(y_data = purrr::map(y_data, function(.d) {
+    .d %>%
+      select(x, y, s2_hat) %>%
+      rast()
+  })) %>%
+  pull(y_data) %>%
+  `names<-`(1981:2025) %>%
+  rast() %>%
+  writeRaster("output/yearly-estimates-denvar.tif", overwrite = TRUE)
