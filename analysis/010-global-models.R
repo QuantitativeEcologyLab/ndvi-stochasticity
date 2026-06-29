@@ -10,11 +10,10 @@ library('sf')        # for splitting predictions across groups
 library('terra')     # for working with rasters
 source('analysis/figures/000-default-ggplot-theme.R')
 
-NCORES <- future::availableCores(logical = FALSE) - 2
+NCORES <- max(future::availableCores(logical = FALSE) - 10, 1)
 t_res <- 4
 s_res <- 4
 
-#' *only ran neotropic-nearctic (4) for now*
 GROUP <-
   st_read('data/ecoregions/groups-polygons.shp', quiet = TRUE) %>%
   filter(group != 'Antarctic') %>%
@@ -22,17 +21,11 @@ GROUP <-
   unique() %>%
   tolower() %>%
   gsub(', ', '-', .) %>%
-  nth(3) #' *change this as one of 1, 2, 3, or 4*
+  nth(2) #' *change this as one of 1, 2, 3, or 4*
 GROUP
 DATE <- paste(Sys.Date()) # make a character to avoid bad conversions
 DATE
 
-# fit the mean models for each group ----
-# fitting times
-#' neotropic-nearctic: 2 days; 1.7 h w/o `ti(year, doy, x, y)` 
-#' africa: 
-#' palearctic: 
-#' indo-malay-oceania-australasia: 
 # import data ----
 d <- paste0('data/avhrr-viirs-ndvi/group-level-datasets/aggregated-',
             GROUP, '-t-', t_res, '-s-', s_res, '-ndvi-data.qs') %>%
@@ -40,10 +33,10 @@ d <- paste0('data/avhrr-viirs-ndvi/group-level-datasets/aggregated-',
 
 #' `k` values for spatial smooths
 k_s <-
-  case_when(GROUP == 'africa' ~ 2000,
-            GROUP == 'indo-malay-oceania-australasia' ~ 900,
+  case_when(GROUP == 'africa' ~ 1300,
+            GROUP == 'indo-malay-oceania-australasia' ~ 450, # 900 was too much
             GROUP == 'neotropic-nearctic' ~ 1300,
-            GROUP == 'palearctic' ~ 2000)
+            GROUP == 'palearctic' ~ 1300)
 
 # fit mean model ----
 if(length(list.files('H:/GitHub/ndvi-stochasticity/models/global-models',
@@ -80,7 +73,7 @@ if(length(list.files('H:/GitHub/ndvi-stochasticity/models/global-models',
     method = 'fREML',
     knots = list(doy = c(0.5, 366.5)),
     discrete = TRUE,
-    nthreads = NCORES,
+    # using multiple cores results in segfault error
     control = gam.control(trace = TRUE),
     samfrac = 0.01) # initial guess using only 1% of data (default = 100%)
   
@@ -99,7 +92,8 @@ d$mu_hat <- predict.bam(m_mu, discrete = GROUP != 'neotropic-nearctic',
 d <- mutate(d, e = (ndvi_aggr - mu_hat), e2 = e^2)
 
 qsave(d,
-      paste0('models/global-models/neotropic-nearcric-preds-w-resid-', Sys.Date(),'.qs'),
+      paste0('models/global-models/', GROUP, '-preds-w-resid-',
+      Sys.Date(),'.qs'),
       nthreads = NCORES)
 
 #' check pixel-level residuals: `dicrete = TRUE` is too coarse but faster
@@ -126,11 +120,15 @@ if(FALSE) {
 # model variance ----
 gc() # clean up before starting
 
-# neotropic-nearctic ran in 38 hours
+# neotropic-nearctic ran in 38 hours with parallelization across 60 cores
+# without parallelization:
+# - neotropic-nearctic ran in 20 days
+# - africa ran in 18 days
+
 m_s2 <- bam(
   e2 ~
     # marginal smooths
-    s(prop_water, bs = 'cr', k = 5) + # water biases towards < 0
+    s(prop_water, bs = 'cr', k = 5) + # water biases towards > 0
     s(y, x, bs = 'sos', k = k_s) + # smooth of space
     s(year, bs = 'cr', k = 20) + # year effect
     s(doy, bs = 'cc', k = 10) + # seasonal/day of year effect
@@ -153,9 +151,9 @@ m_s2 <- bam(
   method = 'fREML',
   knots = list(doy = c(0.5, 366.5)),
   discrete = TRUE,
-  nthreads = NCORES,
+  # using multiple cores results in segfault error
   control = gam.control(trace = TRUE),
   samfrac = 0.01) # initial guess using only 1% of data (default = 100%)
 
 paste0('models/global-models/bam-variance-ndvi-', GROUP,'-',DATE,'.qs') %>%
-  qsave(m_s2, ., nthreads = NCORES)
+  qsave(m_s2, ., nthreads = future::availableCores(logical = FALSE) - 2)
