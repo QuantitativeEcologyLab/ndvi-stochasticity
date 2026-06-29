@@ -111,3 +111,10 @@ data/precipitation-monthly-mean-m-day.tif
 data/precipitation-yearly-mean-m-day.tif
 *.qs
 .positai
+output/yearly-estimates-africa.csv
+output/yearly-estimates-denvar.tif
+output/yearly-estimates-indo-malay-oceania-australasia.csv
+output/yearly-estimates-mean-ndvi.tif
+output/yearly-estimates-neotropic-nearctic.csv
+output/yearly-estimates-palearctic.csv
+output/yearly-estimates.csv
