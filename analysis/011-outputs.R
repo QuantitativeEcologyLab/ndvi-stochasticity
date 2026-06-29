@@ -55,7 +55,8 @@ for (g in GROUPS) {
     mutate(s2_hat = predict(m_s2, newdata = ., type = 'response',
                             se.fit = FALSE, discrete = FALSE,
                             exclude = EXCLUDE) %>%
-             as.numeric())
+             as.numeric()) %>%
+    mutate(year = NA, doy = NA)
   preds
   
   readr::write_csv(preds, paste0('output/long-term-estimates-',
@@ -152,8 +153,9 @@ for (g in GROUPS) {
     mutate(s2_hat = predict(m_s2, newdata = ., type = 'response',
                             se.fit = FALSE, discrete = FALSE,
                             exclude = EXCLUDE) %>%
-             as.numeric())
-  
+             as.numeric()) %>%
+    mutate(doy = NA)
+
   readr::write_csv(preds, paste0('output/yearly-estimates-',
                                  formatted_g,'.csv'))
 }
