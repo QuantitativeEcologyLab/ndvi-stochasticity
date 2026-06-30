@@ -10,11 +10,11 @@ d <- readr::read_csv('output/yearly-estimates.csv', num_threads = 10) %>%
             s2_hat = mean(s2_hat, na.rm = TRUE),
             .by = c(year, y))
 
-mean(d$s2_hat > 0.05)
+mean(d$s2_hat > 0.05) # < 1%
 d <- mutate(d,
             s2_hat = if_else(s2_hat > 0.05, 0.05, s2_hat),
-            ref_mu = mean(mu_hat[year <= 1990]),
-            ref_s2 = mean(s2_hat[year <= 1990]),
+            ref_mu = mean(mu_hat[year > 1990 & year <= 2000]),
+            ref_s2 = mean(s2_hat[year > 1990 & year <= 2000]),
             diff_mu = mu_hat - ref_mu,
             diff_s2 = s2_hat - ref_s2,
             .by = y)
