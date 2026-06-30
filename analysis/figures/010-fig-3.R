@@ -5,9 +5,7 @@ library('ggplot2') # for fancy plots
 library('cowplot') # for fancy plots with multiple panels
 source('analysis/figures/000-default-ggplot-theme.R')
 
-d <- readr::read_csv(d, 'output/yearly-estimates.csv', num_threads = 10)
-
-d <- d %>%
+d <- readr::read_csv('output/yearly-estimates.csv', num_threads = 10) %>%
   summarize(mu_hat = mean(mu_hat, na.rm = TRUE),
             s2_hat = mean(s2_hat, na.rm = TRUE),
             .by = c(year, y))
