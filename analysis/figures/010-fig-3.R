@@ -18,8 +18,8 @@ d <- d %>%
     ref_s2 = mean(s2_hat[year > 1990 & year <= 2000]),
     diff_mu = mu_hat - ref_mu,
     diff_s2 = s2_hat - ref_s2,
-    diff_mu = if_else(abs(diff_mu) > 0.15, sign(diff_mu) * 0.15, diff_mu),
-    diff_s2 = if_else(abs(diff_s2) > 0.02, sign(diff_s2) * 0.02, diff_s2),
+    diff_mu = if_else(abs(diff_mu) > 0.1, sign(diff_mu) * 0.1, diff_mu),
+    diff_s2 = if_else(abs(diff_s2) > 0.01, sign(diff_s2) * 0.01, diff_s2),
     .by = y)
 
 fig_3 <- plot_grid(
