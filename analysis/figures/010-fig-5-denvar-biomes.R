@@ -11,9 +11,6 @@ d <- readRDS('output/d_rob.rds')
 
 biomes_sf <- read_sf('data/ecoregions/ecoregions-polygons.shp') %>%
   st_transform(robinson_crs)
-biomes <- rasterize(biomes_sf, rast(d), field = 'biome', touches = TRUE)
-
-plot(biomes)
 
 d <- d %>%
   mutate(biome = factor(biome, levels = c(
@@ -42,8 +39,7 @@ biome_pal <- color('discreterainbow')(n_distinct(d$biome))
 
 ggplot(d) +
   facet_wrap(~ biome, scales = 'free') +
-  geom_histogram(aes(s2_hat, fill = biome), binwidth = 0.0005,
-                 center = 0.0001, color = 'black') +
+  geom_density(aes(s2_hat, fill = biome), color = 'black') +
   labs(x = 'DENVar', y = 'Count') +
   scale_fill_discreterainbow() +
   theme(legend.position = 'none', strip.placement = 'outside',
