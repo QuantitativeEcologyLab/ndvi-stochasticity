@@ -1,5 +1,5 @@
 ---
-title: "DENVar: A global Dynamic Estimate of NDVI Variance"
+title: "DENVar: A Global Dynamic Estimate of NDVI Variance"
 subtitle: "Appendix B: Senitivity Analyses"
 author:
   - name: Stefano Mezzini
@@ -53,13 +53,13 @@ knitr::opts_chunk$set(echo = FALSE, out.width = '100%', fig.align = 'center', fi
 library('knitr')
 ```
 
-This appendix includes a series of sensitivity analyses performed to reduce computation time without appreciable effects on the estimates of mean NDVI and DENVar. The first set of tests were performed using data from the Mediterranean island of Sardigna (Sardinia; Fig. B.\@ref(fig:sardigna-map)).
+This appendix includes a series of sensitivity analyses performed to reduce computation time with negligible effects on the estimates of mean NDVI and DENVar. The first set of tests were performed using data from the Mediterranean island of Sardigna (Sardinia; Fig. B.\@ref(fig:sardigna-map)).
 
 ```{r sardigna-map, fig.cap="Robinson projection of the world, with the Mediterranean island of Sardigna (Sardinia) in red."}
 include_graphics('../figures/sardinia-test/sardinia-map.png')
 ```
 
-The first test compared fitting times and model predictions across different families of distributions. Since NDVI values for the island ranged between -0.1 and 1, values were scaled between 0 and 1 using the linear transformation $Y^*=(Y + 0.1) / 1.1$, and predictions were back-transformed using the transformation $Y = Y^* \times 1.1 - 0.1.$ The models are shown in the code block below. Spatial terms either used discrete-space Markov Random Field smooths (MRF; `bs = 'mrf'`) or continuous-space Duchon (`bs = 'ds'`) based on the work of @duchon_splines_1977. See @wood_generalized_2017 for additional information. The Beta model fit in about 14 minutes, while the Gaussian models both fit in less than a minute.
+The first test compared fitting times and model predictions across different families of distributions. Since NDVI values for the island ranged between -0.1 and 1, values were scaled between 0 and 1 using the linear transformation $Y^*=(Y + 0.1) / 1.1$, and predictions were back-transformed using the transformation $Y = Y^* \times 1.1 - 0.1.$ The models are shown in the code block below. Spatial terms either used discrete-space Markov Random Field smooths (MRF; `bs = 'mrf'`) or continuous-space Duchon smooths (`bs = 'ds'`) based on the work of @duchon_splines_1977. See @wood_generalized_2017 for additional information. The Beta model fit in about 14 minutes, while the Gaussian models both fit in less than a minute.
 
 \clearpage
 
@@ -76,16 +76,6 @@ m_beta_mrf <- bam(ndvi_scaled ~
                   data = d,
                   method = 'fREML',
                   discrete = TRUE)
-m_gaus_ds <- bam(ndvi ~
-                   s(x, y, bs = 'ds', k = 200) +
-                   s(elev_m, bs = 'cr', k = 5) +
-                   s(year, bs = 'cr', k = 10) +
-                   s(doy, bs = 'cc', k = 10),
-                 family = gaussian(),
-                 knots = list(doy = c(0.5, 366.5)),
-                 data = d,
-                 method = 'fREML',
-                 discrete = TRUE)
 m_gaus_mrf <- bam(ndvi ~
                     s(cell_id, bs = 'mrf', k = 200, xt = list(nb = nbs)) +
                     s(elev_m, bs = 'cr', k = 5) +
@@ -96,11 +86,21 @@ m_gaus_mrf <- bam(ndvi ~
                   data = d,
                   method = 'fREML',
                   discrete = TRUE)
+m_gaus_ds <- bam(ndvi ~
+                   s(x, y, bs = 'ds', k = 200) +
+                   s(elev_m, bs = 'cr', k = 5) +
+                   s(year, bs = 'cr', k = 10) +
+                   s(doy, bs = 'cc', k = 10),
+                 family = gaussian(),
+                 knots = list(doy = c(0.5, 366.5)),
+                 data = d,
+                 method = 'fREML',
+                 discrete = TRUE)
 ```
 
 \doublespacing
 
-An attempt was also made to fit the beta location-scale GAM below [@wood_smoothing_2016] using a custom family provided Dr. Simon Wood (see https://github.com/QuantitativeEcologyLab/ndvi-stochasticity/blob/main/functions/betals.r) and the `gam()` function (since location-scale models cannot currently be fit with `bam()`). However, the model fitting time was prohibitive. The model fitting process was interrupted after more than 6 days of run time with 10 cores on a machine with two Intel Xeon Platinum 8462Y+ processors (64 cores total) and 2 TB of RAM. Within that time, the model had only completed 3 steps using the Newton method described by @wood_generalized_2017-2 while using > 68 GB of RAM. The `gam()` function requires substantially more RAM and computational time than the `bam()` function, particularly since discrete model-fitting procedures are currently not possible with `gam()` [@wood_generalized_2017; @wood_generalized_2015; @wood_generalized_2017-1].
+An attempt was also made to fit the beta location-scale GAM below [@wood_smoothing_2016] using a custom family provided Dr. Simon Wood (see https://github.com/QuantitativeEcologyLab/ndvi-stochasticity/blob/main/functions/betals.r) and the `gam()` function (since location-scale models cannot currently be fit with `bam()`). However, the model fitting time was prohibitive. The model was interrupted after more than 6 days of run time with 10 cores on a machine with two Intel Xeon Platinum 8462Y+ processors (64 cores total) and 2 TB of RAM. Within that time, the model had only completed 3 steps using the Newton method described by @wood_generalized_2017-2 while using > 68 GB of RAM. The `gam()` function requires substantially more RAM and computational time than the `bam()` function, particularly since `gam()` cannot currently use approximate fitting methods with covariate discretization [@wood_generalized_2017; @wood_generalized_2015; @wood_generalized_2017-1].
 
 \singlespacing
 
@@ -149,7 +149,7 @@ m_gaus_mrf_aggr <- bam(
 include_graphics('../figures/sardinia-test/sardinia-ndvi-model-agreement-mrf.png')
 ```
 
-```{r sardigna-aggr-example, out.height='90%', out.width='90%', fig.cap="Comparison of the NDVI rasters for the Mediterranean island of Sardigna (Sardinia) after cloud masking (A) and after cloud masking and spatialtemporal aggregation by a factor of two (B). The excessively low NDVI values in the south and east parts of the island are due to raster misalignment with the shapefile despite reprojecting the shapefile to the each raster's coordinate reference system."}
+```{r sardigna-aggr-example, out.height='90%', out.width='90%', fig.cap="Comparison of the NDVI rasters for the Mediterranean island of Sardigna (Sardinia) after cloud masking (A) and after cloud masking and spatialtemporal aggregation by a factor of two (B)."}
 include_graphics('../figures/sardinia-test/example-rasters-aggregation.png')
 ```
 
