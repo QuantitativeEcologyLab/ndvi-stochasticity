@@ -155,21 +155,22 @@ The estimates of mean NDVI ($\hat \mu$) and DENVar ($\hat \sigma^2$) were spatia
 \label{table:1}
 \end{table}
 
-The models also detected complex spatiotemporal trends, with oscillations of widespread higher NDVI and lower DENVar in 1990, 1995 and the early 2000s, paired with  (Fig. \ref{surface-plots}) CAP ABS FILL VALUES AT 0.15 AND 0.025 FOR EASE OF READABILITY.
+The models also detected complex spatiotemporal trends. In the 1990s, there were two strong, multiannual oscillations in both mean NDVI and DENVar, while the 2000s and 2010s showed more spatially heterogenous pattenrs (Fig. \ref{surface-plots}). Generally, periods of higher mean NDVI tended to correspond to periods of higher variance. This is particularly visible at high northern latitudes (\(\gtrapprox 60^\circ\)), which saw strong trend inversions near 59, 65, and \(69^\circ\)N.
+
 
 \begin{figure}[h]
     \centering
     \includegraphics[width=\textwidth]{fig-3}
-    \caption{Surface plots of the change in mean NDVI and DENVar over the years. Panels A and B show the estimated averages, while panels C and D show the change in the averages relative to the 1991-2000 average.}
+    \caption{Surface plots of the change in mean NDVI and DENVar over the years. Panels A and B show the estimated averages, while panels C and D show the change in the averages relative to the 1991-2000 average. For ease of readability, DENVar values in panel B have been capped to a maximum of 0.05, while differences in panels C and D have been capped at absolute values of 0.1 and 0.01, respectively.}
     \label{surface-plots}
 \end{figure}
 
-\textcolor{red}{PARAGRAPH DESCRIBING TRENDS IN DENVar WITH OTHER VARIABLES.} (Fig. \ref{hex-plots}). Highly stochastic environments tended to have low: mean NDVI, human presence, species richness, annual area burned, annual precipitation, and ... . But it's hard with these plots to be able to tell if it's just because of mean NDVI being low. Additionally, the plots use old versions of the rasters that included the excessively high values in the arctic.
+Fig. \ref{hex-plots} shows the relationship between DENVar and some commont spatial variables. Generally, variance in NDVI tends to be higher in environments with inermediate productivity (NDVI between 0.25 and 0.5), low human presence low species richness, rere fires, high precipitation, and low seasonality in NDVI. \textcolor{red}{REPLACE seasonal CV with occurrence of insect-caused diseases}.
 
 \begin{figure}[h]
     \centering
     \includegraphics[width=\textwidth]{fig-4}
-    \caption{Hex plots of the relationship between the long-term global Dynamic Estimate of NDVI Variance (DENVar) and common ecological metricts. The fill of the hexagonal cells represents the log-10 number of points within the cell. Rowwise, the variables are: long-term mean NDVI (as estimated in this manuscript), the machine-learning Human Footprint Index (ml-HFI) of \citation{keys_machine-learning_2021}, and the 2015 cumulative, minimum, and seasonal range in the Dynamic Habitat Index of \citep{radeloff_dynamic_2019}.}
+    \caption{Hex plots of the relationship between the long-term global Dynamic Estimate of NDVI Variance (DENVar) and common ecological metricts. The fill of the hexagonal cells represents the log-10 number of points within the cell. Rowwise, the variables are: long-term mean NDVI (as estimated in this manuscript), the machine-learning Human Footprint Index of \citet{keys_machine-learning_2021}, and the ... of \citet{radeloff_dynamic_2019}.}
     \label{hex-plots}
 \end{figure}
 
