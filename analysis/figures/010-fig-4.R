@@ -38,8 +38,8 @@ r_precip <- rast('data/precipitation-yearly-mean-m-day.tif') %>%
   mask(ecoregions)
 
 #' *data that might be worth adding:*
-#' - disease occurrence: `https://experience.arcgis.com/experience/1236ef068f234bea90fe404f8308d5b6/page/Aedes-(Stegomyia)-borne-diseases`
-#' - temperature: `https://cds.climate.copernicus.eu/datasets/derived-near-surface-meteorological-variables?tab=download` (need to make a raster)
+#' - disease occurrence (cannot find a downaload link): `https://experience.arcgis.com/experience/1236ef068f234bea90fe404f8308d5b6/page/Aedes-(Stegomyia)-borne-diseases`
+#' - temperature (need to make a raster): `https://cds.climate.copernicus.eu/datasets/derived-near-surface-meteorological-variables?tab=download`
 #' - seasonal temperature range (need to make a raster)
 #' - max body size (can't find a raster)
 #' - invasive species (can't find a raster)
