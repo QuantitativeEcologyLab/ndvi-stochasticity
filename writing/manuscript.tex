@@ -130,7 +130,7 @@ From the two sets of models, we produced daily estimates of (1) the Dynamic Esti
 
 \section{Results}
 
-The estimates of mean NDVI ($\hat \mu$) and DENVar ($\hat \sigma^2$) were spatially smooth but still captured large-scale trends (Fig. \ref{estimates}). The models for mean NDVI explained \textcolor{red}{> XXX}\% of the deviance, while the models for DENVar explained \textcolor{red}{XXX-XXX\%} of the deviance (Table \@ref{dev-expl-table}). For both models, predictions were unreliable in areas with very scarce data (e.g., rock and ice biomes in the Arctic; see Fig. A.5), so such areas were excluded when producing figures and estimates of mean NDVI and DENVar.
+The estimates of mean NDVI ($\hat \mu$) and DENVar ($\hat \sigma^2$) were spatially smooth but still captured complex spatial trends (Fig. \ref{estimates}). The models for mean NDVI explained 68-88\% of the deviance, while the models for DENVar explained 13.40-18.60\% of the deviance (Table \@ref{dev-expl-table}). For both models, predictions were unreliable in areas with very scarce data (e.g., rock and ice biomes in the Arctic; see Fig. A.5), so such areas were excluded when producing figures and estimates of mean NDVI and DENVar. Still, the models detected complex spatial patterns in both variables, such as along the Andes and the Himalayas, and in the Palearctic and Nearctic taiga.
 
 \begin{figure}[h]
     \centering
@@ -145,22 +145,22 @@ The estimates of mean NDVI ($\hat \mu$) and DENVar ($\hat \sigma^2$) were spatia
  \hline
  Region & Dev. expl. (Mean NDVI, \%) & Dev. expl. (DENVar, \%) \\ [0.5ex] 
  \hline
- Africa & \textcolor{red}{XXX} & \textcolor{red}{XXX} \\ 
- Indo-Malay, Oceania, Australasia & \textcolor{red}{XXX} & \textcolor{red}{XXX} \\
- Neotropic, Nearctic & \textcolor{red}{XXX} & \textcolor{red}{XXX} \\
- Palearctic & \textcolor{red}{XXX} & \textcolor{red}{XXX} \\ [1ex] 
+ Africa & 88.02 & 18.60 \\ 
+ Indo-Malay, Oceania, Australasia & 67.89 & 18.17 \\
+ Neotropic, Nearctic & 80.65 & 13.40 \\
+ Palearctic & 82.23 & 14.89 \\ [1ex] 
  \hline
 \end{tabular}
 \caption{Percent deviance explained by the models for mean NDVI and DENVar for each of the four regions shown in Fig. A.4.}
 \label{table:1}
 \end{table}
 
-\textcolor{red}{PARAGRAPH DESCRIBING TRENDS IN MEAN AND VARIANCE OVER TIME} (Fig. \ref{surface-plots})
+The models also detected complex spatiotemporal trends, with oscillations of widespread higher NDVI and lower DENVar in 1990, 1995 and the early 2000s, paired with  (Fig. \ref{surface-plots}) CAP ABS FILL VALUES AT 0.15 AND 0.025 FOR EASE OF READABILITY.
 
 \begin{figure}[h]
     \centering
     \includegraphics[width=\textwidth]{fig-3}
-    \caption{Surface plots of mean NDVI (A) and DENVar (B) over time and latitudes.}
+    \caption{Surface plots of the change in mean NDVI and DENVar over the years. Panels A and B show the estimated averages, while panels C and D show the change in the averages relative to the 1991-2000 average.}
     \label{surface-plots}
 \end{figure}
 
