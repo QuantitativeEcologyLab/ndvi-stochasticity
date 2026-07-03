@@ -3,7 +3,7 @@ title: "DENVar: A global Dynamic Estimate of NDVI Variance"
 subtitle: "Appendix B: Senitivity Analyses"
 author:
   - name: Stefano Mezzini
-    institute: [braes, biol]
+    institute: [braes, biol, pois]
   - name: Michael J. Noonan
     email: michael.noonan@ubc.ca
     institute: [braes, biol, cmps]
@@ -11,6 +11,7 @@ author:
 institute:
   - braes: Okanagan Institute for Biodiversity, Resilience, and Ecosystem Services, The University of British Columbia Okanagan, Kelowna, British Columbia, Canada.
   - biol: Department of Biology, The University of British Columbia Okanagan, Kelowna, British Columbia, Canada.
+  - pois: Poisson Consulting Ltd., Nelson, British Columbia, Canada.
   - cmps: Department of Computer Science, Math, Physics, and Statistics, The University of British Columbia Okanagan, Kelowna, British Columbia, Canada.
 bibliography: 'ndvi-stochasticity.bib'
 csl: 'remote-sensing-of-environment.csl'
