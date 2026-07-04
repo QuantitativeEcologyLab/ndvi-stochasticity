@@ -31,9 +31,12 @@ fig_3 <- plot_grid(
   ggplot(d, aes(year, y)) +
     geom_raster(aes(fill = mu_hat)) +
     geom_contour(aes(year, y, z = mu_hat), color = '#00000080', bins = 8) +
+    # ENSO events: https://doi.org/10.1016/j.scib.2024.12.034
     geom_vline(xintercept = c(1982, 1997, 2015), lty = 'dashed') +
-    geom_vline(xintercept = c(), lty = 'dashed') +
-    scale_x_continuous(NULL, breaks = seq(1985, 2025, by = 5), expand = c(0, 0)) +
+    # geom_vline(xintercept = c(2009), lty = 'dotdash') +
+    # geom_vline(xintercept = c(1985, 2001, 2012), lty = 'dotted') +
+    scale_x_continuous(NULL, breaks = seq(1985, 2025, by = 5),
+                       expand = c(0, 0)) +
     scale_y_continuous(expand = c(0, 0)) +
     labs(x = 'Year', y = 'Latitude (degrees N)') +
     scale_fill_gradientn('Mean NDVI   ', colours = ndvi_pal,
@@ -43,7 +46,11 @@ fig_3 <- plot_grid(
   ggplot(d, aes(year, y)) +
     geom_raster(aes(fill = s2_hat)) +
     geom_contour(aes(z = s2_hat), color = '#00000080', bins = 8) +
-    scale_x_continuous(NULL, breaks = seq(1985, 2025, by = 5), expand = c(0, 0)) +
+    geom_vline(xintercept = c(1982, 1997, 2015), lty = 'dashed') +
+    # geom_vline(xintercept = c(2009), lty = 'dotdash') +
+    # geom_vline(xintercept = c(1985, 2001, 2012), lty = 'dotted') +
+    scale_x_continuous(NULL, breaks = seq(1985, 2025, by = 5),
+                       expand = c(0, 0)) +
     scale_y_continuous(expand = c(0, 0)) +
     scale_fill_davos(name = 'DENVar ', limits = c(0, NA), reverse = TRUE) +
     labs(x = 'Year', y = 'Latitude (degrees N)') +
@@ -52,7 +59,11 @@ fig_3 <- plot_grid(
   ggplot(d, aes(year, y)) +
     geom_raster(aes(fill = diff_mu)) +
     geom_contour(aes(year, y, z = diff_mu), color = '#00000080', bins = 8) +
-    scale_x_continuous(NULL, breaks = seq(1985, 2025, by = 5), expand = c(0, 0)) +
+    geom_vline(xintercept = c(1982, 1997, 2015), lty = 'dashed') +
+    # geom_vline(xintercept = c(2009), lty = 'dotdash') +
+    # geom_vline(xintercept = c(1985, 2001, 2012), lty = 'dotted') +
+    scale_x_continuous(NULL, breaks = seq(1985, 2025, by = 5),
+                       expand = c(0, 0)) +
     scale_y_continuous(expand = c(0, 0)) +
     labs(x = 'Year', y = 'Latitude (degrees N)') +
     scale_fill_vik(name = 'Change in mean NDVI      ', reverse = TRUE) +
@@ -61,7 +72,11 @@ fig_3 <- plot_grid(
   ggplot(d, aes(year, y)) +
     geom_raster(aes(fill = diff_s2)) +
     geom_contour(aes(z = diff_s2), color = '#00000080', bins = 8) +
-    scale_x_continuous(NULL, breaks = seq(1985, 2025, by = 5), expand = c(0, 0)) +
+    geom_vline(xintercept = c(1982, 1997, 2015), lty = 'dashed') +
+    # geom_vline(xintercept = c(2009), lty = 'dotdash') +
+    # geom_vline(xintercept = c(1985, 2001, 2012), lty = 'dotted') +
+    scale_x_continuous(NULL, breaks = seq(1985, 2025, by = 5),
+                       expand = c(0, 0)) +
     scale_y_continuous(expand = c(0, 0)) +
     scale_fill_bam(name = 'Change in DENVar    ', reverse = TRUE) +
     labs(x = 'Year', y = 'Latitude (degrees N)') +
@@ -69,5 +84,5 @@ fig_3 <- plot_grid(
           legend.title = element_text(hjust = 0)),
   labels = 'AUTO', ncol = 2)
 
-ggsave('figures/fig-3.png', fig_3, width = 17, height = 10, dpi = 600,
+ggsave('figures/fig-3.png', fig_3, width = 12, height = 8, dpi = 600,
        bg = 'white')
