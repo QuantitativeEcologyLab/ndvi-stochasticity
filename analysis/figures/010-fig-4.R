@@ -19,7 +19,7 @@ r_dhi <- rast('data/other-rasters/dhi-data/dhi_ndvi_2015.tif') %>%
 r_hfi <- rast('data/other-rasters/hfi-layers/ml_hfi_v1_2019.nc') %>%
   project(r_s2)
 # r_hfi <- rast('H:/GitHub/ndvi-stochasticity/data/other-rasters/hfp_2021_100m_v1-2_cog.tif')
-r_rich <- rast('data/other-rasters/iucn-red-list-spp-richness/Combined_SR_2024.tif') %>%
+r_rich <- rast('data/other-rasters/iucn-red-list-spp-richness/Combined_SR_2025.tif') %>%
   project(crs(r_s2))
 if(file.exists('data/other-rasters/FireCCI51based/global_monthly_burned_area_fraction_05deg_caluclated-average.nc')) {
   r_burn <- rast('data/other-rasters/FireCCI51based/global_monthly_burned_area_fraction_05deg_caluclated-average.nc')
@@ -34,7 +34,25 @@ if(file.exists('data/other-rasters/FireCCI51based/global_monthly_burned_area_fra
   writeCDF(r_burn, 'data/other-rasters/FireCCI51based/global_monthly_burned_area_fraction_05deg_caluclated-average.nc')
 }
 
-r_precip <- rast('data/precipitation-yearly-mean-m-day.tif') %>%
+r_precip <- list.files('data/other-rasters/wc2.1_2.5m_prec/', '\\.tif',
+                       full.names = TRUE) %>%
+  rast() %>%
+  sum() %>%
+  project(r_s2) %>%
+  mask(ecoregions)
+
+r_t_ave <- list.files('data/other-rasters/wc2.1_2.5m_tavg/', '\\.tif',
+                      full.names = TRUE) %>%
+  rast() %>%
+  mean() %>%
+  project(r_s2) %>%
+  mask(ecoregions)
+
+r_t_range <- list.files('data/other-rasters/wc2.1_2.5m_tavg/', '\\.tif',
+                        full.names = TRUE) %>%
+  rast() %>%
+  range() %>%
+  diff() %>%
   project(r_s2) %>%
   mask(ecoregions)
 
@@ -45,6 +63,7 @@ r_dcv <- rast('https://github.com/ahyoung-lim/Arbo_riskmaps_public/raw/refs/head
 #' - seasonal temperature range (need to make a raster)
 #' - max body size (can't find a raster)
 #' - invasive species (can't find a raster)
+#' https://www.worldclim.org/data/worldclim21.html
 
 # check rasters
 if(FALSE) {
@@ -55,15 +74,17 @@ if(FALSE) {
   plot(r_rich)
   plot(r_burn)
   plot(r_precip)
+  plot(r_t_ave)
+  plot(r_t_range)
   plot(r_dcv)
 }
 
 get_values <- function(rst, pts) {
   #' extract values from `rst` after projecting `pts` to `crs(raster)`
-  extract(rst, select(pts, x, y) %>%
-            vect(geom = c('x', 'y')) %>%
-            set.crs('EPSG:4326') %>%
-            project(crs(rst))) %>%
+  terra::extract(rst, select(pts, x, y) %>%
+                   vect(geom = c('x', 'y')) %>%
+                   set.crs('EPSG:4326') %>%
+                   project(crs(rst))) %>%
     pull(2)
 }
 
@@ -74,23 +95,32 @@ d <- as.data.frame(r_mu, xy = TRUE) %>%
          hfi = get_values(r_hfi, .), # ranges [0, 1]
          richness = get_values(r_rich, .),
          burned = get_values(r_burn, .),
-         precip_m_year = get_values(r_precip, .) * 365,
-         dcv_risk = get_values(r_dcv, .)) %>%
+         precip_m_year = sqrt(get_values(r_precip, .)),
+         dcv_risk = get_values(r_dcv, .),
+         t_ave = get_values(r_t_ave, .),
+         t_range = get_values(r_t_range, .)) %>%
   mutate(mu_hat = if_else(mu_hat < -0.1, -0.1, mu_hat),
          s2_hat = if_else(s2_hat < 0, 0, s2_hat),
-         s2_hat = if_else(s2_hat > 0.05, 0.05, s2_hat),
-         precip_m_year = if_else(precip_m_year > 5, 5, precip_m_year)) %>%
+         s2_hat = if_else(s2_hat > 0.05, 0.05, s2_hat)) %>%
   pivot_longer(- c(x, y, s2_hat), names_to = 'variable',
                values_to = 'value') %>%
   mutate(lab = case_when(
     variable == 'mu_hat' ~ 'Estimated mean NDVI',
-    variable == 'hfi' ~ 'Human footprint',
-    variable == 'richness' ~ 'Species richness',
-    variable == 'dcv_risk' ~ 'Risk of arboviral diseases',
+    variable == 't_ave' ~ 'Mean temperature (°C)',
+    variable == 't_range' ~ 'Seasonal temperature range (°C)',
+    variable == 'precip_m_year' ~ 'Annual precipitation (m; sqrt)',
+    variable == 'richness' ~ 'IUCN red list species richness',
     variable == 'burned' ~ 'Mean proportion buned',
-    variable == 'precip_m_year' ~ 'Annual precipitation (m)') %>%
-      factor(., levels = unique(.)))
-d
+    variable == 'hfi' ~ 'Human footprint',
+    variable == 'dcv_risk' ~ 'Risk of arboviral diseases') %>%
+      factor(., levels = c('Estimated mean NDVI',
+                           'Mean temperature (°C)',
+                           'Seasonal temperature range (°C)',
+                           'Annual precipitation (m; sqrt)',
+                           'Species richness',
+                           'Mean proportion buned',
+                           'Human footprint',
+                           'Risk of arboviral diseases')))
 
 fig_4 <-
   ggplot() +
