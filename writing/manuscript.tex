@@ -153,21 +153,21 @@ The estimates of mean NDVI ($\hat \mu$) and DENVar ($\hat \sigma^2$) were spatia
 \label{table:1}
 \end{table}
 
-The models also detected complex spatiotemporal trends. In the 1990s, there were two global, multiannual oscillations in both mean NDVI and DENVar, while the 2000s and 2010s showed more spatially heterogenous patterns (Fig. \ref{surface-plots}). Starting in the mid-2010s, equatorial regions saw a decrease in mean NDVI and DENvar, while near-tropical regions generally experienced an increase in both metrics. Overall, periods of higher mean NDVI tended to correspond to periods of higher variance. This is particularly visible at high northern latitudes (\(\gtrapprox 60^\circ\)), which saw strong spatiotemporal trend inversions near 59, 65, and \(69^\circ\)N.
+The models also detected complex spatiotemporal trends, with major shifts occurring proximally to the major El Niño events in 1982, 1997, and 2015 \citep[Fig. \ref{surface-plots}; ][]{jia_transition_2025}. The early 1980s saw lower mean NDVI and greater variance in NDVI, with values increasing during the second half of the decade. In the 1990s, there were two global-scale, multiannual oscillations in both mean NDVI and DENVar that ended with a widespread increase in mean NDVI and NDVI stochasticity in 2000 and 2001. The 2000s and 2010s were characterized by more heterogeneous and complex spatial patterns that intensified just before the 2015 El Niño event. Equatorial regions saw a decrease in mean NDVI and DENvar, while near-tropical regions generally experienced an increase in both metrics. Latitudes approximately above \(60^\circ\) experienced the strongest changes in both mean NDVI and DENVar, with strong spatiotemporal trend inversions near 59, 65, and \(69^\circ\)N.
 
 \begin{figure}[h]
     \centering
     \includegraphics[width=\textwidth]{fig-3}
-    \caption{Surface plots of the change in mean NDVI and DENVar over the years. Panels A and B show the estimated averages, while panels C and D show the change in the averages relative to the 1991-2000 average. For ease of readability, DENVar values in panel B have been capped to a maximum of 0.05, while differences in panels C and D have been capped at absolute values of 0.1 and 0.01, respectively.}
+    \caption{Surface plots of the change in mean NDVI and DENVar over the years. Panels A and B show the estimated averages, while panels C and D show the change in the averages relative to the 1991-2000 average. For ease of readability, DENVar values in panel B have been capped to a maximum of 0.05, while differences in panels C and D have been capped at absolute values of 0.1 and 0.01, respectively. Vertical dashed lines indicate years with major El Niño events \citep{jia_transition_2025}.}
     \label{surface-plots}
 \end{figure}
 
-Fig. \ref{hex-plots} shows the relationship between DENVar and some commont spatial variables. Generally, variance in NDVI tends to be higher in environments with inermediate productivity (NDVI between 0.25 and 0.5), low human presence, low species richness, infrequent and small fires, high precipitation, and low seasonality in NDVI. \textcolor{red}{REPLACE seasonal CV with occurrence of insect-caused diseases}.
+Fig. \ref{hex-plots} shows the relationship between DENVar and some common spatial variables. Generally, DENVar: was highest with mean NDVI near 0.25, decreased with mean annual temperature, increased with seasonal temperature range, and increased with total annual precipitation. Additionally, DEVNVar was generally higher in environments with low: IUCN Red List species richness, proporition burned, human footprint, and risk of arbivoral disease.
 
 \begin{figure}[h]
     \centering
     \includegraphics[width=\textwidth]{fig-4}
-    \caption{Hex plots of the relationship between the long-term global Dynamic Estimate of NDVI Variance (DENVar) and common ecological metricts. The fill of the hexagonal cells represents the log-10 number of points within the cell. Rowwise, the variables are: long-term mean NDVI (as estimated in this manuscript), the machine-learning Human Footprint Index of \citet{keys_machine-learning_2021}, and the ... of \citet{radeloff_dynamic_2019}.}
+    \caption{Hex plots of the relationship between the long-term global Dynamic Estimate of NDVI Variance (DENVar) and common ecological metrics. The fill of the hexagonal cells represents the log-10 number of points within the cell. Rowwise, the variables are: long-term mean NDVI (as estimated in this manuscript); mean annual temperature, seasonal temperature range, and annual precipitation (1970-2000) from the work of \citet{fick_worldclim_2017}; IUCN Red List species richness \citep{iucn_iucn_2025}; mean proportion burned \citep[1901-2020; ][]{guo_reconstructed_2025}; the human footprint index of \citet{keys_machine-learning_2021}; and the risk of dengue, chikungunya, Zika and yellow fever \citep{lim_overlapping_2025}.}
     \label{hex-plots}
 \end{figure}
 
