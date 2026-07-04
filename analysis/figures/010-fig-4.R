@@ -2,7 +2,6 @@ library('sf')      # for simple features
 library('tidyr')   # for pivoting and nesting data
 library('terra')   # for rasters
 library('dplyr')   # for data wrangling
-library('mgcv')    # for GAMs
 library('ggplot2') # for figures
 library('khroma')  # for colorblind-friendly color scale
 library('cowplot') # for ggplot plots in grids
@@ -93,27 +92,11 @@ d <- as.data.frame(r_mu, xy = TRUE) %>%
       factor(., levels = unique(.)))
 d
 
-gams <- d %>%
-  select(!c(x, y)) %>%
-  filter(! is.na(value)) %>%
-  nest(data = ! c(variable, lab)) %>%
-  mutate(preds = purrr::map(data, \(.d) {
-    m <- bam(s2_hat ~ s(value, k = 5), data = .d, method = 'fREML',
-             discrete = TRUE)
-    x <- m$model$value
-    tibble(value = seq(min(x), max(x), length.out = 250)) %>%
-      mutate(yhat = predict(m, newdata = ., se = FALSE))
-  }, .progress = TRUE)) %>%
-  select(! data) %>%
-  unnest(preds)
-
 fig_4 <-
   ggplot() +
   facet_wrap(~ lab, scales = 'free_x', strip.position = 'bottom', nrow = 2) +
   geom_hex(aes(value, s2_hat, fill = log10(after_stat(count))), d,
            color = 'black', bins = 30, linewidth = 0.1, na.rm = TRUE) +
-  geom_line(aes(value, yhat), gams, color = "white", lwd = 1.25) +
-  geom_line(aes(value, yhat), gams, color = "black", lwd = 0.75) +
   scale_fill_lapaz(
     name = expression(paste(bold('Count (log'), bold(''['10']),
                             bold(' scale)'))), range = c(0, 1),
