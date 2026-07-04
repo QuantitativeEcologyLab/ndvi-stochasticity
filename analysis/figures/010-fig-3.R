@@ -66,7 +66,7 @@ fig_3 <- plot_grid(
                        expand = c(0, 0)) +
     scale_y_continuous(expand = c(0, 0)) +
     labs(x = 'Year', y = 'Latitude (degrees N)') +
-    scale_fill_vik(name = 'Change in mean NDVI      ', reverse = TRUE) +
+    scale_fill_bam(name = 'Change in mean NDVI      ', reverse = FALSE) +
     theme(legend.position = 'top', legend.key.width = rel(2),
           legend.title = element_text(hjust = 0)),
   ggplot(d, aes(year, y)) +
@@ -78,7 +78,7 @@ fig_3 <- plot_grid(
     scale_x_continuous(NULL, breaks = seq(1985, 2025, by = 5),
                        expand = c(0, 0)) +
     scale_y_continuous(expand = c(0, 0)) +
-    scale_fill_bam(name = 'Change in DENVar    ', reverse = TRUE) +
+    scale_fill_vik(name = 'Change in DENVar    ', reverse = TRUE) +
     labs(x = 'Year', y = 'Latitude (degrees N)') +
     theme(legend.position = 'top', legend.key.width = rel(2),
           legend.title = element_text(hjust = 0)),
