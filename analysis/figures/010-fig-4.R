@@ -1,6 +1,8 @@
 library('sf')      # for simple features
+library('tidyr')   # for pivoting and nesting data
 library('terra')   # for rasters
 library('dplyr')   # for data wrangling
+library('mgcv')    # for GAMs
 library('ggplot2') # for figures
 library('khroma')  # for colorblind-friendly color scale
 library('cowplot') # for ggplot plots in grids
@@ -37,8 +39,9 @@ r_precip <- rast('data/precipitation-yearly-mean-m-day.tif') %>%
   project(r_s2) %>%
   mask(ecoregions)
 
+r_dcv <- rast('https://github.com/ahyoung-lim/Arbo_riskmaps_public/raw/refs/heads/main/outputs/Rasters/DCZ_riskmap_wmean_masked.tif')
+
 #' *data that might be worth adding:*
-#' - disease occurrence (cannot find a downaload link): `https://experience.arcgis.com/experience/1236ef068f234bea90fe404f8308d5b6/page/Aedes-(Stegomyia)-borne-diseases`
 #' - temperature (need to make a raster): `https://cds.climate.copernicus.eu/datasets/derived-near-surface-meteorological-variables?tab=download`
 #' - seasonal temperature range (need to make a raster)
 #' - max body size (can't find a raster)
@@ -53,6 +56,7 @@ if(FALSE) {
   plot(r_rich)
   plot(r_burn)
   plot(r_precip)
+  plot(r_dcv)
 }
 
 get_values <- function(rst, pts) {
@@ -65,48 +69,51 @@ get_values <- function(rst, pts) {
 }
 
 d <- as.data.frame(r_mu, xy = TRUE) %>%
+  as_tibble() %>%
   mutate(.,
          s2_hat = get_values(r_s2, .),
          hfi = get_values(r_hfi, .), # ranges [0, 1]
          richness = get_values(r_rich, .),
          burned = get_values(r_burn, .),
-         precip_m_year = get_values(r_precip, .) * 365) %>%
-  # DHI rasters need to be extracted separately
-  bind_cols(.,
-            extract(r_dhi, select(., x, y) %>%
-                      vect(geom = c('x', 'y')) %>%
-                      set.crs('EPSG:4326') %>%
-                      project(crs(r_dhi))) %>%
-              select(! ID) %>%
-              rename(dhi_cumulative = dhi_ndvi_2015_1,
-                     dhi_min = dhi_ndvi_2015_2,
-                     dhi_seasonal = dhi_ndvi_2015_3)) %>%
-  as_tibble()
-d
-
-fig_4 <-
-  d %>%
-  select(! c(dhi_cumulative, dhi_min)) %>%
+         precip_m_year = get_values(r_precip, .) * 365,
+         dcv_risk = get_values(r_dcv, .)) %>%
   mutate(mu_hat = if_else(mu_hat < -0.1, -0.1, mu_hat),
          s2_hat = if_else(s2_hat < 0, 0, s2_hat),
          s2_hat = if_else(s2_hat > 0.05, 0.05, s2_hat),
          precip_m_year = if_else(precip_m_year > 5, 5, precip_m_year)) %>%
-  tidyr::pivot_longer(- c(x, y, s2_hat), names_to = 'variable',
-                      values_to = 'value') %>%
+  pivot_longer(- c(x, y, s2_hat), names_to = 'variable',
+               values_to = 'value') %>%
   mutate(lab = case_when(
     variable == 'mu_hat' ~ 'Estimated mean NDVI',
     variable == 'hfi' ~ 'Human footprint',
     variable == 'richness' ~ 'Species richness',
-    variable == 'dhi_cumulative' ~ 'Cumulative NDVI',
-    variable == 'dhi_min' ~ 'Minimum NDVI',
-    variable == 'dhi_seasonal' ~ 'Seasonal CV of NDVI',
+    variable == 'dcv_risk' ~ 'Risk of arboviral diseases',
     variable == 'burned' ~ 'Mean proportion buned',
     variable == 'precip_m_year' ~ 'Annual precipitation (m)') %>%
-      factor(., levels = unique(.))) %>%
+      factor(., levels = unique(.)))
+d
+
+gams <- d %>%
+  select(!c(x, y)) %>%
+  filter(! is.na(value)) %>%
+  nest(data = ! c(variable, lab)) %>%
+  mutate(preds = purrr::map(data, \(.d) {
+    m <- bam(s2_hat ~ s(value, k = 5), data = .d, method = 'fREML',
+             discrete = TRUE)
+    x <- m$model$value
+    tibble(value = seq(min(x), max(x), length.out = 250)) %>%
+      mutate(yhat = predict(m, newdata = ., se = FALSE))
+  }, .progress = TRUE)) %>%
+  select(! data) %>%
+  unnest(preds)
+
+fig_4 <-
   ggplot() +
   facet_wrap(~ lab, scales = 'free_x', strip.position = 'bottom', nrow = 2) +
-  geom_hex(aes(value, s2_hat, fill = log10(after_stat(count))),
+  geom_hex(aes(value, s2_hat, fill = log10(after_stat(count))), d,
            color = 'black', bins = 30, linewidth = 0.1, na.rm = TRUE) +
+  geom_line(aes(value, yhat), gams, color = "white", lwd = 1.25) +
+  geom_line(aes(value, yhat), gams, color = "black", lwd = 0.75) +
   scale_fill_lapaz(
     name = expression(paste(bold('Count (log'), bold(''['10']),
                             bold(' scale)'))), range = c(0, 1),
