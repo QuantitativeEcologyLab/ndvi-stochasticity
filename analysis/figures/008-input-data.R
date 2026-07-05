@@ -185,10 +185,6 @@ plot_pal <- function(pal) {
 
 plot_pal(pal_groups)
 
-# A.1 colors
-# A.2 water
-# A.7 elevation
-
 p_palettes <-
   plot_grid(
     NULL, NULL,
