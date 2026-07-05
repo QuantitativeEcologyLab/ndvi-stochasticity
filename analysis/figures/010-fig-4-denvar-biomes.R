@@ -170,7 +170,7 @@ p_hex <-
     plot_grid(plotlist = map(levels(d$biome)[5:11], marginal_plot), nrow = 1),
     ncol = 1, rel_heights = c(4, 1))
 
-ggsave('figures/fig-5.png', p_hex,
+ggsave('figures/fig-4.png', p_hex,
        width = 10.1 * 7/5, height = 6 * 5/4, units = 'in',
        dpi = 600, bg = 'white')
 

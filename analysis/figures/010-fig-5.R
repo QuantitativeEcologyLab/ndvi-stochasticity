@@ -122,7 +122,7 @@ d <- as.data.frame(r_mu, xy = TRUE) %>%
                            'Human footprint',
                            'Risk of arboviral diseases')))
 
-fig_4 <-
+fig_5 <-
   ggplot() +
   facet_wrap(~ lab, scales = 'free_x', strip.position = 'bottom', nrow = 2) +
   geom_hex(aes(value, s2_hat, fill = log10(after_stat(count))), d,
@@ -137,5 +137,5 @@ fig_4 <-
         legend.position = 'top', legend.key.width = rel(2),
         strip.text = element_text(size = rel(1)))
 
-ggsave('figures/fig-4.png', fig_4,
+ggsave('figures/fig-5.png', fig_5,
        width = 12, height = 7, units = 'in', dpi = 600, bg = 'white')
