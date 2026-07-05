@@ -90,12 +90,14 @@ Savannas and Shrublands',
       d %>%
       filter(biome == .biome) %>%
       ggplot() +
-      geom_hex(aes(mu_hat, s2_hat), na.rm = TRUE) +
+      geom_hex(aes(mu_hat, s2_hat, fill = log10(after_stat(count))),
+               color = 'black', bins = 30, linewidth = 0.1, na.rm = TRUE) +
       labs(x = 'Mean NDVI', y = 'DENVar') +
       scale_y_continuous(limits = range(d$s2_hat),
                          breaks = c(0, 0.02, 0.04, 0.06)) +
-      scale_fill_lapaz(reverse = TRUE) +
-      small_theme
+      scale_fill_lapaz(reverse = FALSE) +
+      small_theme +
+      theme(panel.background = element_rect(fill = "grey"))
   } else {
     if(var_only) {
       p <-
@@ -140,8 +142,8 @@ Savannas and Shrublands',
   
   p <- plot_grid(
     ggdraw() +
-      draw_label(.title, fontface = 'bold', x = 0.2,
-                 hjust = -0.2, size = 5, vjust = 0.3),
+      draw_label(.title, fontface = 'bold', x = 0.1,
+                 hjust = 0, size = 5, vjust = 0.3),
     p, ncol = 1, rel_heights = c(1, 10))
   
   if(! hex & ! var_only) {
