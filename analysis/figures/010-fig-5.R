@@ -106,21 +106,22 @@ d <- as.data.frame(r_mu, xy = TRUE) %>%
                values_to = 'value') %>%
   mutate(lab = case_when(
     variable == 'mu_hat' ~ 'Estimated mean NDVI',
-    variable == 't_ave' ~ 'Mean temperature (°C)',
-    variable == 't_range' ~ 'Seasonal temperature range (°C)',
+    variable == 't_ave' ~ paste0('Mean temperature (\U00B0', 'C)'),
+    variable == 't_range' ~ paste0('Seasonal temperature range (\U00B0', 'C)'),
     variable == 'precip_m_year' ~ 'Annual precipitation (m; sqrt)',
     variable == 'richness' ~ 'IUCN red list species richness',
     variable == 'burned' ~ 'Mean proportion buned',
     variable == 'hfi' ~ 'Human footprint',
     variable == 'dcv_risk' ~ 'Risk of arboviral diseases') %>%
-      factor(., levels = c('Estimated mean NDVI',
-                           'Mean temperature (°C)',
-                           'Seasonal temperature range (°C)',
-                           'Annual precipitation (m; sqrt)',
-                           'Species richness',
-                           'Mean proportion buned',
-                           'Human footprint',
-                           'Risk of arboviral diseases')))
+      factor(.,
+             levels = c('Estimated mean NDVI',
+                        paste0('Mean temperature (\U00B0', 'C)'),
+                         paste0('Seasonal temperature range (\U00B0', 'C)'),
+                        'Annual precipitation (m; sqrt)',
+                        'IUCN red list species richness',
+                        'Mean proportion buned',
+                        'Human footprint',
+                        'Risk of arboviral diseases')))
 
 fig_5 <-
   ggplot() +
@@ -135,7 +136,8 @@ fig_5 <-
   scale_y_continuous('DENVar') +
   theme(strip.background = element_blank(), strip.placement = 'outside',
         legend.position = 'top', legend.key.width = rel(2),
-        strip.text = element_text(size = rel(1)))
+        strip.text = element_text(size = rel(1)),
+        panel.background = element_rect(fill = 'grey'))
 
 ggsave('figures/fig-5.png', fig_5,
        width = 12, height = 7, units = 'in', dpi = 600, bg = 'white')
