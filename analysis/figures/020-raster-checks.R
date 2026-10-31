@@ -5,6 +5,8 @@ library('ggplot2')   # for fancy plots
 library("tidyterra") # for plotting rasters
 source("analysis/figures/000-default-ggplot-theme.R")
 source("analysis/figures/000-robinson-objects.R")
+theme_set(theme_get() +
+            theme(panel.border = element_blank(), legend.position = "top"))
 
 options(scipen=10)
 
@@ -18,8 +20,7 @@ save_raster <- function(r, parameter_name, check) {
     scale_x_continuous(breaks = NULL) +
     scale_y_continuous(breaks = NULL) +
     khroma::scale_fill_highcontrast(name = paste(parameter_name, check),
-                                    na.translate = FALSE) +
-    theme(panel.border = element_blank(), legend.position = "top")
+                                    na.translate = FALSE)
   check <- gsub(" ", "", check)
   check <- gsub("<", " lt ", check)
   check <- gsub(">", " gt ", check)
@@ -107,3 +108,37 @@ save_raster(a, "\U03B1", "< 0")
 save_raster(b, "\U03B2", "< 0")
 save_raster(phi, "\U03C6", "< 0")
 save_raster(phi, "\U03C6", "> 1")
+
+# figures of coordinates with bad mu values ----
+mu_lt_1 <- rast("output/long-term-estimates.tif")$mu_hat %>%
+  ifel(. < -1, ., NA_real_) %>%
+  trim() %>%
+  project(robinson_crs) %>%
+  as.data.frame(xy = TRUE)
+
+ggplot() +
+  geom_sf(data = bounds, fill = "white") +
+  geom_sf(data = shp_rob) +
+  geom_point(aes(x, y), mu_lt_1, color = "red") +
+  scale_x_continuous(NULL, breaks = NULL) +
+  scale_y_continuous(NULL, breaks = NULL)
+ggsave("locs mu lt -1.png",
+       path = "figures/global-diagnostics/appendix-c",
+       width = 6, height = 4, dpi = 300, bg = "white")
+
+# mu < -0.1
+mu_lt_01 <- rast("output/long-term-estimates.tif")$mu_hat %>%
+  ifel(. < -0.1, ., NA_real_) %>%
+  trim() %>%
+  project(robinson_crs) %>%
+  as.data.frame(xy = TRUE)
+
+ggplot() +
+  geom_sf(data = bounds, fill = "white") +
+  geom_sf(data = shp_rob) +
+  geom_point(aes(x, y), mu_lt_01, color = "red") +
+  scale_x_continuous(NULL, breaks = NULL) +
+  scale_y_continuous(NULL, breaks = NULL)
+ggsave("locs mu lt -0.1.png",
+       path = "figures/global-diagnostics/appendix-c",
+       width = 6, height = 4, dpi = 300, bg = "white")
