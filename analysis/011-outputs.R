@@ -246,16 +246,16 @@ newd <- as.data.frame(c(r_prop_water, r_group, r_elev), xy = TRUE, na.rm = TRUE)
          elev_m = file37905ccd4e9d) %>%
   filter(y < 70)
 
-m_mu_a <- qread("bam-mean-ndvi-africa-2026-02-03.qs", nthreads = 40)
-m_mu_i <- qread("bam-mean-ndvi-indo-malay-oceania-australasia-2026-05-20.qs", nthreads = 40)
-m_mu_n <- qread("bam-mean-ndvi-neotropic-nearctic-2025-10-29.qs", nthreads = 40)
-m_mu_p <- qread("bam-mean-ndvi-palearctic-2026-03-24.qs", nthreads = 40)
-m_s2_a <- qread("bam-variance-ndvi-africa-2026-02-03.qs", nthreads = 40)
-m_s2_i <- qread("bam-variance-ndvi-indo-malay-oceania-australasia-2026-05-20.qs", nthreads = 40)
-m_s2_n <- qread("bam-variance-ndvi-neotropic-nearctic-2026-02-24.qs", nthreads = 40)
-m_s2_p <- qread("bam-variance-ndvi-palearctic-2026-03-24.qs", nthreads = 40)
+m_mu_a <- qread("models/global-models/bam-mean-ndvi-africa-2026-02-03.qs", nthreads = 40)
+m_mu_i <- qread("models/global-models/bam-mean-ndvi-indo-malay-oceania-australasia-2026-05-20.qs", nthreads = 40)
+m_mu_n <- qread("models/global-models/bam-mean-ndvi-neotropic-nearctic-2025-10-29.qs", nthreads = 40)
+m_mu_p <- qread("models/global-models/bam-mean-ndvi-palearctic-2026-03-24.qs", nthreads = 40)
+m_s2_a <- qread("models/global-models/bam-variance-ndvi-africa-2026-02-03.qs", nthreads = 40)
+m_s2_i <- qread("models/global-models/bam-variance-ndvi-indo-malay-oceania-australasia-2026-05-20.qs", nthreads = 40)
+m_s2_n <- qread("models/global-models/bam-variance-ndvi-neotropic-nearctic-2026-02-24.qs", nthreads = 40)
+m_s2_p <- qread("models/global-models/bam-variance-ndvi-palearctic-2026-03-24.qs", nthreads = 40)
 
-map (DATES[1:3], function(.date) {
+map (DATES, function(.date) {
   file_name <- paste0(year(.date), "-", yday(.date), ".tif")
   cat(paste0('Predicting for ', .date, ' (file ', file_name, ')...\n'))
   
