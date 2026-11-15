@@ -1,3 +1,6 @@
+# NOTE: predicting at the 0.05-degree resolution despite the models using
+# data at the 0.2-degree resolution, since the scale of the input
+# data is not the scale of the GAMs' bases
 library('sf')      # for shapefiles
 library('dplyr')   # for data wrangling
 library('mgcv')    # for predicting from models
@@ -32,8 +35,7 @@ for (g in GROUPS) {
   
   r_prop_water <- rast('data/water-body-raster.tif') %>%
     ifel(. > 0.4, NA, .) %>%
-    crop(st_transform(shp, crs = crs(.)), mask = TRUE) %>%
-    aggregate(4, na.rm = TRUE)
+    crop(st_transform(shp, crs = crs(.)), mask = TRUE)
   
   r_elev <- rast('data/elev-raster.tif') %>%
     project(r_prop_water) %>%
@@ -133,8 +135,7 @@ for (g in GROUPS) {
   
   r_prop_water <- rast('data/water-body-raster.tif') %>%
     ifel(. > 0.4, NA, .) %>%
-    crop(st_transform(shp, crs = crs(.)), mask = TRUE) %>%
-    aggregate(4, na.rm = TRUE)
+    crop(st_transform(shp, crs = crs(.)), mask = TRUE)
   
   r_elev <- rast('data/elev-raster.tif') %>%
     project(r_prop_water) %>%
@@ -156,7 +157,7 @@ for (g in GROUPS) {
                             exclude = EXCLUDE) %>%
              as.numeric()) %>%
     mutate(doy = NA)
-
+  
   readr::write_csv(preds, paste0('output/yearly-estimates-',
                                  formatted_g,'.csv'))
 }
