@@ -9,6 +9,7 @@ library('terra')   # for working with rasters
 library('ggplot2') # for fancy plots
 library('qs')      # for importing models quickly
 library('tidyr')   # for nesting data
+library("lubridate")
 source('analysis/figures/000-default-ggplot-theme.R')
 
 GROUPS <- read_sf('data/ecoregions/groups-polygons.shp') %>%
@@ -211,3 +212,75 @@ d %>%
   `names<-`(1981:2025) %>%
   rast() %>%
   writeRaster("output/yearly-estimates-denvar.tif", overwrite = TRUE)
+
+# daily estimates ----
+gc()
+
+purrr::map_int(1982:2025, \(x) dir.create(paste0("H:/ndvi-denvar-daily-estimates/", x)))
+
+DATES <- seq(as.Date("1981-01-01"), as.Date("2025-12-31"), by = 1)
+
+# drop dates manually if prediction gets interrupted.
+# the code for automatic drop is not worth the time because it requires
+# possibly listing too many files.
+
+shp <- read_sf('data/ecoregions/groups-polygons.shp') %>%
+  select(group) %>%
+  filter(group != "Antarctic") %>%
+  st_as_sf()
+
+r_prop_water <- rast('data/water-body-raster.tif') %>%
+  ifel(. > 0.4, NA, .) %>%
+  crop(st_transform(shp, crs = crs(.)), mask = TRUE)
+
+r_elev <- rast('data/elev-raster.tif') %>%
+  project(r_prop_water) %>%
+  crop(st_transform(shp, crs = crs(.)), mask = TRUE)
+
+r_group <- rasterize(shp, r_prop_water, field = "group")
+plot(r_group)
+
+newd <- as.data.frame(c(r_prop_water, r_group, r_elev), xy = TRUE, na.rm = TRUE) %>%
+  as_tibble() %>%
+  rename(prop_water = layer,
+         elev_m = file37905ccd4e9d) %>%
+  filter(y < 70)
+
+m_mu_a <- qread("bam-mean-ndvi-africa-2026-02-03.qs", nthreads = 40)
+m_mu_i <- qread("bam-mean-ndvi-indo-malay-oceania-australasia-2026-05-20.qs", nthreads = 40)
+m_mu_n <- qread("bam-mean-ndvi-neotropic-nearctic-2025-10-29.qs", nthreads = 40)
+m_mu_p <- qread("bam-mean-ndvi-palearctic-2026-03-24.qs", nthreads = 40)
+m_s2_a <- qread("bam-variance-ndvi-africa-2026-02-03.qs", nthreads = 40)
+m_s2_i <- qread("bam-variance-ndvi-indo-malay-oceania-australasia-2026-05-20.qs", nthreads = 40)
+m_s2_n <- qread("bam-variance-ndvi-neotropic-nearctic-2026-02-24.qs", nthreads = 40)
+m_s2_p <- qread("bam-variance-ndvi-palearctic-2026-03-24.qs", nthreads = 40)
+
+map (DATES[1:3], function(.date) {
+  file_name <- paste0(year(.date), "-", yday(.date), ".tif")
+  cat(paste0('Predicting for ', .date, ' (file ', file_name, ')...\n'))
+  
+  preds <- newd %>%
+    mutate(doy = yday(.date),
+           year = year(.date)) %>%
+    nest(dat = !group) %>%
+    mutate(dat = purrr::map2(group, dat, function(.g, .d) {
+      m_mu <- get(paste0("m_mu_", tolower(substr(.g, 1, 1))))
+      m_s2 <- get(paste0("m_s2_", tolower(substr(.g, 1, 1))))
+      dat$mu_hat <- predict.bam(m_mu, newdata = dat, type = "response",
+                                se.fit = FALSE, discrete = FALSE) %>%
+        as.numeric() # to drop matrix format
+      dat$s2_hat <- predict.bam(m_s2, newdata = dat, type = "response",
+                                se.fit = FALSE, discrete = FALSE) %>%
+        as.numeric()
+      dat
+    })) %>%
+    tidyr::unnest(dat)
+  
+  preds %>%
+    select(x, y, mu_hat, s2_hat) %>%
+    rast() %>%
+    terra::writeRaster(preds,
+                       paste0('H:/ndvi-denvar-daily-estimates/',
+                              year(.date), "/",
+                              year(.date), "-", yday(.date),'.tif'))
+})
